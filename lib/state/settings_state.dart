@@ -80,9 +80,7 @@ class SettingsState extends ChangeNotifier {
     for (final config in _providerConfigs) {
       for (int i = 0; i < config.models.length; i++) {
         if (config.models[i].uid.isEmpty) {
-          config.models[i] = config.models[i].copyWith(
-            uid: _uuid.v4(),
-          );
+          config.models[i] = config.models[i].copyWith(uid: _uuid.v4());
           changed = true;
         }
       }
@@ -109,10 +107,7 @@ class SettingsState extends ChangeNotifier {
       }
       final provider = _providerConfigs[oldPi];
       final model = provider.models[oldMi];
-      return ModelSlot(
-        providerConfigId: provider.id,
-        modelUid: model.uid,
-      );
+      return ModelSlot(providerConfigId: provider.id, modelUid: model.uid);
     }
 
     bool changed = false;
@@ -394,25 +389,35 @@ class SettingsState extends ChangeNotifier {
 
   /// 设置输入模态模型（null = 使用主模型）
   Future<void> setInputModality(ModelTag tag, ModelSlot? slot) async {
-    final newMap = Map<ModelTag, ModelSlot?>.from(_modelSelectionConfig.inputModalities);
+    final newMap = Map<ModelTag, ModelSlot?>.from(
+      _modelSelectionConfig.inputModalities,
+    );
     newMap[tag] = slot;
-    _modelSelectionConfig = _modelSelectionConfig.copyWith(inputModalities: newMap);
+    _modelSelectionConfig = _modelSelectionConfig.copyWith(
+      inputModalities: newMap,
+    );
     await _service.saveModelSelectionConfig(_modelSelectionConfig);
     notifyListeners();
   }
 
   /// 设置输出类型模型
   Future<void> setOutputModality(ModelType type, ModelSlot? slot) async {
-    final newMap = Map<ModelType, ModelSlot?>.from(_modelSelectionConfig.outputModalities);
+    final newMap = Map<ModelType, ModelSlot?>.from(
+      _modelSelectionConfig.outputModalities,
+    );
     newMap[type] = slot;
-    _modelSelectionConfig = _modelSelectionConfig.copyWith(outputModalities: newMap);
+    _modelSelectionConfig = _modelSelectionConfig.copyWith(
+      outputModalities: newMap,
+    );
     await _service.saveModelSelectionConfig(_modelSelectionConfig);
     notifyListeners();
   }
 
   /// 设置其他模型
   Future<void> setOtherModel(String key, ModelSlot? slot) async {
-    final newMap = Map<String, ModelSlot?>.from(_modelSelectionConfig.otherModels);
+    final newMap = Map<String, ModelSlot?>.from(
+      _modelSelectionConfig.otherModels,
+    );
     newMap[key] = slot;
     _modelSelectionConfig = _modelSelectionConfig.copyWith(otherModels: newMap);
     await _service.saveModelSelectionConfig(_modelSelectionConfig);

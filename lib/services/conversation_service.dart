@@ -76,18 +76,14 @@ class ConversationService {
     final db = await database;
     final msgCount = conv.messages.length;
     await db.transaction((txn) async {
-      await txn.insert(
-        'conversations',
-        {
-          'id': conv.id,
-          'title': conv.title,
-          'config': jsonEncode(conv.config.toJson()),
-          'system_prompt': conv.systemPrompt,
-          'created_at': conv.createdAt.toIso8601String(),
-          'updated_at': conv.updatedAt.toIso8601String(),
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await txn.insert('conversations', {
+        'id': conv.id,
+        'title': conv.title,
+        'config': jsonEncode(conv.config.toJson()),
+        'system_prompt': conv.systemPrompt,
+        'created_at': conv.createdAt.toIso8601String(),
+        'updated_at': conv.updatedAt.toIso8601String(),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
 
       // 删除旧消息后重新插入
       await txn.delete('messages', where: 'conv_id = ?', whereArgs: [conv.id]);
@@ -114,7 +110,9 @@ class ConversationService {
         });
       }
     });
-    debugPrint('[ConversationService] 保存对话: id=${conv.id}, title=${conv.title}, messages=$msgCount');
+    debugPrint(
+      '[ConversationService] 保存对话: id=${conv.id}, title=${conv.title}, messages=$msgCount',
+    );
   }
 
   /// 获取所有对话列表（不含消息）
@@ -122,14 +120,18 @@ class ConversationService {
     final db = await database;
     final rows = await db.query('conversations', orderBy: 'updated_at DESC');
 
-    return rows.map((row) => Conversation(
-      id: row['id'] as String,
-      title: row['title'] as String,
-      config: LlmConfig.fromJson(jsonDecode(row['config'] as String)),
-      systemPrompt: row['system_prompt'] as String?,
-      createdAt: DateTime.parse(row['created_at'] as String),
-      updatedAt: DateTime.parse(row['updated_at'] as String),
-    )).toList();
+    return rows
+        .map(
+          (row) => Conversation(
+            id: row['id'] as String,
+            title: row['title'] as String,
+            config: LlmConfig.fromJson(jsonDecode(row['config'] as String)),
+            systemPrompt: row['system_prompt'] as String?,
+            createdAt: DateTime.parse(row['created_at'] as String),
+            updatedAt: DateTime.parse(row['updated_at'] as String),
+          ),
+        )
+        .toList();
   }
 
   /// 获取单个对话（含消息）
@@ -151,27 +153,35 @@ class ConversationService {
       orderBy: 'timestamp ASC',
     );
 
-    final messages = msgRows.map((row) => Message(
-      id: row['id'] as String,
-      role: MessageRole.values.firstWhere((r) => r.name == row['role']),
-      content: row['content'] as String,
-      thinking: row['thinking'] as String?,
-      mediaAttachments: row['media_attachments'] != null
-          ? (jsonDecode(row['media_attachments'] as String) as List)
-              .map((e) =>
-                  MediaAttachment.fromJson(e as Map<String, dynamic>))
-              .toList()
-          : null,
-      toolCalls: row['tool_calls'] != null
-          ? (jsonDecode(row['tool_calls'] as String) as List)
-              .map((e) => ToolCall.fromJson(e as Map<String, dynamic>))
-              .toList()
-          : null,
-      toolCallId: row['tool_call_id'] as String?,
-      status: MessageStatus.values.firstWhere((s) => s.name == row['status']),
-      errorMessage: row['error_message'] as String?,
-      timestamp: DateTime.parse(row['timestamp'] as String),
-    )).toList();
+    final messages = msgRows
+        .map(
+          (row) => Message(
+            id: row['id'] as String,
+            role: MessageRole.values.firstWhere((r) => r.name == row['role']),
+            content: row['content'] as String,
+            thinking: row['thinking'] as String?,
+            mediaAttachments: row['media_attachments'] != null
+                ? (jsonDecode(row['media_attachments'] as String) as List)
+                      .map(
+                        (e) =>
+                            MediaAttachment.fromJson(e as Map<String, dynamic>),
+                      )
+                      .toList()
+                : null,
+            toolCalls: row['tool_calls'] != null
+                ? (jsonDecode(row['tool_calls'] as String) as List)
+                      .map((e) => ToolCall.fromJson(e as Map<String, dynamic>))
+                      .toList()
+                : null,
+            toolCallId: row['tool_call_id'] as String?,
+            status: MessageStatus.values.firstWhere(
+              (s) => s.name == row['status'],
+            ),
+            errorMessage: row['error_message'] as String?,
+            timestamp: DateTime.parse(row['timestamp'] as String),
+          ),
+        )
+        .toList();
 
     final row = convRows.first;
     return Conversation(
@@ -205,7 +215,9 @@ class ConversationService {
   /// 获取对话数量
   Future<int> getConversationCount() async {
     final db = await database;
-    final result = await db.rawQuery('SELECT COUNT(*) as count FROM conversations');
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM conversations',
+    );
     return (result.first['count'] as int?) ?? 0;
   }
 }

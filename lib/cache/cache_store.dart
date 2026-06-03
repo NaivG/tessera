@@ -39,9 +39,7 @@ class CacheStore {
           )
         ''');
 
-        await db.execute(
-          'CREATE INDEX idx_ps_type ON prompt_sections(type)',
-        );
+        await db.execute('CREATE INDEX idx_ps_type ON prompt_sections(type)');
         await db.execute(
           'CREATE INDEX idx_ps_expires ON prompt_sections(expires_at)',
         );
@@ -93,9 +91,7 @@ class CacheStore {
   }
 
   /// 按类型获取所有分块（不含已过期）
-  Future<List<PromptSection>> getSectionsByType(
-    PromptSectionType type,
-  ) async {
+  Future<List<PromptSection>> getSectionsByType(PromptSectionType type) async {
     final db = await database;
     final now = DateTime.now().toIso8601String();
     final rows = await db.query(
@@ -227,8 +223,9 @@ class CacheStore {
       'created_at': section.createdAt.toIso8601String(),
       'expires_at': section.expiresAt?.toIso8601String(),
       'cache_hint': jsonEncode(section.cacheHint.toJson()),
-      'metadata':
-          section.metadata != null ? jsonEncode(section.metadata) : null,
+      'metadata': section.metadata != null
+          ? jsonEncode(section.metadata)
+          : null,
     };
   }
 

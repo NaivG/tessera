@@ -46,10 +46,14 @@ class MemoryForgetter {
       // conversational 类型不参与遗忘评分
       if (entry.type == MemoryType.conversational) continue;
 
-      final daysSinceCreated =
-          now.difference(entry.createdAt).inDays.clamp(0, 365000);
-      final daysSinceAccess =
-          now.difference(entry.lastAccessed).inDays.clamp(0, 365000);
+      final daysSinceCreated = now
+          .difference(entry.createdAt)
+          .inDays
+          .clamp(0, 365000);
+      final daysSinceAccess = now
+          .difference(entry.lastAccessed)
+          .inDays
+          .clamp(0, 365000);
 
       final timeDecay = exp(-lambda * daysSinceCreated);
       final accessDecay = exp(-mu * daysSinceAccess);
@@ -82,10 +86,14 @@ class MemoryForgetter {
     double mu = 0.05,
   }) {
     final now = DateTime.now();
-    final daysSinceCreated =
-        now.difference(entry.createdAt).inDays.clamp(0, 365000);
-    final daysSinceAccess =
-        now.difference(entry.lastAccessed).inDays.clamp(0, 365000);
+    final daysSinceCreated = now
+        .difference(entry.createdAt)
+        .inDays
+        .clamp(0, 365000);
+    final daysSinceAccess = now
+        .difference(entry.lastAccessed)
+        .inDays
+        .clamp(0, 365000);
 
     final timeDecay = exp(-lambda * daysSinceCreated);
     final accessDecay = exp(-mu * daysSinceAccess);

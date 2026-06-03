@@ -109,17 +109,14 @@ class PromptCacheHint {
   );
 
   /// 不缓存（每次请求重新计算）
-  static const none = PromptCacheHint(
-    cacheable: false,
-    clientCache: false,
-  );
+  static const none = PromptCacheHint(cacheable: false, clientCache: false);
 
   Map<String, dynamic> toJson() => {
-        'cacheable': cacheable,
-        'ttl_seconds': ttlSeconds,
-        'priority': priority,
-        'client_cache': clientCache,
-      };
+    'cacheable': cacheable,
+    'ttl_seconds': ttlSeconds,
+    'priority': priority,
+    'client_cache': clientCache,
+  };
 
   factory PromptCacheHint.fromJson(Map<String, dynamic> json) {
     return PromptCacheHint(
@@ -225,7 +222,9 @@ class PromptSection {
       id: json['id'] as String,
       type: promptSectionTypeFromName(json['type'] as String? ?? 'custom'),
       content: json['content'] as String,
-      contentHash: json['content_hash'] as String? ?? _computeHash(json['content'] as String),
+      contentHash:
+          json['content_hash'] as String? ??
+          _computeHash(json['content'] as String),
       createdAt: DateTime.parse(json['created_at'] as String),
       expiresAt: json['expires_at'] != null
           ? DateTime.parse(json['expires_at'] as String)
@@ -254,8 +253,7 @@ class PromptSection {
   // ── 辅助方法 ──
 
   /// 是否已过期
-  bool get isExpired =>
-      expiresAt != null && DateTime.now().isAfter(expiresAt!);
+  bool get isExpired => expiresAt != null && DateTime.now().isAfter(expiresAt!);
 
   /// 内容是否匹配给定哈希
   bool matchesHash(String hash) => contentHash == hash;
@@ -402,9 +400,7 @@ class PromptSectionCollection {
 
   /// 需要服务端缓存的分块（按优先级降序）
   List<PromptSection> get cacheableSections {
-    return sections
-        .where((s) => s.cacheHint.cacheable && !s.isExpired)
-        .toList()
+    return sections.where((s) => s.cacheHint.cacheable && !s.isExpired).toList()
       ..sort((a, b) => b.cacheHint.priority.compareTo(a.cacheHint.priority));
   }
 
@@ -462,6 +458,5 @@ class PromptSectionCollection {
   }
 
   @override
-  String toString() =>
-      'PromptSectionCollection(${sections.length} sections)';
+  String toString() => 'PromptSectionCollection(${sections.length} sections)';
 }

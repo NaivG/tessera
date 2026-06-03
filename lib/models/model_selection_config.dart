@@ -14,10 +14,7 @@ class ModelSlot {
   /// 模型实例 ID（ModelInfo.uid，UUID）
   final String modelUid;
 
-  const ModelSlot({
-    required this.providerConfigId,
-    required this.modelUid,
-  });
+  const ModelSlot({required this.providerConfigId, required this.modelUid});
 
   /// 构建可执行的 [LlmConfig]
   ///
@@ -112,10 +109,7 @@ class ModelSlot {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'pc': providerConfigId,
-        'mu': modelUid,
-      };
+  Map<String, dynamic> toJson() => {'pc': providerConfigId, 'mu': modelUid};
 
   @override
   bool operator ==(Object other) =>
@@ -127,8 +121,7 @@ class ModelSlot {
   int get hashCode => Object.hash(providerConfigId, modelUid);
 
   @override
-  String toString() =>
-      'ModelSlot(pc: $providerConfigId, mu: $modelUid)';
+  String toString() => 'ModelSlot(pc: $providerConfigId, mu: $modelUid)';
 }
 
 /// 模型选择配置

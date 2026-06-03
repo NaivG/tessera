@@ -56,8 +56,10 @@ class _SettingsPageState extends State<SettingsPage> {
               _SectionHeader('用户'),
               const SizedBox(height: 8),
               ListTile(
-                leading: Icon(Icons.person_outline,
-                    color: theme.colorScheme.primary),
+                leading: Icon(
+                  Icons.person_outline,
+                  color: theme.colorScheme.primary,
+                ),
                 title: const Text('用户档案'),
                 subtitle: Text(
                   state.userDisplayName.isNotEmpty
@@ -73,8 +75,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                tileColor: theme.colorScheme.surfaceContainerHighest
-                    .withValues(alpha: 0.5),
+                tileColor: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
                 onTap: () {
                   Navigator.of(context).pushNamed('/profile');
                 },
@@ -120,14 +123,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                tileColor: theme.colorScheme.surfaceContainerHighest
-                    .withValues(alpha: 0.5),
+                tileColor: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => ModelSelectionPage(
-                        settingsState: state,
-                      ),
+                      builder: (_) => ModelSelectionPage(settingsState: state),
                     ),
                   );
                 },
@@ -177,13 +179,13 @@ class _SettingsPageState extends State<SettingsPage> {
               const SizedBox(height: 8),
               SwitchListTile(
                 title: const Text('轻量模式'),
-                subtitle: const Text(
-                  '大幅缩减系统提示词，仅保留核心约束并不再限制安全指令，开启后跳过记忆加载。',
-                ),
+                subtitle: const Text('大幅缩减系统提示词，仅保留核心约束并不再限制安全指令，开启后跳过记忆加载。'),
                 value: state.lightweightSystemPrompt,
                 onChanged: (v) => state.setLightweightSystemPrompt(v),
-                secondary: Icon(Icons.compress_outlined,
-                    color: theme.colorScheme.primary),
+                secondary: Icon(
+                  Icons.compress_outlined,
+                  color: theme.colorScheme.primary,
+                ),
               ),
               const Divider(height: 8),
               _buildCustomPromptTile(theme, state),
@@ -196,10 +198,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   // ==================== 提供商卡片 ====================
 
-  Widget _buildProviderCard(
-    ThemeData theme,
-    LlmProviderConfig config,
-  ) {
+  Widget _buildProviderCard(ThemeData theme, LlmProviderConfig config) {
     final state = widget.settingsState;
     final providerId = config.id;
     final needsApiKey = LlmProviderConfig.formatNeedsApiKey(config.format);
@@ -269,21 +268,25 @@ class _SettingsPageState extends State<SettingsPage> {
             // 模型列表
             if (config.models.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text('模型 (${config.models.length}):', style: theme.textTheme.labelMedium),
+              Text(
+                '模型 (${config.models.length}):',
+                style: theme.textTheme.labelMedium,
+              ),
               const SizedBox(height: 4),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
-                  children: config.models.map((modelInfo) {
-                    return InputChip(
-                      label: Text(
-                        _modelChipLabel(modelInfo),
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      onDeleted: () => state.removeModel(providerId, modelInfo.uid),
-                      visualDensity: VisualDensity.compact,
-                    );
-                  }).toList(),
+                children: config.models.map((modelInfo) {
+                  return InputChip(
+                    label: Text(
+                      _modelChipLabel(modelInfo),
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    onDeleted: () =>
+                        state.removeModel(providerId, modelInfo.uid),
+                    visualDensity: VisualDensity.compact,
+                  );
+                }).toList(),
               ),
             ],
 
@@ -316,9 +319,11 @@ class _SettingsPageState extends State<SettingsPage> {
     final tagsStr = model.isOmni
         ? 'omni'
         : (model.tags.length == 1 && model.tags.first == ModelTag.text
-            ? ''
-            : model.tagsShortLabel);
-    final suffix = tagsStr.isNotEmpty ? ' [$typeStr · $tagsStr]' : ' [$typeStr]';
+              ? ''
+              : model.tagsShortLabel);
+    final suffix = tagsStr.isNotEmpty
+        ? ' [$typeStr · $tagsStr]'
+        : ' [$typeStr]';
     return '${model.id}$suffix';
   }
 
@@ -671,11 +676,10 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ),
       trailing: const Icon(Icons.chevron_right),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      tileColor: theme.colorScheme.surfaceContainerHighest.withValues(
+        alpha: 0.5,
       ),
-      tileColor: theme.colorScheme.surfaceContainerHighest
-          .withValues(alpha: 0.5),
       onTap: () => _showEditCustomPromptDialog(context),
     );
   }
@@ -699,8 +703,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 Text(
                   '在此输入的内容将注入到系统提示的 "用户自定义指令" 块中。留空则不注入。',
                   style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(ctx).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(

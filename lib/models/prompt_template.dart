@@ -51,9 +51,8 @@ class PromptTemplate {
       ),
       description: json['description'] as String? ?? '',
       template: json['template'] as String,
-      requiredVariables: (json['required_variables'] as List<dynamic>?)
-              ?.cast<String>() ??
-          [],
+      requiredVariables:
+          (json['required_variables'] as List<dynamic>?)?.cast<String>() ?? [],
     );
   }
 

@@ -37,7 +37,9 @@ class ChatState extends ChangeNotifier {
 
   // 记忆系统
   final MemoryState _memoryState = MemoryState();
-  final MemoryExtractor _memoryExtractor = MemoryExtractor(extractRoundCount: 5);
+  final MemoryExtractor _memoryExtractor = MemoryExtractor(
+    extractRoundCount: 5,
+  );
   late final ConversationalMemoryManager _convMemManager;
   String _memoryContextText = '';
   bool _memoryInitialized = false;
@@ -59,7 +61,8 @@ class ChatState extends ChangeNotifier {
   bool get isPreprocessing => _isPreprocessing;
   String get preprocessingTitle => _preprocessingTitle;
   String get preprocessingText => _preprocessingText;
-  Stream<String> get preprocessingStream => _preprocessingStreamController.stream;
+  Stream<String> get preprocessingStream =>
+      _preprocessingStreamController.stream;
   String? get error => _error;
   bool get hasConversation => _conversation != null;
 
@@ -233,7 +236,7 @@ class ChatState extends ChangeNotifier {
     try {
       adaptedContent = effectiveAttachments != null
           ? await (_adapter?.adaptInput(content, effectiveAttachments) ??
-              Future.value(content))
+                Future.value(content))
           : content;
     } finally {
       if (effectiveAttachments != null) {
@@ -303,30 +306,49 @@ class ChatState extends ChangeNotifier {
               final delta = chunk.contentDelta ?? '';
               accumulatedContent += delta;
               contentController.add(delta);
-              _updateAssistant(assistantId, content: accumulatedContent,
-                thinking: accumulatedThinking.isNotEmpty ? accumulatedThinking : null);
+              _updateAssistant(
+                assistantId,
+                content: accumulatedContent,
+                thinking: accumulatedThinking.isNotEmpty
+                    ? accumulatedThinking
+                    : null,
+              );
               break;
 
             case StreamChunkType.thinkingDelta:
               final delta = chunk.thinkingDelta ?? '';
               accumulatedThinking += delta;
               thinkingController.add(delta);
-              _updateAssistant(assistantId, content: accumulatedContent,
-                thinking: accumulatedThinking);
+              _updateAssistant(
+                assistantId,
+                content: accumulatedContent,
+                thinking: accumulatedThinking,
+              );
               break;
 
             case StreamChunkType.toolCall:
               if (chunk.toolCall != null) {
                 accumulatedToolCalls.add(chunk.toolCall!);
-                _updateAssistant(assistantId, content: accumulatedContent,
-                  thinking: accumulatedThinking.isNotEmpty ? accumulatedThinking : null,
-                  toolCalls: accumulatedToolCalls);
+                _updateAssistant(
+                  assistantId,
+                  content: accumulatedContent,
+                  thinking: accumulatedThinking.isNotEmpty
+                      ? accumulatedThinking
+                      : null,
+                  toolCalls: accumulatedToolCalls,
+                );
               }
               break;
 
             case StreamChunkType.done:
-              unawaited(_finishStreaming(assistantId, accumulatedContent,
-                accumulatedToolCalls, accumulatedThinking.isNotEmpty ? accumulatedThinking : null));
+              unawaited(
+                _finishStreaming(
+                  assistantId,
+                  accumulatedContent,
+                  accumulatedToolCalls,
+                  accumulatedThinking.isNotEmpty ? accumulatedThinking : null,
+                ),
+              );
               break;
 
             case StreamChunkType.error:
@@ -338,8 +360,14 @@ class ChatState extends ChangeNotifier {
           _setError('连接错误: $e', assistantId);
         },
         onDone: () {
-          unawaited(_finishStreaming(assistantId, accumulatedContent,
-            accumulatedToolCalls, accumulatedThinking.isNotEmpty ? accumulatedThinking : null));
+          unawaited(
+            _finishStreaming(
+              assistantId,
+              accumulatedContent,
+              accumulatedToolCalls,
+              accumulatedThinking.isNotEmpty ? accumulatedThinking : null,
+            ),
+          );
         },
       );
     } catch (e) {
@@ -354,7 +382,8 @@ class ChatState extends ChangeNotifier {
       final response = await provider.chat(
         config: _conversation!.config,
         history: _conversation!.messages.sublist(
-          0, _conversation!.messages.length - 1,
+          0,
+          _conversation!.messages.length - 1,
         ),
         systemPrompt: _conversation!.systemPrompt,
         tools: tools.isNotEmpty ? tools : null,
@@ -370,7 +399,11 @@ class ChatState extends ChangeNotifier {
       }
 
       if (toolCalls.isNotEmpty) {
-        await _handleToolCallsAndContinue(assistantId, toolCalls, streamEnabled: false);
+        await _handleToolCallsAndContinue(
+          assistantId,
+          toolCalls,
+          streamEnabled: false,
+        );
         return;
       }
 
@@ -384,7 +417,10 @@ class ChatState extends ChangeNotifier {
     }
   }
 
-  void _findAndUpdateMessage(String messageId, Message Function(Message old) transform) {
+  void _findAndUpdateMessage(
+    String messageId,
+    Message Function(Message old) transform,
+  ) {
     if (_conversation == null) return;
     final messages = _conversation!.messages;
     for (int i = messages.length - 1; i >= 0; i--) {
@@ -395,7 +431,12 @@ class ChatState extends ChangeNotifier {
     }
   }
 
-  void _updateAssistant(String assistantId, {String? content, String? thinking, List<ToolCall>? toolCalls}) {
+  void _updateAssistant(
+    String assistantId, {
+    String? content,
+    String? thinking,
+    List<ToolCall>? toolCalls,
+  }) {
     if (_conversation == null) return;
     final messages = _conversation!.messages;
     for (int i = messages.length - 1; i >= 0; i--) {
@@ -413,10 +454,15 @@ class ChatState extends ChangeNotifier {
   }
 
   Future<bool> _handleToolCallsAndContinue(
-    String assistantId, List<ToolCall> toolCalls, {bool streamEnabled = true}) async {
+    String assistantId,
+    List<ToolCall> toolCalls, {
+    bool streamEnabled = true,
+  }) async {
     if (toolCalls.isEmpty) return false;
 
-    debugPrint('[ChatState] _handleToolCallsAndContinue: count=${toolCalls.length}');
+    debugPrint(
+      '[ChatState] _handleToolCallsAndContinue: count=${toolCalls.length}',
+    );
 
     final results = await _toolRegistry.executeAll(toolCalls);
 
@@ -424,17 +470,22 @@ class ChatState extends ChangeNotifier {
     for (final result in results) {
       toolResults[result.toolCallId] = result.content;
     }
-    _findAndUpdateMessage(assistantId, (msg) => msg.copyWith(toolResults: toolResults));
+    _findAndUpdateMessage(
+      assistantId,
+      (msg) => msg.copyWith(toolResults: toolResults),
+    );
 
     for (final result in results) {
-      _conversation!.addMessage(Message(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
-        role: MessageRole.tool,
-        content: result.content,
-        toolCallId: result.toolCallId,
-        status: MessageStatus.completed,
-        timestamp: DateTime.now(),
-      ));
+      _conversation!.addMessage(
+        Message(
+          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          role: MessageRole.tool,
+          content: result.content,
+          toolCallId: result.toolCallId,
+          status: MessageStatus.completed,
+          timestamp: DateTime.now(),
+        ),
+      );
     }
     notifyListeners();
 
@@ -452,8 +503,11 @@ class ChatState extends ChangeNotifier {
   }
 
   Future<void> _finishStreaming(
-    String assistantId, String content, List<ToolCall> toolCalls,
-    [String? thinking]) async {
+    String assistantId,
+    String content,
+    List<ToolCall> toolCalls, [
+    String? thinking,
+  ]) async {
     if (_conversation == null) return;
 
     final messages = _conversation!.messages;
@@ -478,7 +532,11 @@ class ChatState extends ChangeNotifier {
     _activeThinkingStreams.remove(assistantId)?.close();
 
     if (toolCalls.isNotEmpty) {
-      await _handleToolCallsAndContinue(assistantId, toolCalls, streamEnabled: true);
+      await _handleToolCallsAndContinue(
+        assistantId,
+        toolCalls,
+        streamEnabled: true,
+      );
       return;
     }
 
@@ -515,22 +573,25 @@ class ChatState extends ChangeNotifier {
       final convConfig = _conversation!.config;
       final provider = ProviderFactory.get(convConfig.providerId);
       final srcMsgId = assistantMsg.id;
-      unawaited(_memoryExtractor.extract(
-        provider: provider,
-        config: convConfig,
-      ).then((extractions) {
-        if (extractions.isNotEmpty) {
-          _memoryExtractor.bufferExtractions(extractions);
-          if (_memoryExtractor.shouldFlush) {
-            unawaited(_memoryExtractor.flushToMemory(
-              memoryState: _memoryState,
-              conversationId: convId,
-              sourceMessageId: srcMsgId,
-            ));
+      unawaited(
+        _memoryExtractor.extract(provider: provider, config: convConfig).then((
+          extractions,
+        ) {
+          if (extractions.isNotEmpty) {
+            _memoryExtractor.bufferExtractions(extractions);
+            if (_memoryExtractor.shouldFlush) {
+              unawaited(
+                _memoryExtractor.flushToMemory(
+                  memoryState: _memoryState,
+                  conversationId: convId,
+                  sourceMessageId: srcMsgId,
+                ),
+              );
+            }
           }
-        }
-        _memoryExtractor.resetRoundCount();
-      }));
+          _memoryExtractor.resetRoundCount();
+        }),
+      );
     }
 
     if (_convMemManager.shouldSummarize) {
@@ -538,24 +599,30 @@ class ChatState extends ChangeNotifier {
       final convConfig = _conversation!.config;
       final provider = ProviderFactory.get(convConfig.providerId);
       final recentMessages = messages.sublist(
-        (messages.length - _convMemManager.turnsSinceLastSummary * 2)
-            .clamp(0, messages.length),
+        (messages.length - _convMemManager.turnsSinceLastSummary * 2).clamp(
+          0,
+          messages.length,
+        ),
       );
 
       if (_convMemManager.hasSummary) {
-        unawaited(_convMemManager.updateSummary(
-          provider: provider,
-          config: convConfig,
-          messages: recentMessages,
-          conversationId: convId,
-        ));
+        unawaited(
+          _convMemManager.updateSummary(
+            provider: provider,
+            config: convConfig,
+            messages: recentMessages,
+            conversationId: convId,
+          ),
+        );
       } else {
-        unawaited(_convMemManager.generateInitialSummary(
-          provider: provider,
-          config: convConfig,
-          messages: recentMessages,
-          conversationId: convId,
-        ));
+        unawaited(
+          _convMemManager.generateInitialSummary(
+            provider: provider,
+            config: convConfig,
+            messages: recentMessages,
+            conversationId: convId,
+          ),
+        );
       }
     }
   }
@@ -588,10 +655,14 @@ class ChatState extends ChangeNotifier {
     final messages = _conversation!.messages;
     if (messages.length < 2) return;
 
-    final lastAssistantIdx = messages.lastIndexWhere((m) => m.role == MessageRole.assistant);
+    final lastAssistantIdx = messages.lastIndexWhere(
+      (m) => m.role == MessageRole.assistant,
+    );
     if (lastAssistantIdx < 0) return;
 
-    final lastUserIdx = messages.lastIndexWhere((m) => m.role == MessageRole.user);
+    final lastUserIdx = messages.lastIndexWhere(
+      (m) => m.role == MessageRole.user,
+    );
     _conversation!.removeLastMessage();
     notifyListeners();
 
@@ -602,7 +673,10 @@ class ChatState extends ChangeNotifier {
   }
 
   Future<void> modifyAndResend(
-    String messageId, String newContent, {bool streamEnabled = true}) async {
+    String messageId,
+    String newContent, {
+    bool streamEnabled = true,
+  }) async {
     if (_conversation == null || _isStreaming) return;
 
     final messages = _conversation!.messages;
@@ -650,8 +724,9 @@ class ChatState extends ChangeNotifier {
               customPrompt: _settingsState?.userCustomPrompt,
             );
       for (final section in spSections.sections) {
-        final existingSection = _cacheManager.cached.sections
-            .where((s) => s.id == section.id);
+        final existingSection = _cacheManager.cached.sections.where(
+          (s) => s.id == section.id,
+        );
         if (existingSection.isNotEmpty &&
             !existingSection.first.isExpired &&
             existingSection.first.content == section.content) {
@@ -662,25 +737,35 @@ class ChatState extends ChangeNotifier {
       }
     } else if (_conversation?.systemPrompt != null &&
         _conversation!.systemPrompt!.isNotEmpty) {
-      sections.add(_cacheManager.buildPromptSection(
-        _conversation!.systemPrompt!, ttlSeconds: 300));
+      sections.add(
+        _cacheManager.buildPromptSection(
+          _conversation!.systemPrompt!,
+          ttlSeconds: 300,
+        ),
+      );
     }
 
     if (!isLightweight && _memoryContextText.isNotEmpty) {
-      sections.add(PromptSection.create(
-        id: 'system.block4.memory_context',
-        type: PromptSectionType.memory,
-        content: _memoryContextText,
-        cacheHint: PromptCacheHint(
-          cacheable: false, clientCache: true, priority: 10),
-      ));
+      sections.add(
+        PromptSection.create(
+          id: 'system.block4.memory_context',
+          type: PromptSectionType.memory,
+          content: _memoryContextText,
+          cacheHint: PromptCacheHint(
+            cacheable: false,
+            clientCache: true,
+            priority: 10,
+          ),
+        ),
+      );
     }
 
     final tools = _currentTools;
     if (tools.isNotEmpty) {
       final toolDefsMap = tools.map((t) => t.toOpenAiSchema()).toList();
-      sections.add(_cacheManager.buildToolSection(
-        toolDefsMap.toString(), ttlSeconds: 300));
+      sections.add(
+        _cacheManager.buildToolSection(toolDefsMap.toString(), ttlSeconds: 300),
+      );
     }
 
     return PromptSectionCollection(sections);
@@ -710,17 +795,25 @@ class ChatState extends ChangeNotifier {
   }
 
   void _closeAllStreams() {
-    for (final c in _activeStreams.values) { c.close(); }
+    for (final c in _activeStreams.values) {
+      c.close();
+    }
     _activeStreams.clear();
-    for (final c in _activeThinkingStreams.values) { c.close(); }
+    for (final c in _activeThinkingStreams.values) {
+      c.close();
+    }
     _activeThinkingStreams.clear();
   }
 
-  Future<void> _generateAndUpdateTopic(String userInput, LlmConfig config) async {
+  Future<void> _generateAndUpdateTopic(
+    String userInput,
+    LlmConfig config,
+  ) async {
     try {
       final provider = ProviderFactory.get(config.providerId);
-      final prompt = PromptTemplateStore.instance.render(
-        'topic_generation', {'user_input': userInput});
+      final prompt = PromptTemplateStore.instance.render('topic_generation', {
+        'user_input': userInput,
+      });
       final topicConfig = config.copyWith(maxTokens: 50);
       final response = await provider.chat(
         config: topicConfig,

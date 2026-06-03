@@ -15,6 +15,7 @@ final _log = Logger('main');
 /// 防抖——避免同一个错误被多条路径重复触发导航
 Object? _lastErrorIdentity;
 StackTrace? _lastStackIdentity;
+
 /// 正在处理中的标志，避免在导航过程中重复触发
 bool _isRoutingToErrorPage = false;
 
@@ -104,7 +105,6 @@ void main() {
 //       runApp(const TesseraApp());
 // }
 
-
 // -----------------------------------------------------------------------------
 // 全局错误处理核心
 // -----------------------------------------------------------------------------
@@ -146,10 +146,7 @@ void _navigateToErrorPage() {
       return;
     }
     try {
-      navigator.pushNamedAndRemoveUntil(
-        ErrorPage.routeName,
-        (_) => false,
-      );
+      navigator.pushNamedAndRemoveUntil(ErrorPage.routeName, (_) => false);
     } catch (e) {
       _log.error('导航到错误页失败: ', e);
     }

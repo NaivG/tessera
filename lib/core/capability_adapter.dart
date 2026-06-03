@@ -115,7 +115,8 @@ class CapabilityAdapter {
       },
       'object': {
         'type': 'string',
-        'description': 'Reference to the image or video ([object key]/filename/URL/data URI)',
+        'description':
+            'Reference to the image or video ([object key]/filename/URL/data URI)',
         'required': true,
       },
       'question': {
@@ -149,12 +150,15 @@ class CapabilityAdapter {
     final object = call.arguments['object'] as String? ?? '';
     final mediaType = call.arguments['type'] as String? ?? 'image';
 
-    debugPrint('[CapabilityAdapter] _executeVision: object="$object", question="$question", type="$mediaType"');
+    debugPrint(
+      '[CapabilityAdapter] _executeVision: object="$object", question="$question", type="$mediaType"',
+    );
 
     if (object.isEmpty) {
       return ToolResult(
         toolCallId: call.id,
-        content: 'vision tool called without an object parameter. '
+        content:
+            'vision tool called without an object parameter. '
             'Arguments received: ${call.arguments}. ',
         isError: true,
       );
@@ -166,7 +170,8 @@ class CapabilityAdapter {
     if (attachment == null) {
       return ToolResult(
         toolCallId: call.id,
-        content: 'Media object not found: "$object". '
+        content:
+            'Media object not found: "$object". '
             'MediaLibrary has ${MediaLibrary.instance.entries.length} entries: '
             '${MediaLibrary.instance.entries.map((e) => e.attachment.fileName).toList()}. '
             'Make sure the object name matches a filename in your library.',
@@ -192,10 +197,7 @@ class CapabilityAdapter {
           ),
         ],
       );
-      return ToolResult(
-        toolCallId: call.id,
-        content: response.content,
-      );
+      return ToolResult(toolCallId: call.id, content: response.content);
     } catch (e) {
       return ToolResult(
         toolCallId: call.id,
@@ -215,7 +217,8 @@ class CapabilityAdapter {
     parameters: {
       'object': {
         'type': 'string',
-        'description': 'Reference to the audio ([object key]/filename/URL/data URI)',
+        'description':
+            'Reference to the audio ([object key]/filename/URL/data URI)',
         'required': true,
       },
       'question': {
@@ -248,12 +251,15 @@ class CapabilityAdapter {
     final question = call.arguments['question'] as String? ?? '';
     final object = call.arguments['object'] as String? ?? '';
 
-    debugPrint('[CapabilityAdapter] _executeAudible: object="$object", question="$question"');
+    debugPrint(
+      '[CapabilityAdapter] _executeAudible: object="$object", question="$question"',
+    );
 
     if (object.isEmpty) {
       return ToolResult(
         toolCallId: call.id,
-        content: 'audible tool called without an object parameter. '
+        content:
+            'audible tool called without an object parameter. '
             'Arguments received: ${call.arguments}. ',
         isError: true,
       );
@@ -264,7 +270,8 @@ class CapabilityAdapter {
     if (attachment == null) {
       return ToolResult(
         toolCallId: call.id,
-        content: 'Media object not found: "$object". '
+        content:
+            'Media object not found: "$object". '
             'MediaLibrary has ${MediaLibrary.instance.entries.length} entries: '
             '${MediaLibrary.instance.entries.map((e) => e.attachment.fileName).toList()}.',
         isError: true,
@@ -289,10 +296,7 @@ class CapabilityAdapter {
           ),
         ],
       );
-      return ToolResult(
-        toolCallId: call.id,
-        content: response.content,
-      );
+      return ToolResult(toolCallId: call.id, content: response.content);
     } catch (e) {
       return ToolResult(
         toolCallId: call.id,
@@ -414,9 +418,7 @@ class CapabilityAdapter {
       final provider = _providerFactory(llmConfig.providerId);
       final response = await provider.chat(
         config: llmConfig,
-        history: [
-          Message.user('Convert the following text to speech: $text'),
-        ],
+        history: [Message.user('Convert the following text to speech: $text')],
       );
       return ToolResult(
         toolCallId: call.id,
@@ -465,7 +467,9 @@ class CapabilityAdapter {
     // 3. URL / data URI 下载并导入
     if (object.startsWith('http://') || object.startsWith('https://')) {
       try {
-        final response = await http.get(Uri.parse(object)).timeout(const Duration(seconds: 10));
+        final response = await http
+            .get(Uri.parse(object))
+            .timeout(const Duration(seconds: 10));
         if (response.statusCode == 200) {
           final bytes = response.bodyBytes;
           final uri = Uri.parse(object);
@@ -503,7 +507,9 @@ class CapabilityAdapter {
     List<MediaAttachment> attachments,
   ) async {
     if (attachments.isEmpty) return userMessage;
-    debugPrint('[Adapter] Adapting input with ${attachments.length} attachments for main model "${config.mainModel}"');
+    debugPrint(
+      '[Adapter] Adapting input with ${attachments.length} attachments for main model "${config.mainModel}"',
+    );
 
     final mainModelInfo = config.mainModel.getModelInfo(state);
     final mainTags = mainModelInfo?.tags ?? [ModelTag.text];
@@ -512,8 +518,7 @@ class CapabilityAdapter {
 
     for (final attachment in attachments) {
       final tag = _tagForMediaType(attachment.type);
-      final supportedByMain =
-          tag == null || mainTags.contains(tag);
+      final supportedByMain = tag == null || mainTags.contains(tag);
 
       if (supportedByMain) {
         // 主模型支持该模态：附件由 provider 直接加入 API 请求，
@@ -533,7 +538,8 @@ class CapabilityAdapter {
         formatMediaPlaceholder(
           type: typeName,
           name: attachment.fileName,
-          description: description ??
+          description:
+              description ??
               '[File: object: ${attachment.fileName}, type: ${attachment.type}, description: an error was encountered while trying to get description]',
           toolName: tag == ModelTag.vision ? 'vision' : 'audible',
         ),
@@ -578,9 +584,9 @@ class CapabilityAdapter {
     final filePath = MediaLibrary.instance.filePathFor(attachment.libraryId);
     final prompt = tag == ModelTag.vision
         ? 'Describe this ${attachment.type.name} ("${attachment.fileName}") '
-            'in general. What is it mainly shown? No more than 300 words. DO NOT distort the facts; just state what you see.'
+              'in general. What is it mainly shown? No more than 300 words. DO NOT distort the facts; just state what you see.'
         : 'Transcribe or describe this audio file ("${attachment.fileName}") '
-            'in general. What is being said or heard? DO NOT distort the facts; just state what you heard.';
+              'in general. What is being said or heard? DO NOT distort the facts; just state what you heard.';
 
     try {
       final provider = _providerFactory(llmConfig.providerId);
@@ -592,9 +598,7 @@ class CapabilityAdapter {
             id: DateTime.now().microsecondsSinceEpoch.toString(),
             role: MessageRole.user,
             content: prompt,
-            mediaAttachments: filePath != null
-                ? [attachment.copyWith()]
-                : null,
+            mediaAttachments: filePath != null ? [attachment.copyWith()] : null,
             timestamp: DateTime.now(),
           ),
         ],

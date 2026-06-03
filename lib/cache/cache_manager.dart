@@ -48,7 +48,8 @@ class CacheManager {
   PromptSectionCollection get lastCollection => _lastCollection;
 
   /// 获取已缓存的持久化分块
-  PromptSectionCollection get cached => _cached ?? PromptSectionCollection.empty;
+  PromptSectionCollection get cached =>
+      _cached ?? PromptSectionCollection.empty;
 
   // ═══════════════════════════════════════════════════════
   // 初始化
@@ -65,9 +66,7 @@ class CacheManager {
     unawaited(_store.purgeExpired());
 
     _initialized = true;
-    debugPrint(
-      '[CacheManager] 初始化完成：${sections.length} 个有效分块',
-    );
+    debugPrint('[CacheManager] 初始化完成：${sections.length} 个有效分块');
   }
 
   // ═══════════════════════════════════════════════════════
@@ -88,8 +87,7 @@ class CacheManager {
     // 如果内容未变且未过期，直接复用
     if (cachedSection != null && cachedSection.isNotEmpty) {
       final cached = cachedSection.first;
-      if (!cached.isExpired &&
-          cached.content == systemPrompt) {
+      if (!cached.isExpired && cached.content == systemPrompt) {
         return cached;
       }
     }
@@ -172,9 +170,7 @@ class CacheManager {
       id: id ?? 'history_${_uuid.v4().substring(0, 8)}',
       type: PromptSectionType.history,
       content: historyText,
-      cacheHint: cacheable
-          ? PromptCacheHint.standard
-          : PromptCacheHint.none,
+      cacheHint: cacheable ? PromptCacheHint.standard : PromptCacheHint.none,
       ttlSeconds: ttlSeconds,
     );
   }
@@ -205,20 +201,17 @@ class CacheManager {
     await _store.saveSections(toPersist);
 
     // 更新内存缓存
-    _cached = _cached?.merge(PromptSectionCollection(toPersist)) ??
+    _cached =
+        _cached?.merge(PromptSectionCollection(toPersist)) ??
         PromptSectionCollection(toPersist);
 
-    debugPrint(
-      '[CacheManager] 持久化 ${toPersist.length} 个分块',
-    );
+    debugPrint('[CacheManager] 持久化 ${toPersist.length} 个分块');
   }
 
   /// 恢复持久化的分块（已从缓存加载可以复用的内容）
   Future<PromptSectionCollection> restoreCached() async {
     final sections = await _store.getClientCacheable();
-    debugPrint(
-      '[CacheManager] 从持久化恢复 ${sections.length} 个客户端缓存分块',
-    );
+    debugPrint('[CacheManager] 从持久化恢复 ${sections.length} 个客户端缓存分块');
     return PromptSectionCollection(sections);
   }
 
@@ -241,9 +234,7 @@ class CacheManager {
   ///
   /// 返回一个 Map，key 为分块 ID，value 为是否需要服务端缓存。
   /// 当分块内容未变化时，value 为 true（表示可命中缓存）。
-  Map<String, PromptCacheHint> getCacheHints(
-    PromptSectionCollection current,
-  ) {
+  Map<String, PromptCacheHint> getCacheHints(PromptSectionCollection current) {
     final hints = <String, PromptCacheHint>{};
 
     for (final s in current.sections) {

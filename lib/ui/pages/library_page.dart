@@ -180,7 +180,9 @@ class _LibraryGridItem extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+        side: BorderSide(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
       child: Stack(
         children: [
@@ -234,11 +236,7 @@ class _LibraryGridItem extends StatelessWidget {
                 onTap: onDelete,
                 child: Padding(
                   padding: const EdgeInsets.all(4),
-                  child: Icon(
-                    Icons.close,
-                    size: 14,
-                    color: colorScheme.error,
-                  ),
+                  child: Icon(Icons.close, size: 14, color: colorScheme.error),
                 ),
               ),
             ),
@@ -278,9 +276,7 @@ class _LibraryGridItem extends StatelessWidget {
       color = colorScheme.outline;
     }
 
-    return Center(
-      child: Icon(icon, size: 40, color: color),
-    );
+    return Center(child: Icon(icon, size: 40, color: color));
   }
 
   String _buildInfoText(MediaAttachment att) {

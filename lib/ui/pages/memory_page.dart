@@ -49,16 +49,12 @@ class _MemoryPageState extends State<MemoryPage> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('记忆'),
-      ),
+      appBar: AppBar(title: const Text('记忆')),
       body: _loading
-          ? Center(
-              child: CircularProgressIndicator(color: colorScheme.primary),
-            )
+          ? Center(child: CircularProgressIndicator(color: colorScheme.primary))
           : _entries.isEmpty
-              ? _buildEmptyState(theme)
-              : _buildMemoryList(theme, colorScheme),
+          ? _buildEmptyState(theme)
+          : _buildMemoryList(theme, colorScheme),
     );
   }
 
@@ -166,9 +162,7 @@ class _MemoryCard extends StatelessWidget {
               // 内容
               Text(
                 entry.content,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  height: 1.5,
-                ),
+                style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
               ),
               const SizedBox(height: 8),
               // 时间

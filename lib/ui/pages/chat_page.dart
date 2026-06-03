@@ -92,10 +92,7 @@ class _ChatPageState extends State<ChatPage> {
                 ),
             ],
           ),
-          body: ChatContentView(
-            chatState: _chatState,
-            onSend: _handleSend,
-          ),
+          body: ChatContentView(chatState: _chatState, onSend: _handleSend),
         );
       },
     );

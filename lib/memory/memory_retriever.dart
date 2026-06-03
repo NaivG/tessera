@@ -117,21 +117,24 @@ class MemoryRetriever {
       final simSimilarity = 1.0 - (distance / SimHash.dimensions);
 
       // recency：一周半衰期
-      final hoursSinceAccess =
-          now.difference(entry.lastAccessed).inHours.clamp(0, 8760);
+      final hoursSinceAccess = now
+          .difference(entry.lastAccessed)
+          .inHours
+          .clamp(0, 8760);
       final recency = 1.0 / (1.0 + hoursSinceAccess / 168.0);
 
-      final score = alpha * simSimilarity +
-          beta * entry.importance +
-          gamma * recency;
+      final score =
+          alpha * simSimilarity + beta * entry.importance + gamma * recency;
 
-      scored.add(ScoredMemory(
-        entry: entry,
-        score: score,
-        simSimilarity: simSimilarity,
-        importance: entry.importance,
-        recency: recency,
-      ));
+      scored.add(
+        ScoredMemory(
+          entry: entry,
+          score: score,
+          simSimilarity: simSimilarity,
+          importance: entry.importance,
+          recency: recency,
+        ),
+      );
     }
 
     // 按评分降序排序，取 Top-K

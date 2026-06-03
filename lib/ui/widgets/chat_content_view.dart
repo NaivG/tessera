@@ -98,7 +98,10 @@ class _ChatContentViewState extends State<ChatContentView> {
             // 预处理指示器 — 附件分析中
             if (widget.chatState.isPreprocessing)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 child: ProcessingBlock(
                   icon: Icons.analytics,
                   inProgressTitle: widget.chatState.preprocessingTitle,
@@ -112,7 +115,8 @@ class _ChatContentViewState extends State<ChatContentView> {
               ),
             // 输入栏
             MessageInput(
-              enabled: !widget.chatState.isStreaming &&
+              enabled:
+                  !widget.chatState.isStreaming &&
                   !widget.chatState.isPreprocessing,
               onSend: widget.onSend,
             ),

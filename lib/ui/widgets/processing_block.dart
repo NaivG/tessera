@@ -109,15 +109,13 @@ class _ProcessingBlockState extends State<ProcessingBlock>
   void _subscribeToStream() {
     _streamSubscription?.cancel();
     if (widget.contentStream != null && widget.isProcessing) {
-      _streamSubscription = widget.contentStream!.listen(
-        (delta) {
-          if (!mounted) return;
-          setState(() {
-            _accumulatedContent += delta;
-          });
-          _scrollToBottom();
-        },
-      );
+      _streamSubscription = widget.contentStream!.listen((delta) {
+        if (!mounted) return;
+        setState(() {
+          _accumulatedContent += delta;
+        });
+        _scrollToBottom();
+      });
     }
   }
 
@@ -152,8 +150,9 @@ class _ProcessingBlockState extends State<ProcessingBlock>
       return const SizedBox.shrink();
     }
 
-    final effectiveTitle =
-        widget.isProcessing ? widget.inProgressTitle : widget.completedTitle;
+    final effectiveTitle = widget.isProcessing
+        ? widget.inProgressTitle
+        : widget.completedTitle;
 
     final headerColor = widget.isProcessing
         ? theme.colorScheme.tertiary
@@ -168,8 +167,9 @@ class _ProcessingBlockState extends State<ProcessingBlock>
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeInOut,
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest
-                .withValues(alpha: 0.55),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.55,
+            ),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(

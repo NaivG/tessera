@@ -44,9 +44,9 @@ class SystemPromptBuilder {
     required String block1Content,
     required String block2Template,
     required String block3Template,
-  })  : _block1Content = block1Content,
-        _block2Template = block2Template,
-        _block3Template = block3Template;
+  }) : _block1Content = block1Content,
+       _block2Template = block2Template,
+       _block3Template = block3Template;
 
   // ── 静态工厂：从 asset 加载 ──
 
@@ -71,10 +71,7 @@ class SystemPromptBuilder {
   /// - Block 3 用 ` ``` ```prompt ````
   static List<String> _parseBlocks(String raw) {
     final regex = RegExp(r'```[^\n]*\n(.*?)```', dotAll: true);
-    return regex
-        .allMatches(raw)
-        .map((m) => m.group(1)!.trim())
-        .toList();
+    return regex.allMatches(raw).map((m) => m.group(1)!.trim()).toList();
   }
 
   // ── 分块构建 ──
@@ -110,8 +107,10 @@ class SystemPromptBuilder {
         .replaceAll('{user_role}', role ?? '')
         .replaceAll('{user_preferences}', preferences ?? '')
         .replaceAll('{user_facts}', facts ?? '')
-        .replaceAll('{user_long_term_memory_summary}',
-            longTermMemorySummary ?? '');
+        .replaceAll(
+          '{user_long_term_memory_summary}',
+          longTermMemorySummary ?? '',
+        );
 
     return PromptSection.create(
       id: 'system.block2.user_profile',
@@ -170,7 +169,9 @@ class SystemPromptBuilder {
       ),
       buildUserDefinedSection(customPrompt: customPrompt),
     ];
-    debugPrint('[SystemPromptBuilder] successfully built system prompt: ${sections.fold(0, (sum, section) => sum + section.content.length)} chars');
+    debugPrint(
+      '[SystemPromptBuilder] successfully built system prompt: ${sections.fold(0, (sum, section) => sum + section.content.length)} chars',
+    );
     return PromptSectionCollection(sections);
   }
 
@@ -207,7 +208,7 @@ class SystemPromptBuilder {
   ///
   /// 相比完整的三块系统提示，仅保留最核心的行为约束，
   /// 大幅缩减 token 消耗，适合不需要复杂人格设定的场景。
-  /// 
+  ///
   /// 或者不需要SFW的场景？
   static const String _lightweightCorePrompt = '''
 You are Tessera, a helpful assistant designed by NaivG.
@@ -226,9 +227,7 @@ You are Tessera, a helpful assistant designed by NaivG.
   /// 2. 用户自定义提示词（仅当非空时）
   ///
   /// 不含用户档案、长时记忆等模块。
-  PromptSectionCollection buildLightweightSystemPrompt({
-    String? customPrompt,
-  }) {
+  PromptSectionCollection buildLightweightSystemPrompt({String? customPrompt}) {
     final sections = <PromptSection>[
       PromptSection.create(
         id: 'system.lightweight.core',
@@ -243,7 +242,8 @@ You are Tessera, a helpful assistant designed by NaivG.
         PromptSection.create(
           id: 'system.lightweight.custom',
           type: PromptSectionType.prompt,
-          content: '''
+          content:
+              '''
           ## User Instructions
           
           Follow the user's instructions concisely and accurately.
@@ -256,7 +256,9 @@ You are Tessera, a helpful assistant designed by NaivG.
         ),
       );
     }
-    debugPrint('[SystemPromptBuilder] successfully built system prompt: ${sections.fold(0, (sum, section) => sum + section.content.length)} chars (lightweight mode)');
+    debugPrint(
+      '[SystemPromptBuilder] successfully built system prompt: ${sections.fold(0, (sum, section) => sum + section.content.length)} chars (lightweight mode)',
+    );
     return PromptSectionCollection(sections);
   }
 

@@ -85,7 +85,7 @@ class ChatBubble extends StatelessWidget {
                   // 思考过程（仅 assistant 消息）
                   if (message.role == MessageRole.assistant &&
                       (message.thinking != null &&
-                          message.thinking!.isNotEmpty ||
+                              message.thinking!.isNotEmpty ||
                           thinkingStream != null))
                     ProcessingBlock(
                       icon: Icons.psychology,
@@ -99,9 +99,7 @@ class ChatBubble extends StatelessWidget {
                   // 媒体附件封面
                   if (message.mediaAttachments != null &&
                       message.mediaAttachments!.isNotEmpty)
-                    _MediaCoverGrid(
-                      attachments: message.mediaAttachments!,
-                    ),
+                    _MediaCoverGrid(attachments: message.mediaAttachments!),
 
                   // 消息内容
                   if (isStreaming && contentStream != null)
@@ -124,26 +122,24 @@ class ChatBubble extends StatelessWidget {
                   else
                     const SizedBox.shrink(),
 
-                   // 工具调用 — 复用 ProcessingBlock 保持 UI 一致性
-                   if (message.toolCalls != null &&
-                       message.toolCalls!.isNotEmpty)
-                     ...message.toolCalls!.map(
-                       (tc) {
-                         final argsText = _formatToolArguments(tc.arguments);
-                         final resultText = message.toolResults?[tc.id];
-                         final content = resultText != null
-                             ? '$argsText\n\n── 结果 ──\n$resultText'
-                             : argsText;
-                         return ProcessingBlock(
-                           icon: Icons.terminal,
-                           inProgressTitle: '调用工具...',
-                           completedTitle: tc.name,
-                           isProcessing: false,
-                           content: content,
-                           initiallyExpanded: resultText != null,
-                         );
-                       },
-                     ),
+                  // 工具调用 — 复用 ProcessingBlock 保持 UI 一致性
+                  if (message.toolCalls != null &&
+                      message.toolCalls!.isNotEmpty)
+                    ...message.toolCalls!.map((tc) {
+                      final argsText = _formatToolArguments(tc.arguments);
+                      final resultText = message.toolResults?[tc.id];
+                      final content = resultText != null
+                          ? '$argsText\n\n── 结果 ──\n$resultText'
+                          : argsText;
+                      return ProcessingBlock(
+                        icon: Icons.terminal,
+                        inProgressTitle: '调用工具...',
+                        completedTitle: tc.name,
+                        isProcessing: false,
+                        content: content,
+                        initiallyExpanded: resultText != null,
+                      );
+                    }),
 
                   // 错误信息
                   if (message.status == MessageStatus.error &&
@@ -360,8 +356,11 @@ class _ImageCover extends StatelessWidget {
                 Image.file(
                   File(filePath!),
                   fit: BoxFit.cover,
-                  errorBuilder: (_, err, stack) =>
-                      Icon(Icons.image, size: 40, color: theme.colorScheme.outline),
+                  errorBuilder: (_, err, stack) => Icon(
+                    Icons.image,
+                    size: 40,
+                    color: theme.colorScheme.outline,
+                  ),
                 )
               else
                 Icon(Icons.image, size: 40, color: theme.colorScheme.outline),
@@ -371,7 +370,10 @@ class _ImageCover extends StatelessWidget {
                 left: 0,
                 right: 0,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 3,
+                  ),
                   color: Colors.black54,
                   child: Text(
                     attachment.fileName,
@@ -400,9 +402,7 @@ class _ImageCover extends StatelessWidget {
             iconTheme: const IconThemeData(color: Colors.white),
           ),
           body: Center(
-            child: InteractiveViewer(
-              child: Image.file(File(filePath!)),
-            ),
+            child: InteractiveViewer(child: Image.file(File(filePath!))),
           ),
         ),
       ),
@@ -430,7 +430,11 @@ class _VideoCover extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.play_circle_fill, size: 40, color: theme.colorScheme.primary),
+          Icon(
+            Icons.play_circle_fill,
+            size: 40,
+            color: theme.colorScheme.primary,
+          ),
           const SizedBox(height: 6),
           Text(
             attachment.fileName,
@@ -521,7 +525,11 @@ class _FileCover extends StatelessWidget {
       child: Row(
         children: [
           const SizedBox(width: 12),
-          Icon(Icons.insert_drive_file, size: 28, color: theme.colorScheme.outline),
+          Icon(
+            Icons.insert_drive_file,
+            size: 28,
+            color: theme.colorScheme.outline,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(

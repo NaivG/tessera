@@ -8,11 +8,7 @@ import 'package:restart_app/restart_app.dart';
 ///
 /// 清空导航栈后显示该页面，防止用户回到已损坏的页面树。
 class ErrorPage extends StatelessWidget {
-  const ErrorPage({
-    super.key,
-    required this.error,
-    required this.stackTrace,
-  });
+  const ErrorPage({super.key, required this.error, required this.stackTrace});
 
   /// 异常对象（可为 String / Error / Exception）
   final Object error;
@@ -49,7 +45,9 @@ class ErrorPage extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF1A1A2E) : const Color(0xFFF5F5F5),
+      backgroundColor: isDark
+          ? const Color(0xFF1A1A2E)
+          : const Color(0xFFF5F5F5),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -83,10 +81,7 @@ class ErrorPage extends StatelessWidget {
               // 错误类型
               _SectionCard(
                 title: '错误类型',
-                child: Text(
-                  '${error.runtimeType}',
-                  style: _monoStyle(context),
-                ),
+                child: Text('${error.runtimeType}', style: _monoStyle(context)),
               ),
               const SizedBox(height: 12),
               // 错误信息
@@ -171,14 +166,16 @@ class ErrorPage extends StatelessWidget {
     final buffer = StringBuffer();
     buffer.writeln('Error Type: ${error.runtimeType}');
     buffer.writeln('Error: ${_formatError(error)}');
-    buffer.writeln('Platform: ${Platform.operatingSystem} ${Platform.operatingSystemVersion}');
+    buffer.writeln(
+      'Platform: ${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
+    );
     buffer.writeln('\nStack Trace:');
     buffer.writeln(_formatStack(stackTrace));
 
     Clipboard.setData(ClipboardData(text: buffer.toString()));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('错误信息已复制到剪贴板')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('错误信息已复制到剪贴板')));
   }
 
   Future<void> _restartApp(BuildContext context) async {
@@ -187,9 +184,7 @@ class ErrorPage extends StatelessWidget {
     try {
       await Restart.restartApp(mode: RestartMode.process);
     } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('重启失败: $e')),
-      );
+      messenger.showSnackBar(SnackBar(content: Text('重启失败: $e')));
     }
   }
 

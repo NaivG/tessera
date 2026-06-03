@@ -44,9 +44,7 @@ class PromptTemplateStore {
   /// 获取指定类别的所有模板
   List<PromptTemplate> getByCategory(PromptCategory category) {
     _ensureInitialized();
-    return _templates.values
-        .where((t) => t.category == category)
-        .toList();
+    return _templates.values.where((t) => t.category == category).toList();
   }
 
   /// 获取所有已注册模板
@@ -103,10 +101,7 @@ class PromptTemplateStore {
 
     String result = template.template;
     for (final variable in template.requiredVariables) {
-      result = result.replaceAll(
-        '{{$variable}}',
-        variables[variable] ?? '',
-      );
+      result = result.replaceAll('{{$variable}}', variables[variable] ?? '');
     }
 
     return result;

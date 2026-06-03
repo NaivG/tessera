@@ -80,9 +80,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
       );
       setState(() => _hasChanges = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('用户档案已保存')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('用户档案已保存')));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -115,7 +115,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final state = widget.settingsState;
-    final hasAnyContent = state.userDisplayName.isNotEmpty ||
+    final hasAnyContent =
+        state.userDisplayName.isNotEmpty ||
         state.userAlias.isNotEmpty ||
         state.userRole.isNotEmpty ||
         state.userPreferences.isNotEmpty ||
@@ -157,8 +158,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline,
-                        color: theme.colorScheme.onPrimaryContainer),
+                    Icon(
+                      Icons.info_outline,
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -301,7 +304,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.6,
+                  ),
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -334,8 +339,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child:
-                Text('清除', style: TextStyle(color: theme.colorScheme.error)),
+            child: Text('清除', style: TextStyle(color: theme.colorScheme.error)),
           ),
         ],
       ),
@@ -362,10 +366,9 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: Theme.of(context)
-          .textTheme
-          .titleSmall
-          ?.copyWith(fontWeight: FontWeight.bold),
+      style: Theme.of(
+        context,
+      ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
     );
   }
 }

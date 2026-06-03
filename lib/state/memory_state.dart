@@ -28,7 +28,8 @@ class MemoryState extends ChangeNotifier {
 
   /// 最近一次检索结果
   List<ScoredMemory> _lastSearchResults = [];
-  List<ScoredMemory> get lastSearchResults => List.unmodifiable(_lastSearchResults);
+  List<ScoredMemory> get lastSearchResults =>
+      List.unmodifiable(_lastSearchResults);
 
   /// 记忆总数
   int _totalEntries = 0;
@@ -48,7 +49,7 @@ class MemoryState extends ChangeNotifier {
   bool get isInitialized => _initialized;
 
   MemoryState({MemoryService? service})
-      : _service = service ?? MemoryService() {
+    : _service = service ?? MemoryService() {
     _retriever = MemoryRetriever(service: _service);
   }
 
@@ -106,21 +107,28 @@ class MemoryState extends ChangeNotifier {
 
     // 按 importance × recency 排序
     candidates.sort((a, b) {
-      final scoreA = a.importance *
+      final scoreA =
+          a.importance *
           (1.0 / (1.0 + now.difference(a.lastAccessed).inHours / 168.0));
-      final scoreB = b.importance *
+      final scoreB =
+          b.importance *
           (1.0 / (1.0 + now.difference(b.lastAccessed).inHours / 168.0));
       return scoreB.compareTo(scoreA);
     });
 
-    return candidates.take(limit).map((e) => ScoredMemory(
-      entry: e,
-      score: e.importance,
-      simSimilarity: 0,
-      importance: e.importance,
-      recency: 1.0 /
-          (1.0 + now.difference(e.lastAccessed).inHours / 168.0),
-    )).toList();
+    return candidates
+        .take(limit)
+        .map(
+          (e) => ScoredMemory(
+            entry: e,
+            score: e.importance,
+            simSimilarity: 0,
+            importance: e.importance,
+            recency:
+                1.0 / (1.0 + now.difference(e.lastAccessed).inHours / 168.0),
+          ),
+        )
+        .toList();
   }
 
   // ── 记忆写入 ──
@@ -141,14 +149,18 @@ class MemoryState extends ChangeNotifier {
       final hash = SimHash.compute(extraction.content);
 
       // 去重：查找桶内最相似记忆
-      final (closest, distance) = await _retriever.findClosest(extraction.content);
+      final (closest, distance) = await _retriever.findClosest(
+        extraction.content,
+      );
 
       if (closest != null && distance <= 8) {
         // 同一记忆：提升 confidence，更新时间
         final updated = closest.copyWith(
           confidence: (closest.confidence * 0.7 + 0.3).clamp(0.0, 1.0),
-          importance: ((closest.importance + extraction.importance) / 2)
-              .clamp(0.0, 1.0),
+          importance: ((closest.importance + extraction.importance) / 2).clamp(
+            0.0,
+            1.0,
+          ),
           updatedAt: DateTime.now(),
         );
         await _service.updateEntry(updated);
@@ -164,13 +176,15 @@ class MemoryState extends ChangeNotifier {
           sourceMessageId: sourceMessageId,
         );
         await _service.insertEntry(entry);
-        await _service.insertRelation(MemoryRelation.create(
-          id: _uuid.v4(),
-          sourceId: entry.id,
-          targetId: closest.id,
-          relationType: MemoryRelation.supports,
-          weight: 1.0 - distance / 16.0,
-        ));
+        await _service.insertRelation(
+          MemoryRelation.create(
+            id: _uuid.v4(),
+            sourceId: entry.id,
+            targetId: closest.id,
+            relationType: MemoryRelation.supports,
+            weight: 1.0 - distance / 16.0,
+          ),
+        );
         inserted++;
       } else {
         // 独立新记忆

@@ -169,9 +169,11 @@ class GoogleProvider extends LlmProvider {
             () => _GeminiToolCallAcc(name: fc.name),
           );
 
-          debugPrint('[Google] chatStream FunctionCallPart: '
-              'id=${fc.id}, name=${fc.name}, args=${fc.args}, '
-              'argsType=${fc.args.runtimeType}');
+          debugPrint(
+            '[Google] chatStream FunctionCallPart: '
+            'id=${fc.id}, name=${fc.name}, args=${fc.args}, '
+            'argsType=${fc.args.runtimeType}',
+          );
 
           if (fc.args != null) {
             acc.arguments.addAll(fc.args!);
@@ -186,16 +188,16 @@ class GoogleProvider extends LlmProvider {
     }
 
     // 输出累积的工具调用
-    debugPrint('[Google] chatStream tool accumulators: count=${toolCallParts.length}');
+    debugPrint(
+      '[Google] chatStream tool accumulators: count=${toolCallParts.length}',
+    );
     for (final acc in toolCallParts.values) {
       final args = Map<String, dynamic>.from(acc.arguments);
-      debugPrint('[Google] chatStream yielding StreamChunk.tool: name=${acc.name}, args=$args');
+      debugPrint(
+        '[Google] chatStream yielding StreamChunk.tool: name=${acc.name}, args=$args',
+      );
       yield StreamChunk.tool(
-        ToolCall(
-          id: acc.name,
-          name: acc.name,
-          arguments: args,
-        ),
+        ToolCall(id: acc.name, name: acc.name, arguments: args),
       );
     }
 
@@ -378,14 +380,10 @@ class GoogleProvider extends LlmProvider {
         final args = fc.args is Map<String, dynamic>
             ? fc.args as Map<String, dynamic>
             : <String, dynamic>{};
-        debugPrint('[Google] _extractToolCalls: name=${fc.name}, args=$args, argsType=${fc.args.runtimeType}');
-        toolCalls.add(
-          ToolCall(
-            id: fc.name,
-            name: fc.name,
-            arguments: args,
-          ),
+        debugPrint(
+          '[Google] _extractToolCalls: name=${fc.name}, args=$args, argsType=${fc.args.runtimeType}',
         );
+        toolCalls.add(ToolCall(id: fc.name, name: fc.name, arguments: args));
       }
     }
     return toolCalls.isNotEmpty ? toolCalls : null;

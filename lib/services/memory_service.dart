@@ -195,10 +195,7 @@ class MemoryService {
   /// 获取所有记忆（按更新时间降序）
   Future<List<MemoryEntry>> getAllEntries() async {
     final db = await database;
-    final rows = await db.query(
-      'memory_entries',
-      orderBy: 'updated_at DESC',
-    );
+    final rows = await db.query('memory_entries', orderBy: 'updated_at DESC');
     return rows.map(MemoryEntry.fromDb).toList();
   }
 

@@ -111,7 +111,9 @@ class OllamaProvider extends LlmProvider {
               function: ollama.ToolFunction(
                 name: t.name,
                 description: t.description,
-                parameters: t.parameters.isNotEmpty ? t.toParametersSchema() : const {},
+                parameters: t.parameters.isNotEmpty
+                    ? t.toParametersSchema()
+                    : const {},
               ),
             ),
           )
@@ -155,7 +157,9 @@ class OllamaProvider extends LlmProvider {
               function: ollama.ToolFunction(
                 name: t.name,
                 description: t.description,
-                parameters: t.parameters.isNotEmpty ? t.toParametersSchema() : const {},
+                parameters: t.parameters.isNotEmpty
+                    ? t.toParametersSchema()
+                    : const {},
               ),
             ),
           )
@@ -195,9 +199,11 @@ class OllamaProvider extends LlmProvider {
           if (args != null) {
             acc.arguments.addAll(args);
           }
-          debugPrint('[Ollama] chatStream tool chunk: '
-              'name=$name, args=${tc.function?.arguments}, '
-              'argsType=${tc.function?.arguments.runtimeType}');
+          debugPrint(
+            '[Ollama] chatStream tool chunk: '
+            'name=$name, args=${tc.function?.arguments}, '
+            'argsType=${tc.function?.arguments.runtimeType}',
+          );
         }
       }
 
@@ -205,14 +211,12 @@ class OllamaProvider extends LlmProvider {
         // 输出累积的工具调用
         for (final acc in toolCallAccumulator.values) {
           final args = Map<String, dynamic>.from(acc.arguments);
-          debugPrint('[Ollama] chatStream yielding StreamChunk.tool: '
-              'name=${acc.name}, args=$args');
+          debugPrint(
+            '[Ollama] chatStream yielding StreamChunk.tool: '
+            'name=${acc.name}, args=$args',
+          );
           yield StreamChunk.tool(
-            ToolCall(
-              id: acc.name,
-              name: acc.name,
-              arguments: args,
-            ),
+            ToolCall(id: acc.name, name: acc.name, arguments: args),
           );
         }
         toolCallAccumulator.clear();
@@ -303,19 +307,17 @@ class OllamaProvider extends LlmProvider {
   List<ToolCall>? _mapToolCalls(List<ollama.ToolCall>? calls) {
     if (calls == null || calls.isEmpty) return null;
     debugPrint('[Ollama] _mapToolCalls: count=${calls.length}');
-    return calls
-        .map(
-          (tc) {
-            final args = tc.function?.arguments ?? {};
-            debugPrint('[Ollama] _mapToolCalls: name=${tc.function?.name}, args=$args, argsType=${args.runtimeType}');
-            return ToolCall(
-              id: tc.function?.name ?? '',
-              name: tc.function?.name ?? '',
-              arguments: args,
-            );
-          },
-        )
-        .toList();
+    return calls.map((tc) {
+      final args = tc.function?.arguments ?? {};
+      debugPrint(
+        '[Ollama] _mapToolCalls: name=${tc.function?.name}, args=$args, argsType=${args.runtimeType}',
+      );
+      return ToolCall(
+        id: tc.function?.name ?? '',
+        name: tc.function?.name ?? '',
+        arguments: args,
+      );
+    }).toList();
   }
 }
 

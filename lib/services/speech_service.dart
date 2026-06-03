@@ -31,41 +31,43 @@ class SpeechService {
       },
     );
 
-    _stt.initialize(
-      onStatus: (status) {
-        if (status == 'done' || status == 'notListening') {
-          _isListening = false;
-          if (!controller.isClosed) controller.close();
-        }
-      },
-      onError: (error) {
-        _isListening = false;
-        if (!controller.isClosed) controller.addError(error);
-      },
-    ).then((available) {
-      if (!available) {
-        if (!controller.isClosed) controller.close();
-        return;
-      }
-
-      _isListening = true;
-
-      _stt.listen(
-        onResult: (result) {
-          if (!controller.isClosed) {
-            controller.add(result.recognizedWords);
+    _stt
+        .initialize(
+          onStatus: (status) {
+            if (status == 'done' || status == 'notListening') {
+              _isListening = false;
+              if (!controller.isClosed) controller.close();
+            }
+          },
+          onError: (error) {
+            _isListening = false;
+            if (!controller.isClosed) controller.addError(error);
+          },
+        )
+        .then((available) {
+          if (!available) {
+            if (!controller.isClosed) controller.close();
+            return;
           }
-        },
-        // ignore: deprecated_member_use
-        listenFor: const Duration(seconds: 60),
-        // ignore: deprecated_member_use
-        pauseFor: const Duration(seconds: 3),
-        // ignore: deprecated_member_use
-        partialResults: true,
-        // ignore: deprecated_member_use
-        listenMode: ListenMode.dictation,
-      );
-    });
+
+          _isListening = true;
+
+          _stt.listen(
+            onResult: (result) {
+              if (!controller.isClosed) {
+                controller.add(result.recognizedWords);
+              }
+            },
+            // ignore: deprecated_member_use
+            listenFor: const Duration(seconds: 60),
+            // ignore: deprecated_member_use
+            pauseFor: const Duration(seconds: 3),
+            // ignore: deprecated_member_use
+            partialResults: true,
+            // ignore: deprecated_member_use
+            listenMode: ListenMode.dictation,
+          );
+        });
 
     return controller.stream;
   }

@@ -152,7 +152,9 @@ class OpenAiProvider extends LlmProvider {
           if (tc.function?.arguments != null) {
             entry.arguments += tc.function!.arguments!;
           }
-          debugPrint('[OpenAI] chatStream tool delta: idx=$idx, id=${tc.id}, name=${tc.function?.name}, argsChunk=${tc.function?.arguments}');
+          debugPrint(
+            '[OpenAI] chatStream tool delta: idx=$idx, id=${tc.id}, name=${tc.function?.name}, argsChunk=${tc.function?.arguments}',
+          );
         }
       }
 
@@ -163,12 +165,18 @@ class OpenAiProvider extends LlmProvider {
     }
 
     // 输出累积的工具调用
-    debugPrint('[OpenAI] chatStream tool accumulators: count=${toolCallAccumulator.length}');
+    debugPrint(
+      '[OpenAI] chatStream tool accumulators: count=${toolCallAccumulator.length}',
+    );
     for (final entry in toolCallAccumulator.values) {
-      debugPrint('[OpenAI] chatStream tool acc: id=${entry.id}, name=${entry.name}, rawArgs=${entry.arguments}');
+      debugPrint(
+        '[OpenAI] chatStream tool acc: id=${entry.id}, name=${entry.name}, rawArgs=${entry.arguments}',
+      );
       if (entry.name.isNotEmpty) {
         final args = _safeParseJson(entry.arguments);
-        debugPrint('[OpenAI] chatStream yielding StreamChunk.tool: id=${entry.id}, name=${entry.name}, args=$args');
+        debugPrint(
+          '[OpenAI] chatStream yielding StreamChunk.tool: id=${entry.id}, name=${entry.name}, args=$args',
+        );
         yield StreamChunk.tool(
           ToolCall(id: entry.id, name: entry.name, arguments: args),
         );
@@ -209,7 +217,9 @@ class OpenAiProvider extends LlmProvider {
             (t) => openai.Tool.function(
               name: t.name,
               description: t.description,
-              parameters: t.parameters.isNotEmpty ? t.toParametersSchema() : null,
+              parameters: t.parameters.isNotEmpty
+                  ? t.toParametersSchema()
+                  : null,
             ),
           )
           .toList(),
@@ -263,8 +273,7 @@ class OpenAiProvider extends LlmProvider {
     }
 
     for (final attachment in attachments) {
-      final filePath =
-          MediaLibrary.instance.filePathFor(attachment.libraryId);
+      final filePath = MediaLibrary.instance.filePathFor(attachment.libraryId);
       if (filePath == null) continue;
 
       if (attachment.isImage) {
@@ -272,7 +281,9 @@ class OpenAiProvider extends LlmProvider {
           final bytes = File(filePath).readAsBytesSync();
           final base64 = base64Encode(bytes);
           final mime = attachment.mimeType ?? 'image/png';
-          parts.add(openai.ContentPart.imageBase64(data: base64, mediaType: mime));
+          parts.add(
+            openai.ContentPart.imageBase64(data: base64, mediaType: mime),
+          );
         } catch (_) {
           // 图片读取失败，静默跳过
         }
@@ -305,7 +316,9 @@ class OpenAiProvider extends LlmProvider {
     if (toolCalls == null || toolCalls.isEmpty) return null;
     debugPrint('[OpenAI] _mapToolCalls: count=${toolCalls.length}');
     for (final tc in toolCalls) {
-      debugPrint('[OpenAI] _mapToolCalls: id=${tc.id}, name=${tc.function.name}, rawArgs=${tc.function.arguments}');
+      debugPrint(
+        '[OpenAI] _mapToolCalls: id=${tc.id}, name=${tc.function.name}, rawArgs=${tc.function.arguments}',
+      );
     }
     return toolCalls
         .map(
@@ -321,7 +334,9 @@ class OpenAiProvider extends LlmProvider {
   Map<String, dynamic> _safeParseJson(String raw) {
     try {
       final result = jsonDecode(raw) as Map<String, dynamic>;
-      debugPrint('[OpenAI] _safeParseJson: raw="$raw" → parsed keys=${result.keys.toList()}');
+      debugPrint(
+        '[OpenAI] _safeParseJson: raw="$raw" → parsed keys=${result.keys.toList()}',
+      );
       return result;
     } catch (e) {
       debugPrint('[OpenAI] _safeParseJson FAILED: raw="$raw", error=$e');
@@ -374,7 +389,9 @@ class OpenAiProvider extends LlmProvider {
       tags.add(ModelTag.vision);
     }
     // GPT-4V 明确视觉
-    if (lower.contains('-vision') || lower.contains('gpt-4v') || lower.contains('-vl')) {
+    if (lower.contains('-vision') ||
+        lower.contains('gpt-4v') ||
+        lower.contains('-vl')) {
       tags.add(ModelTag.vision);
     }
 

@@ -52,7 +52,8 @@ class ConversationalMemoryManager {
 
   int get turnsSinceLastSummary => _turnCount - _lastSummaryTurn;
 
-  String? get currentSummary => _summaryMemoryId != null ? _lastSummaryText : null;
+  String? get currentSummary =>
+      _summaryMemoryId != null ? _lastSummaryText : null;
   String? _lastSummaryText;
 
   bool get hasSummary => _summaryMemoryId != null;
@@ -186,7 +187,9 @@ class ConversationalMemoryManager {
         history: history,
         systemPrompt: '你是一个精确的对话摘要助手。只返回摘要文本。',
       );
-      return response.content.trim().isNotEmpty ? response.content.trim() : null;
+      return response.content.trim().isNotEmpty
+          ? response.content.trim()
+          : null;
     } catch (e) {
       debugPrint('[ConversationalMemory] 摘要生成失败: $e');
       return null;
@@ -202,7 +205,8 @@ class ConversationalMemoryManager {
       Message(
         id: 'final-summary-1',
         role: MessageRole.user,
-        content: '请对整个对话做一个全面的最终摘要。包含以下要素：\n'
+        content:
+            '请对整个对话做一个全面的最终摘要。包含以下要素：\n'
             '1. 对话主题和背景\n'
             '2. 达成的关键决策和结论\n'
             '3. 未解决的问题或待办事项\n'
@@ -219,7 +223,9 @@ class ConversationalMemoryManager {
         history: history,
         systemPrompt: '你是一个精确的对话摘要助手。只返回摘要文本。',
       );
-      return response.content.trim().isNotEmpty ? response.content.trim() : null;
+      return response.content.trim().isNotEmpty
+          ? response.content.trim()
+          : null;
     } catch (e) {
       debugPrint('[ConversationalMemory] 最终摘要生成失败: $e');
       return null;

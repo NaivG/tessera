@@ -37,10 +37,10 @@ class LibraryEntry {
 
   /// 序列化为 JSON
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'file_path': filePath,
-        'attachment': attachment.toJson(),
-      };
+    'id': id,
+    'file_path': filePath,
+    'attachment': attachment.toJson(),
+  };
 }
 
 /// 资料库 — 缓存所有上传文件的信息，内部使用资料库 ID 映射，
@@ -209,8 +209,11 @@ class MediaLibrary {
       }
       if (entry.attachment.thumbnailId != null) {
         try {
-          final thumbPath =
-              p.join(_cacheDir, 'thumbnails', entry.attachment.thumbnailId!);
+          final thumbPath = p.join(
+            _cacheDir,
+            'thumbnails',
+            entry.attachment.thumbnailId!,
+          );
           await File(thumbPath).delete();
         } catch (_) {
           // 删除失败，忽略
@@ -242,14 +245,17 @@ class MediaLibrary {
 
   MediaType _inferType(String ext) {
     const imageExts = {
-      '.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.svg', '.heic',
+      '.png',
+      '.jpg',
+      '.jpeg',
+      '.gif',
+      '.webp',
+      '.bmp',
+      '.svg',
+      '.heic',
     };
-    const videoExts = {
-      '.mp4', '.mov', '.avi', '.mkv', '.webm', '.flv', '.wmv',
-    };
-    const audioExts = {
-      '.mp3', '.wav', '.aac', '.ogg', '.flac', '.m4a', '.wma',
-    };
+    const videoExts = {'.mp4', '.mov', '.avi', '.mkv', '.webm', '.flv', '.wmv'};
+    const audioExts = {'.mp3', '.wav', '.aac', '.ogg', '.flac', '.m4a', '.wma'};
 
     if (imageExts.contains(ext)) return MediaType.image;
     if (videoExts.contains(ext)) return MediaType.video;
@@ -286,11 +292,7 @@ class MediaLibrary {
       final decoded = img.decodeImage(bytes);
       if (decoded == null) return null;
 
-      final thumb = img.copyResize(
-        decoded,
-        width: 200,
-        height: 200,
-      );
+      final thumb = img.copyResize(decoded, width: 200, height: 200);
       final thumbBytes = img.encodePng(thumb);
 
       final thumbName = '${p.basenameWithoutExtension(imagePath)}.thumb.png';

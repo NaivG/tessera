@@ -63,10 +63,7 @@ class MemoryExtractor {
   /// 批量写入阈值
   final int batchWriteThreshold;
 
-  MemoryExtractor({
-    this.extractRoundCount = 5,
-    this.batchWriteThreshold = 3,
-  });
+  MemoryExtractor({this.extractRoundCount = 5, this.batchWriteThreshold = 3});
 
   /// 添加一对 user→assistant 消息到缓冲区
   ///
@@ -84,7 +81,8 @@ class MemoryExtractor {
   }
 
   /// 是否达到提取阈值
-  bool get shouldExtract => _roundCount > 0 && _roundCount % extractRoundCount == 0;
+  bool get shouldExtract =>
+      _roundCount > 0 && _roundCount % extractRoundCount == 0;
 
   /// 重置轮计数（提取后调用）
   void resetRoundCount() {
@@ -129,7 +127,8 @@ class MemoryExtractor {
             timestamp: DateTime.now(),
           ),
         ],
-        systemPrompt: systemPrompt ??
+        systemPrompt:
+            systemPrompt ??
             '你是一个精确的记忆提取助手。只返回 JSON 数组，不返回其他内容。'
                 '如果没有值得记忆的内容，返回空数组 []。',
         tools: null,
@@ -197,7 +196,10 @@ class MemoryExtractor {
     }
 
     // 尝试从 markdown code block 中提取
-    final codeBlockRe = RegExp(r'```(?:json)?\s*\n?(\[.*?\])\s*\n?```', dotAll: true);
+    final codeBlockRe = RegExp(
+      r'```(?:json)?\s*\n?(\[.*?\])\s*\n?```',
+      dotAll: true,
+    );
     final match = codeBlockRe.firstMatch(content);
     if (match != null) {
       return match.group(1)?.trim();

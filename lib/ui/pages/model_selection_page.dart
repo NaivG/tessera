@@ -78,12 +78,9 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
           _buildSlotTile(
             label: _config.mainModel.displayLabel(_state),
             subtitle: '主模型',
-            onTap: () => _pickModel(
-              (slot) {
-                if (slot != null) _state.setMainModel(slot);
-              },
-              filterType: ModelType.text,
-            ),
+            onTap: () => _pickModel((slot) {
+              if (slot != null) _state.setMainModel(slot);
+            }, filterType: ModelType.text),
           ),
 
           const Divider(height: 32),
@@ -114,9 +111,12 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
           ),
           const SizedBox(height: 8),
           ...ModelType.values
-              .where((t) => t != ModelType.text &&
-                  t != ModelType.embedding &&
-                  t != ModelType.ranking)
+              .where(
+                (t) =>
+                    t != ModelType.text &&
+                    t != ModelType.embedding &&
+                    t != ModelType.ranking,
+              )
               .map(_buildOutputRow),
 
           const Divider(height: 32),
@@ -130,12 +130,24 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
             ),
           ),
           const SizedBox(height: 8),
-          _buildOtherRow('topic_detection', '话题检测', '检测对话话题、意图分类',
-              canUseMain: true),
-          _buildOtherRow('memory_organization', '记忆整理', '整理长期记忆、知识提取',
-              canUseMain: true),
-          _buildOtherRow('content_summarization', '内容总结', '对话/文档摘要生成',
-              canUseMain: true),
+          _buildOtherRow(
+            'topic_detection',
+            '话题检测',
+            '检测对话话题、意图分类',
+            canUseMain: true,
+          ),
+          _buildOtherRow(
+            'memory_organization',
+            '记忆整理',
+            '整理长期记忆、知识提取',
+            canUseMain: true,
+          ),
+          _buildOtherRow(
+            'content_summarization',
+            '内容总结',
+            '对话/文档摘要生成',
+            canUseMain: true,
+          ),
 
           const Divider(height: 32),
 
@@ -213,8 +225,11 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.input,
-                              size: 16, color: theme.colorScheme.primary),
+                          Icon(
+                            Icons.input,
+                            size: 16,
+                            color: theme.colorScheme.primary,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -223,8 +238,10 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          Icon(Icons.arrow_drop_down,
-                              color: theme.colorScheme.outline),
+                          Icon(
+                            Icons.arrow_drop_down,
+                            color: theme.colorScheme.outline,
+                          ),
                         ],
                       ),
                     ),
@@ -237,10 +254,10 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
               TextButton.icon(
                 onPressed: () => _state.setInputModality(tag, null),
                 icon: const Icon(Icons.undo, size: 14),
-                label:
-                    const Text('使用主模型', style: TextStyle(fontSize: 12)),
+                label: const Text('使用主模型', style: TextStyle(fontSize: 12)),
                 style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact),
+                  visualDensity: VisualDensity.compact,
+                ),
               ),
             ],
           ],
@@ -268,8 +285,10 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
                 _buildTypeChip(theme, type),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(type.displayName,
-                      style: theme.textTheme.titleSmall),
+                  child: Text(
+                    type.displayName,
+                    style: theme.textTheme.titleSmall,
+                  ),
                 ),
               ],
             ),
@@ -282,16 +301,21 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
               ),
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   border: Border.all(color: theme.colorScheme.outlineVariant),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.output,
-                        size: 16, color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.output,
+                      size: 16,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -300,8 +324,10 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    Icon(Icons.arrow_drop_down,
-                        color: theme.colorScheme.outline),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      color: theme.colorScheme.outline,
+                    ),
                   ],
                 ),
               ),
@@ -325,8 +351,12 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
     };
   }
 
-  Widget _buildOtherRow(String key, String label, String hint,
-      {bool canUseMain = false}) {
+  Widget _buildOtherRow(
+    String key,
+    String label,
+    String hint, {
+    bool canUseMain = false,
+  }) {
     final theme = Theme.of(context);
     final slot = _config.otherModels[key];
     final String currentLabel;
@@ -373,16 +403,21 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
               ),
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   border: Border.all(color: theme.colorScheme.outlineVariant),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.extension,
-                        size: 16, color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.extension,
+                      size: 16,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -391,8 +426,10 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    Icon(Icons.arrow_drop_down,
-                        color: theme.colorScheme.outline),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      color: theme.colorScheme.outline,
+                    ),
                   ],
                 ),
               ),
@@ -402,10 +439,10 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
               TextButton.icon(
                 onPressed: () => _state.setOtherModel(key, null),
                 icon: const Icon(Icons.undo, size: 14),
-                label:
-                    const Text('使用主模型', style: TextStyle(fontSize: 12)),
+                label: const Text('使用主模型', style: TextStyle(fontSize: 12)),
                 style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact),
+                  visualDensity: VisualDensity.compact,
+                ),
               ),
             ],
           ],
@@ -451,13 +488,15 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
       allModels = allModels.where((e) => e.model.type == filterType).toList();
     }
     if (filterTag != null) {
-      allModels = allModels.where((e) => e.model.tags.contains(filterTag)).toList();
+      allModels = allModels
+          .where((e) => e.model.tags.contains(filterTag))
+          .toList();
     }
     if (allModels.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('未找到可用的模型，请先在设置中添加对应模型')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('未找到可用的模型，请先在设置中添加对应模型')));
       }
       return;
     }
@@ -476,8 +515,7 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
               itemBuilder: (ctx, index) {
                 if (allowClear && index == allModels.length) {
                   return ListTile(
-                    leading:
-                        Icon(Icons.clear, color: theme.colorScheme.error),
+                    leading: Icon(Icons.clear, color: theme.colorScheme.error),
                     title: Text(
                       clearLabel,
                       style: TextStyle(color: theme.colorScheme.error),
@@ -498,8 +536,10 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
                     size: 20,
                     color: theme.colorScheme.primary,
                   ),
-                  title: Text(entry.model.id,
-                      style: const TextStyle(fontSize: 14)),
+                  title: Text(
+                    entry.model.id,
+                    style: const TextStyle(fontSize: 14),
+                  ),
                   subtitle: Text(
                     '${entry.provider.displayName}${entry.model.type == ModelType.text ? "" : " \u00b7 ${entry.model.type.displayName}"}$tagsStr',
                     style: const TextStyle(fontSize: 12),
@@ -540,10 +580,9 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
       padding: const EdgeInsets.only(bottom: 2),
       child: Text(
         title,
-        style: Theme.of(context)
-            .textTheme
-            .titleMedium
-            ?.copyWith(fontWeight: FontWeight.bold),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
       ),
     );
   }

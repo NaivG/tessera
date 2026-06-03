@@ -29,10 +29,8 @@ class MemoryCompressor {
 原始记忆：
 ''';
 
-  MemoryCompressor({
-    required MemoryService service,
-    this.clusterDistance = 10,
-  }) : _service = service;
+  MemoryCompressor({required MemoryService service, this.clusterDistance = 10})
+    : _service = service;
 
   /// 全局压缩：对所有记忆执行聚类和合并
   Future<Map<String, int>> compressAll({
@@ -85,13 +83,15 @@ class MemoryCompressor {
       }
 
       for (final other in toMerge) {
-        await _service.insertRelation(MemoryRelation.create(
-          id: _uuid.v4(),
-          sourceId: other.id,
-          targetId: primary.id,
-          relationType: MemoryRelation.mergedInto,
-          weight: 1.0,
-        ));
+        await _service.insertRelation(
+          MemoryRelation.create(
+            id: _uuid.v4(),
+            sourceId: other.id,
+            targetId: primary.id,
+            relationType: MemoryRelation.mergedInto,
+            weight: 1.0,
+          ),
+        );
         merged++;
       }
     }
@@ -112,7 +112,8 @@ class MemoryCompressor {
   }
 
   /// 对指定对话的 conversational 类型记忆压缩
-  Future<void> compressConversational(String convId, {
+  Future<void> compressConversational(
+    String convId, {
     LlmProvider? provider,
     LlmConfig? config,
   }) async {
@@ -127,17 +128,18 @@ class MemoryCompressor {
       final merged = await _summaryMerge(provider, config, convEntries);
       if (merged != null) {
         final primary = convEntries.first;
-        await _service.updateEntry(primary.copyWith(
-          content: merged,
-          updatedAt: DateTime.now(),
-        ));
+        await _service.updateEntry(
+          primary.copyWith(content: merged, updatedAt: DateTime.now()),
+        );
         for (var i = 1; i < convEntries.length; i++) {
-          await _service.insertRelation(MemoryRelation.create(
-            id: _uuid.v4(),
-            sourceId: convEntries[i].id,
-            targetId: primary.id,
-            relationType: MemoryRelation.mergedInto,
-          ));
+          await _service.insertRelation(
+            MemoryRelation.create(
+              id: _uuid.v4(),
+              sourceId: convEntries[i].id,
+              targetId: primary.id,
+              relationType: MemoryRelation.mergedInto,
+            ),
+          );
         }
       }
     }
@@ -203,7 +205,9 @@ class MemoryCompressor {
         history: history,
         systemPrompt: '你是一个信息精炼助手。只返回合并后的精炼文本。',
       );
-      return response.content.trim().isNotEmpty ? response.content.trim() : null;
+      return response.content.trim().isNotEmpty
+          ? response.content.trim()
+          : null;
     } catch (e) {
       debugPrint('[MemoryCompressor] LLM 合并失败: $e');
       return null;
@@ -238,7 +242,9 @@ class MemoryCompressor {
         history: history,
         systemPrompt: '你是一个信息精炼助手。请合并以下摘要为一段精炼连贯的对话摘要。只返回摘要文本。',
       );
-      return response.content.trim().isNotEmpty ? response.content.trim() : null;
+      return response.content.trim().isNotEmpty
+          ? response.content.trim()
+          : null;
     } catch (e) {
       debugPrint('[MemoryCompressor] 摘要合并失败: $e');
       return null;

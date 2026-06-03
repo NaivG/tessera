@@ -118,8 +118,7 @@ class Message {
           .toList(),
       toolCallId: json['tool_call_id'] as String?,
       mediaAttachments: (json['media_attachments'] as List<dynamic>?)
-          ?.map(
-              (e) => MediaAttachment.fromJson(e as Map<String, dynamic>))
+          ?.map((e) => MediaAttachment.fromJson(e as Map<String, dynamic>))
           .toList(),
       status: json['status'] != null
           ? MessageStatus.values.firstWhere((s) => s.name == json['status'])

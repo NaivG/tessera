@@ -161,9 +161,7 @@ class _SidebarState extends State<Sidebar> {
           Expanded(
             child: Column(
               children: [
-                Expanded(
-                  child: _buildConversationsTab(theme, colorScheme),
-                ),
+                Expanded(child: _buildConversationsTab(theme, colorScheme)),
                 _buildLibraryTab(theme, colorScheme),
               ],
             ),
@@ -203,9 +201,7 @@ class _SidebarState extends State<Sidebar> {
                     borderRadius: BorderRadius.circular(8),
                     onTap: widget.onProfile,
                     child: Text(
-                      widget.displayName.isNotEmpty
-                          ? widget.displayName
-                          : '用户',
+                      widget.displayName.isNotEmpty ? widget.displayName : '用户',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
@@ -371,12 +367,8 @@ class _SidebarState extends State<Sidebar> {
       label: Text(label, style: theme.textTheme.labelSmall),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        side: BorderSide(
-          color: colorScheme.outline.withValues(alpha: 0.4),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.4)),
         alignment: Alignment.center,
       ),
     );
@@ -397,9 +389,7 @@ class DrawerHeaderStyle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-      ),
+      decoration: BoxDecoration(color: theme.colorScheme.surface),
       child: child,
     );
   }

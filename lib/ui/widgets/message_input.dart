@@ -17,10 +17,7 @@ class SendPayload {
   /// 媒体附件列表
   final List<MediaAttachment> attachments;
 
-  const SendPayload({
-    this.text = '',
-    this.attachments = const [],
-  });
+  const SendPayload({this.text = '', this.attachments = const []});
 
   bool get isEmpty => text.trim().isEmpty && attachments.isEmpty;
   bool get hasAttachments => attachments.isNotEmpty;
@@ -40,11 +37,7 @@ class MessageInput extends StatefulWidget {
   final bool enabled;
   final ValueChanged<SendPayload> onSend;
 
-  const MessageInput({
-    super.key,
-    this.enabled = true,
-    required this.onSend,
-  });
+  const MessageInput({super.key, this.enabled = true, required this.onSend});
 
   @override
   State<MessageInput> createState() => _MessageInputState();
@@ -162,15 +155,19 @@ class _MessageInputState extends State<MessageInput> {
                   onTap: () => Navigator.pop(ctx, 1),
                 ),
                 ListTile(
-                  leading:
-                      Icon(Icons.camera_alt, color: theme.colorScheme.primary),
+                  leading: Icon(
+                    Icons.camera_alt,
+                    color: theme.colorScheme.primary,
+                  ),
                   title: const Text('相机'),
                   subtitle: const Text('使用相机拍摄'),
                   onTap: () => Navigator.pop(ctx, 2),
                 ),
                 ListTile(
-                  leading: Icon(Icons.attach_file,
-                      color: theme.colorScheme.primary),
+                  leading: Icon(
+                    Icons.attach_file,
+                    color: theme.colorScheme.primary,
+                  ),
                   title: const Text('文件'),
                   subtitle: const Text('选择任意文件'),
                   onTap: () => Navigator.pop(ctx, 3),
@@ -212,9 +209,7 @@ class _MessageInputState extends State<MessageInput> {
   }
 
   Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      allowMultiple: true,
-    );
+    final result = await FilePicker.platform.pickFiles(allowMultiple: true);
     if (result == null || result.files.isEmpty) return;
 
     for (final file in result.files) {
@@ -354,10 +349,7 @@ class _AttachmentChip extends StatelessWidget {
   final MediaAttachment attachment;
   final VoidCallback onRemove;
 
-  const _AttachmentChip({
-    required this.attachment,
-    required this.onRemove,
-  });
+  const _AttachmentChip({required this.attachment, required this.onRemove});
 
   @override
   Widget build(BuildContext context) {
@@ -425,23 +417,28 @@ class _AttachmentChip extends StatelessWidget {
     );
   }
 
-  Widget _buildThumb(MediaLibrary lib, String? filePath, ColorScheme colorScheme) {
+  Widget _buildThumb(
+    MediaLibrary lib,
+    String? filePath,
+    ColorScheme colorScheme,
+  ) {
     if (attachment.isImage && filePath != null) {
       return Image.file(
         File(filePath),
         fit: BoxFit.cover,
         width: 58,
         height: 58,
-        errorBuilder: (_, error, stack) => Icon(
-          Icons.broken_image,
-          size: 24,
-          color: colorScheme.outline,
-        ),
+        errorBuilder: (_, error, stack) =>
+            Icon(Icons.broken_image, size: 24, color: colorScheme.outline),
       );
     }
     if (attachment.isVideo) {
       return Center(
-        child: Icon(Icons.play_circle_fill, size: 28, color: colorScheme.tertiary),
+        child: Icon(
+          Icons.play_circle_fill,
+          size: 28,
+          color: colorScheme.tertiary,
+        ),
       );
     }
     if (attachment.isAudio) {
@@ -450,7 +447,11 @@ class _AttachmentChip extends StatelessWidget {
       );
     }
     return Center(
-      child: Icon(Icons.insert_drive_file, size: 28, color: colorScheme.outline),
+      child: Icon(
+        Icons.insert_drive_file,
+        size: 28,
+        color: colorScheme.outline,
+      ),
     );
   }
 }

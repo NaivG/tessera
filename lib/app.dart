@@ -94,9 +94,7 @@ class _TesseraAppState extends State<TesseraApp> {
     if (!_initialized) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        ),
+        home: const Scaffold(body: Center(child: CircularProgressIndicator())),
       );
     }
 
@@ -122,9 +120,7 @@ class _TesseraAppState extends State<TesseraApp> {
             ),
             useMaterial3: true,
           ),
-          home: MainPage(
-            settingsState: _settingsState,
-          ),
+          home: MainPage(settingsState: _settingsState),
           onGenerateRoute: (settings) {
             if (settings.name == ErrorPage.routeName) {
               final payload = consumePendingError();
@@ -147,5 +143,4 @@ class _TesseraAppState extends State<TesseraApp> {
       },
     );
   }
-
 }

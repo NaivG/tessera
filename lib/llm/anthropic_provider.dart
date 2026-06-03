@@ -91,7 +91,9 @@ class AnthropicProvider extends LlmProvider {
         content += block.text;
       } else if (block is anthropic.ToolUseBlock) {
         toolCalls ??= [];
-        debugPrint('[Anthropic] chat ToolUseBlock: id=${block.id}, name=${block.name}, input=${block.input}');
+        debugPrint(
+          '[Anthropic] chat ToolUseBlock: id=${block.id}, name=${block.name}, input=${block.input}',
+        );
         toolCalls.add(
           ToolCall(id: block.id, name: block.name, arguments: block.input),
         );
@@ -130,8 +132,10 @@ class AnthropicProvider extends LlmProvider {
           // 流式模式下 ToolUseBlock.input 恒为 {}，实际参数通过 InputJsonDelta 增量传输
           final pending = _PendingToolUse(id: block.id, name: block.name);
           pendingToolUses[event.index] = pending;
-          debugPrint('[Anthropic] chatStream ContentBlockStart: '
-              'index=${event.index}, id=${block.id}, name=${block.name}');
+          debugPrint(
+            '[Anthropic] chatStream ContentBlockStart: '
+            'index=${event.index}, id=${block.id}, name=${block.name}',
+          );
         }
       } else if (event is anthropic.ContentBlockDeltaEvent) {
         final delta = event.delta;
@@ -144,23 +148,23 @@ class AnthropicProvider extends LlmProvider {
           if (pending != null) {
             pending.inputJsonBuffer.write(delta.partialJson);
           }
-          debugPrint('[Anthropic] chatStream InputJsonDelta: '
-              'index=${event.index}, partialJson=${delta.partialJson}');
+          debugPrint(
+            '[Anthropic] chatStream InputJsonDelta: '
+            'index=${event.index}, partialJson=${delta.partialJson}',
+          );
         }
         // SignatureDelta / CitationsDelta / CompactionDelta / Unknown: 当前工具调用场景不涉及，忽略
       } else if (event is anthropic.ContentBlockStopEvent) {
         final pending = pendingToolUses.remove(event.index);
         if (pending != null) {
           final parsedArgs = _parseToolInputJson(pending.inputJsonBuffer);
-          debugPrint('[Anthropic] chatStream ContentBlockStop: '
-              'index=${event.index}, id=${pending.id}, name=${pending.name}, '
-              'parsedArgs=$parsedArgs');
+          debugPrint(
+            '[Anthropic] chatStream ContentBlockStop: '
+            'index=${event.index}, id=${pending.id}, name=${pending.name}, '
+            'parsedArgs=$parsedArgs',
+          );
           yield StreamChunk.tool(
-            ToolCall(
-              id: pending.id,
-              name: pending.name,
-              arguments: parsedArgs,
-            ),
+            ToolCall(id: pending.id, name: pending.name, arguments: parsedArgs),
           );
         }
       } else if (event is anthropic.MessageDeltaEvent) {
@@ -168,15 +172,13 @@ class AnthropicProvider extends LlmProvider {
         for (final entry in pendingToolUses.entries) {
           final pending = entry.value;
           final parsedArgs = _parseToolInputJson(pending.inputJsonBuffer);
-          debugPrint('[Anthropic] chatStream MessageDelta (draining): '
-              'index=${entry.key}, id=${pending.id}, name=${pending.name}, '
-              'parsedArgs=$parsedArgs');
+          debugPrint(
+            '[Anthropic] chatStream MessageDelta (draining): '
+            'index=${entry.key}, id=${pending.id}, name=${pending.name}, '
+            'parsedArgs=$parsedArgs',
+          );
           yield StreamChunk.tool(
-            ToolCall(
-              id: pending.id,
-              name: pending.name,
-              arguments: parsedArgs,
-            ),
+            ToolCall(id: pending.id, name: pending.name, arguments: parsedArgs),
           );
         }
         pendingToolUses.clear();
@@ -230,8 +232,9 @@ class AnthropicProvider extends LlmProvider {
     if (msg.mediaAttachments != null && msg.mediaAttachments!.isNotEmpty) {
       for (final attachment in msg.mediaAttachments!) {
         if (!attachment.isImage) continue;
-        final filePath =
-            MediaLibrary.instance.filePathFor(attachment.libraryId);
+        final filePath = MediaLibrary.instance.filePathFor(
+          attachment.libraryId,
+        );
         if (filePath == null) continue;
 
         try {

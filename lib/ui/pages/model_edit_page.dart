@@ -111,9 +111,9 @@ class _ModelEditPageState extends State<ModelEditPage> {
 
     // 优先使用已缓存的模型信息
     ModelInfo? existing = _allModels?.cast<ModelInfo?>().firstWhere(
-          (m) => m!.id == trimmed,
-          orElse: () => null,
-        );
+      (m) => m!.id == trimmed,
+      orElse: () => null,
+    );
 
     ModelInfo? fetchedInfo;
     if (existing != null) {
@@ -134,9 +134,9 @@ class _ModelEditPageState extends State<ModelEditPage> {
 
     // 优先使用已缓存的模型信息
     ModelInfo? cached = _allModels?.cast<ModelInfo?>().firstWhere(
-          (m) => m!.id == trimmed,
-          orElse: () => null,
-        );
+      (m) => m!.id == trimmed,
+      orElse: () => null,
+    );
 
     ModelInfo? fetchedInfo;
     if (cached != null) {
@@ -169,8 +169,10 @@ class _ModelEditPageState extends State<ModelEditPage> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('删除',
-                style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+            child: Text(
+              '删除',
+              style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+            ),
           ),
         ],
       ),
@@ -203,7 +205,10 @@ class _ModelEditPageState extends State<ModelEditPage> {
   /// [modelId] 模型 ID（只读展示）
   /// [fetchedInfo] 从 API 获取到的模型信息，用于预填充类型与标签；
   ///   为 null 时使用默认值（text 类型 + text 标签）
-  Future<void> _showTypeTagDialog(String modelId, ModelInfo? fetchedInfo) async {
+  Future<void> _showTypeTagDialog(
+    String modelId,
+    ModelInfo? fetchedInfo,
+  ) async {
     final state = widget.settingsState;
 
     ModelType selectedType = fetchedInfo?.type ?? ModelType.text;
@@ -324,8 +329,11 @@ class _ModelEditPageState extends State<ModelEditPage> {
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          Icon(Icons.info_outline,
-                              size: 14, color: theme.colorScheme.outline),
+                          Icon(
+                            Icons.info_outline,
+                            size: 14,
+                            color: theme.colorScheme.outline,
+                          ),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
@@ -379,9 +387,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
     final config = widget.config;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('编辑模型 - ${config.displayName}'),
-      ),
+      appBar: AppBar(title: Text('编辑模型 - ${config.displayName}')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -414,9 +420,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
           if (config.models.isEmpty)
             _buildEmptyModels(theme)
           else
-            ...config.models.map(
-                  (model) => _buildModelCard(theme, model),
-                ),
+            ...config.models.map((model) => _buildModelCard(theme, model)),
 
           const SizedBox(height: 16),
         ],
@@ -430,9 +434,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
       enabled: false,
       decoration: InputDecoration(
         hintText: '正在获取模型列表…',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         isDense: true,
         suffixIcon: Padding(
           padding: const EdgeInsets.all(12),
@@ -462,9 +464,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
           autocorrect: false,
           decoration: InputDecoration(
             hintText: '搜索或输入模型 ID…',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             isDense: true,
             suffixIcon: IconButton(
               icon: Icon(Icons.add_circle, color: theme.colorScheme.primary),
@@ -499,11 +499,12 @@ class _ModelEditPageState extends State<ModelEditPage> {
                           : null,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                         child: Row(
                           children: [
-                            const Icon(Icons.smart_toy_outlined,
-                                size: 18),
+                            const Icon(Icons.smart_toy_outlined, size: 18),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -540,7 +541,11 @@ class _ModelEditPageState extends State<ModelEditPage> {
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
         children: [
-          Icon(Icons.model_training, size: 40, color: theme.colorScheme.outline),
+          Icon(
+            Icons.model_training,
+            size: 40,
+            color: theme.colorScheme.outline,
+          ),
           const SizedBox(height: 8),
           Text(
             '尚未添加任何模型',
@@ -562,12 +567,9 @@ class _ModelEditPageState extends State<ModelEditPage> {
 
   /// 单个模型卡片
   Widget _buildModelCard(ThemeData theme, ModelInfo model) {
-
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Row(
@@ -598,8 +600,11 @@ class _ModelEditPageState extends State<ModelEditPage> {
             ),
             // 操作按钮
             IconButton(
-              icon:
-                  Icon(Icons.delete_outline, size: 20, color: theme.colorScheme.error),
+              icon: Icon(
+                Icons.delete_outline,
+                size: 20,
+                color: theme.colorScheme.error,
+              ),
               onPressed: () => _onDeleteModel(model.uid),
               tooltip: '删除模型',
               visualDensity: VisualDensity.compact,
@@ -652,10 +657,9 @@ class _DialogLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: Theme.of(context)
-          .textTheme
-          .labelMedium
-          ?.copyWith(fontWeight: FontWeight.w600),
+      style: Theme.of(
+        context,
+      ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
     );
   }
 }

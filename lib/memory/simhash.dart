@@ -13,7 +13,7 @@ import 'package:jieba_flutter/analysis/jieba_segmenter.dart';
 /// ```
 ///
 /// 将文本转为 128 位 SimHash 指纹用于相似度检索。
-/// 
+///
 /// 算法流程：
 ///
 /// ```
@@ -24,9 +24,9 @@ import 'package:jieba_flutter/analysis/jieba_segmenter.dart';
 ///   ↓ 逐维判断：≥0 → '1'，<0 → '0'
 ///   ↓ 输出 128 位二进制字符串
 /// ```
-/// 
+///
 /// 算法实现参考论文 [Similarity Estimation Techniques from Rounding Algorithms](https://www.cs.princeton.edu/courses/archive/spring04/cos598B/bib/CharikarEstim.pdf)
-/// 
+///
 /// 经过测试，128 位 SimHash 在文本相似度检索中表现良好，且比EMB速度快数百倍，适合大规模文本库的快速近似匹配。
 class SimHash {
   /// 维度固定 128 位
@@ -112,7 +112,8 @@ class SimHash {
   static List<double> _generateRandomVector(String token) {
     final bytes = utf8.encode(token);
     final digest = sha256.convert(bytes);
-    final seed = BigInt.parse(digest.toString(), radix: 16) % BigInt.from(1 << 31);
+    final seed =
+        BigInt.parse(digest.toString(), radix: 16) % BigInt.from(1 << 31);
 
     final rng = Random(seed.toInt());
     final v = <double>[];
@@ -141,8 +142,10 @@ class SimHash {
 
   /// 计算两条 128 位 SimHash 字符串之间的汉明距离
   static int hammingDistance(String a, String b) {
-    assert(a.length == dimensions && b.length == dimensions,
-        'SimHash 位串长度必须为 $dimensions');
+    assert(
+      a.length == dimensions && b.length == dimensions,
+      'SimHash 位串长度必须为 $dimensions',
+    );
     int dist = 0;
     for (int i = 0; i < dimensions; i++) {
       if (a[i] != b[i]) dist++;
@@ -170,8 +173,10 @@ class SimHash {
   ///
   /// 比逐字符比较快约 10x，适合大量条目排序。
   static int hammingDistanceFast(String a, String b) {
-    assert(a.length == dimensions && b.length == dimensions,
-        'SimHash 位串长度必须为 $dimensions');
+    assert(
+      a.length == dimensions && b.length == dimensions,
+      'SimHash 位串长度必须为 $dimensions',
+    );
     final hiA = _parseBits64(a.substring(0, 64));
     final loA = _parseBits64(a.substring(64, 128));
     final hiB = _parseBits64(b.substring(0, 64));

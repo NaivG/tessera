@@ -190,10 +190,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('请先在设置中配置 LLM 提供商并选择模型'),
-        action: SnackBarAction(
-          label: '去设置',
-          onPressed: _openSettings,
-        ),
+        action: SnackBarAction(label: '去设置', onPressed: _openSettings),
       ),
     );
   }
@@ -224,8 +221,10 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
         ],
       ),
     );
-    
-    if (newContent != null && newContent.isNotEmpty && newContent != msg.content) {
+
+    if (newContent != null &&
+        newContent.isNotEmpty &&
+        newContent != msg.content) {
       _chatState?.modifyAndResend(
         msg.id,
         newContent,
@@ -239,7 +238,9 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   }
 
   void _handleShare(Message msg) {
-    SharePlus.instance.share(ShareParams(text: msg.content, subject: 'Tessera AI Chat'));
+    SharePlus.instance.share(
+      ShareParams(text: msg.content, subject: 'Tessera AI Chat'),
+    );
   }
 
   /// 当前对话标题
@@ -327,10 +328,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
             builder: (context, child) {
               return SizedBox(
                 width: _sidebarWidth * _sidebarAnim.value,
-                child: OverflowBox(
-                  maxWidth: _sidebarWidth,
-                  child: child,
-                ),
+                child: OverflowBox(maxWidth: _sidebarWidth, child: child),
               );
             },
             child: Sidebar(
@@ -347,10 +345,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
             ),
           ),
           // 分隔线
-          Container(
-            width: 1,
-            color: theme.colorScheme.outlineVariant,
-          ),
+          Container(width: 1, color: theme.colorScheme.outlineVariant),
           // 聊天区域
           Expanded(
             child: Scaffold(

@@ -38,7 +38,9 @@ class MemoryExtraction {
   static List<MemoryExtraction> listFromJson(dynamic jsonData) {
     if (jsonData is List) {
       return jsonData
-          .map((item) => MemoryExtraction.fromJson(item as Map<String, dynamic>))
+          .map(
+            (item) => MemoryExtraction.fromJson(item as Map<String, dynamic>),
+          )
           .toList();
     }
     return [];
