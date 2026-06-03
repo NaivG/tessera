@@ -19,6 +19,7 @@ class SettingsService {
   static const _keyModelSelectionConfig = 'model_selection_config';
   static const _keyUserCustomPrompt = 'user_custom_prompt';
   static const _keyLightweightSystemPrompt = 'lightweight_system_prompt';
+  static const _keyLocale = 'locale';
 
   Future<SharedPreferences> get _store async {
     if (_prefs != null) return _prefs!;
@@ -162,6 +163,14 @@ class SettingsService {
 
   Future<void> setUserFacts(String v) async =>
       (await _store).setString(_keyUserFacts, v);
+
+  // --- 语言 ---
+
+  Future<String> getLocale() async =>
+      (await _store).getString(_keyLocale) ?? 'system';
+
+  Future<void> setLocale(String locale) async =>
+      (await _store).setString(_keyLocale, locale);
 
   // --- 清除 ---
 

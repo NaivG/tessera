@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:tessera/l10n/app_localizations.dart';
+
 import '../../memory/memory.dart';
 
 /// 记忆页面 — 展示记忆系统中的所有记忆条目
@@ -49,7 +51,9 @@ class _MemoryPageState extends State<MemoryPage> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('记忆')),
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.memoryAppBarTitle),
+      ),
       body: _loading
           ? Center(child: CircularProgressIndicator(color: colorScheme.primary))
           : _entries.isEmpty
@@ -70,14 +74,14 @@ class _MemoryPageState extends State<MemoryPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            '暂无记忆',
+            AppLocalizations.of(context)!.memoryEmpty,
             style: theme.textTheme.titleMedium?.copyWith(
               color: theme.colorScheme.outline,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            '对话中提取的记忆会显示在这里',
+            AppLocalizations.of(context)!.memoryEmptySubtitle,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.outline,
             ),
@@ -110,7 +114,7 @@ class _MemoryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final typeLabel = _typeLabel(entry.type);
+    final typeLabel = _typeLabel(entry.type, context);
     final typeColor = _typeColor(entry.type, colorScheme);
 
     return Padding(
@@ -167,7 +171,7 @@ class _MemoryCard extends StatelessWidget {
               const SizedBox(height: 8),
               // 时间
               Text(
-                _formatTime(entry.updatedAt),
+                _formatTime(entry.updatedAt, context),
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: colorScheme.outline.withValues(alpha: 0.6),
                 ),
@@ -179,13 +183,14 @@ class _MemoryCard extends StatelessWidget {
     );
   }
 
-  String _typeLabel(MemoryType type) {
+  String _typeLabel(MemoryType type, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return switch (type) {
-      MemoryType.user => '用户',
-      MemoryType.knowledge => '知识',
-      MemoryType.event => '事件',
-      MemoryType.conversational => '对话',
-      MemoryType.longTerm => '长期',
+      MemoryType.user => l10n.memoryTypeUser,
+      MemoryType.knowledge => l10n.memoryTypeKnowledge,
+      MemoryType.event => l10n.memoryTypeEvent,
+      MemoryType.conversational => l10n.memoryTypeConversational,
+      MemoryType.longTerm => l10n.memoryTypeLongTerm,
     };
   }
 
@@ -199,13 +204,14 @@ class _MemoryCard extends StatelessWidget {
     };
   }
 
-  String _formatTime(DateTime dt) {
+  String _formatTime(DateTime dt, BuildContext context) {
     final now = DateTime.now();
     final diff = now.difference(dt);
-    if (diff.inMinutes < 1) return '刚刚';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} 分钟前';
-    if (diff.inHours < 24) return '${diff.inHours} 小时前';
-    if (diff.inDays < 7) return '${diff.inDays} 天前';
+    final l10n = AppLocalizations.of(context)!;
+    if (diff.inMinutes < 1) return l10n.memoryFormatJustNow;
+    if (diff.inMinutes < 60) return l10n.memoryFormatMinutesAgo(diff.inMinutes);
+    if (diff.inHours < 24) return l10n.memoryFormatHoursAgo(diff.inHours);
+    if (diff.inDays < 7) return l10n.memoryFormatDaysAgo(diff.inDays);
     return '${dt.month}/${dt.day} ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
   }
 }

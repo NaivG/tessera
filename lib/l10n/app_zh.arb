@@ -1,0 +1,295 @@
+{
+  "@@locale": "zh",
+
+  "localeDescription": "简体中文",
+
+  "createdBy": "NaivG",
+
+  "appTitle": "Tessera",
+
+  "commonCancel": "取消",
+  "commonDelete": "删除",
+  "commonSave": "保存",
+  "commonConfirm": "确认",
+  "commonClear": "清除",
+
+  "chatNewConversation": "新对话",
+  "chatNewLabel": "新建对话",
+  "chatNoConversations": "暂无对话",
+  "chatSend": "发送",
+  "chatModifyMessage": "修改消息",
+  "chatNewContentHint": "输入新内容",
+  "chatConfigureProviderFirst": "请先在设置中 LLM 提供商并选择模型",
+  "chatGoToSettings": "去设置",
+  "chatWelcomeTitle": "Tessera AI",
+  "chatWelcomeSubtitle": "开始新对话，发送消息即可",
+
+  "bubbleThinking": "思考中...",
+  "bubbleThought": "已思考",
+  "bubbleToolCall": "调用工具...",
+  "bubbleNoArgs": "(无参数)",
+  "bubbleCopy": "复制",
+  "bubbleCopyMarkdown": "Markdown",
+  "bubbleCopyPlainText": "纯文本",
+  "bubbleModify": "修改",
+  "bubbleRegenerate": "重新生成",
+  "bubbleShare": "分享",
+
+  "sidebarTitle": "Tessera AI",
+  "sidebarCollapseTooltip": "收回侧边栏",
+  "sidebarCloseTooltip": "关闭",
+  "sidebarConversationsLabel": "对话",
+  "sidebarRename": "重命名",
+  "sidebarRenameDialogTitle": "重命名对话",
+  "sidebarRenameHint": "输入新名称",
+  "sidebarDeleteDialogTitle": "删除对话",
+  "sidebarDeleteConfirm": "确定要删除「{title}」吗？",
+  "@sidebarDeleteConfirm": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "sidebarDefaultUserName": "用户",
+
+  "settingsTitle": "设置",
+  "settingsSectionUser": "用户",
+  "settingsUserProfile": "用户档案",
+  "settingsUserProfileSubtitle": "设置个人信息以让 AI 更好地了解你",
+  "settingsSectionLlmProviders": "LLM 提供商",
+  "settingsEmptyProviders": "尚未配置任何 LLM 提供商",
+  "settingsEmptyProvidersSub": "点击下方按钮添加",
+  "settingsAddProvider": "添加提供商",
+  "settingsSectionModelSelection": "模型选择",
+  "settingsModelAssignment": "模型分配",
+  "settingsModelAssignmentSubtitle": "为各能力方向（文本/视觉/语音/嵌入等）指定模型",
+  "settingsSectionRequest": "请求",
+  "settingsStreamEnabled": "启用流式请求",
+  "settingsStreamEnabledSubtitle": "实时显示 AI 回复，关闭后等待完整回复",
+  "settingsDeepThinking": "启用深度思考",
+  "settingsDeepThinkingSubtitle": "显示模型的推理思考过程（部分模型默认开启）",
+  "settingsSectionSpeech": "语音",
+  "settingsTtsEnabled": "启用文字转语音 (TTS)",
+  "settingsTtsEnabledSubtitle": "AI 回复时自动朗读",
+  "settingsSttEnabled": "启用语音输入 (STT)",
+  "settingsSttEnabledSubtitle": "通过语音输入消息",
+  "settingsSectionPrompt": "提示词",
+  "settingsLightweightMode": "轻量模式",
+  "settingsLightweightModeSubtitle": "大幅缩减系统提示词，仅保留核心约束并不再限制安全指令，开启后跳过记忆加载。",
+  "settingsCustomPrompt": "自定义提示词",
+
+  "settingsEdit": "编辑",
+  "settingsEditProvider": "编辑 {name}",
+  "@settingsEditProvider": {
+    "placeholders": { "name": {} }
+  },
+  "settingsModelCount": "模型 ({count}):",
+  "@settingsModelCount": {
+    "placeholders": { "count": {} }
+  },
+  "settingsEditModel": "编辑模型",
+
+  "settingsAddProviderDialogTitle": "添加 LLM 提供商",
+  "settingsProviderFormat": "提供商格式",
+  "settingsProviderNameLabel": "提供商名称（留空使用格式名称）",
+  "settingsProviderNameHint": "如: DeepSeek、自定义代理...",
+  "settingsBaseUrl": "Base URL",
+  "settingsApiKey": "API Key",
+  "settingsApiKeyOptional": "API Key（无需）",
+  "settingsApiKeyHint": "输入 API Key...",
+  "settingsApiKeyNotNeeded": "(Ollama 不需要 API Key)",
+  "settingsApiKeyEditHint": "留空不修改...",
+  "settingsProviderAdd": "添加",
+
+  "settingsDeleteConfirmTitle": "确认删除",
+  "settingsDeleteConfirm": "确定要删除「{name}」吗？此操作不可撤销。",
+  "@settingsDeleteConfirm": {
+    "placeholders": { "name": {} }
+  },
+
+  "messageInputImage": "图片",
+  "messageInputImageSubtitle": "从相册选择图片",
+  "messageInputCamera": "相机",
+  "messageInputCameraSubtitle": "使用相机拍摄",
+  "messageInputFile": "文件",
+  "messageInputFileSubtitle": "选择任意文件",
+
+  "memoryAppBarTitle": "记忆",
+  "memoryEmpty": "暂无记忆",
+  "memoryEmptySubtitle": "对话中提取的记忆会显示在这里",
+  "memoryTypeUser": "用户",
+  "memoryTypeKnowledge": "知识",
+  "memoryTypeEvent": "事件",
+  "memoryTypeConversational": "对话",
+  "memoryTypeLongTerm": "长期",
+
+  "libraryAppBarTitle": "资料库",
+  "libraryClearTooltip": "清空资料库",
+  "libraryEmpty": "资料库为空",
+  "libraryEmptySubtitle": "在对话中上传的图片、文件等会自动保存在这里",
+  "libraryDeleteDialogTitle": "删除文件",
+  "libraryDeleteConfirm": "确定要删除「{name}」吗？",
+  "@libraryDeleteConfirm": {
+    "placeholders": { "name": {} }
+  },
+  "libraryClearDialogTitle": "清空资料库",
+  "libraryClearConfirm": "确定要删除资料库中的所有文件吗？此操作不可撤销。",
+
+  "profileAppBarTitle": "用户档案",
+  "profileSaving": "保存中…",
+  "profileSave": "保存",
+  "profileInfoCard": "你填写的信息将注入系统提示词，帮助 AI 了解你的偏好和背景，提供更加个性化的回复。空字段将被忽略。",
+  "profileSectionBasic": "基本信息",
+  "profileDisplayName": "显示名称",
+  "profileDisplayNameHint": "例如：张三",
+  "profileAlias": "偏好称呼 / 别名",
+  "profileAliasHint": "例如：小张、Alice",
+  "profileRole": "角色 / 与 AI 的关系",
+  "profileRoleHint": "例如：软件工程师、学生",
+  "profileSectionPersonalization": "个性化信息",
+  "profilePreferences": "偏好与风格",
+  "profilePreferencesHint": "例如：喜欢简洁的回答、偏好中文、注重代码质量",
+  "profileFacts": "相关事实",
+  "profileFactsHint": "例如：住在北京、使用 Flutter 开发、正在学习 Rust",
+  "profileSaveButton": "保存用户档案",
+  "profileClearButton": "清除所有档案信息",
+  "profileUnsavedDialogTitle": "未保存的更改",
+  "profileUnsavedDialogContent": "你有未保存的更改，确定要离开吗？",
+  "profileLeave": "离开",
+  "profileSavedSnackbar": "用户档案已保存",
+  "profileClearDialogTitle": "清除用户档案",
+  "profileClearDialogContent": "确定要清除所有档案信息吗？此操作不可撤销。",
+
+  "errorTitle": "Oops! An unexpected error occurred.",
+  "errorSubtitle": "应用发生了未处理的异常, 请将以下信息反馈给开发者",
+  "errorType": "错误类型",
+  "errorMessage": "错误信息",
+  "errorStackTrace": "堆栈跟踪",
+  "errorCopyInfo": "复制信息",
+  "errorRestart": "重启应用",
+  "errorCopied": "错误信息已复制到剪贴板",
+  "errorRestartFailed": "重启失败: {error}",
+  "@errorRestartFailed": {
+    "placeholders": { "error": {} }
+  },
+
+  "shortcutLibrary": "资料库",
+  "shortcutMemory": "记忆",
+
+  "modelEditAppBarTitle": "编辑模型 - {name}",
+  "@modelEditAppBarTitle": {
+    "placeholders": { "name": {} }
+  },
+  "modelEditAddModelDialogTitle": "添加模型: {modelId}",
+  "@modelEditAddModelDialogTitle": {
+    "placeholders": { "modelId": {} }
+  },
+  "modelEditModelIdLabel": "模型 ID",
+  "modelEditModelTypeLabel": "模型类型",
+  "modelEditModalTagsLabel": "模态标签",
+  "modelEditSelectedTags": "已选标签: {tags}",
+  "@modelEditSelectedTags": {
+    "placeholders": { "tags": {} }
+  },
+  "modelEditApiInfoFetched": "已从 API 获取到模型信息，请确认",
+
+  "modelEditTitle": "编辑模型",
+  "modelEditDeleteTitle": "删除模型",
+  "modelEditDeleteConfirm": "确定要删除模型「{model}」吗？",
+  "@modelEditDeleteConfirm": {
+    "placeholders": { "model": {} }
+  },
+  "modelEditAddModel": "添加模型",
+  "modelEditAddedModels": "已添加模型 ({count})",
+  "@modelEditAddedModels": {
+    "placeholders": { "count": {} }
+  },
+  "modelEditFetching": "正在获取模型列表…",
+  "modelEditSearchHint": "搜索或输入模型 ID…",
+  "modelEditAddTooltip": "添加模型",
+  "modelEditNoModels": "尚未添加任何模型",
+  "modelEditAddPrompt": "在上方输入框中搜索或输入模型 ID 进行添加",
+  "modelEditDeleteTooltip": "删除模型",
+
+  "modelSelectionAppBarTitle": "模型选择",
+  "modelSelectionSectionMain": "主模型（文本 LLM）",
+  "modelSelectionMainSubtitle": "最基础的文本对话任务交给哪个模型",
+  "modelSelectionSectionInput": "多模态输入处理",
+  "modelSelectionInputSubtitle": "处理用户输入的图片、音频、视频时使用哪个模型。",
+  "modelSelectionInputHint": "若主模型支持该模态，可选择\"使用主模型\"。",
+  "modelSelectionSectionOutput": "多模态输出生成",
+  "modelSelectionSectionOther": "其他模型",
+  "modelSelectionSectionEmbedding": "嵌入模型",
+  "modelSelectionMainLabel": "主模型",
+  "modelSelectionUseMainModel": "使用主模型",
+  "modelSelectionNotConfigured": "未配置",
+  "modelSelectionClearSelection": "清除选择",
+  "modelSelectionSectionLlm": "LLM 辅助功能",
+  "modelSelectionOutputSubtitle": "生成图片、视频、语音等非文本输出时使用哪个模型。",
+  "modelSelectionLlmSubtitle": "话题检测、记忆整理、内容总结等辅助任务。留空默认使用主模型。",
+  "modelSelectionOtherSubtitle": "嵌入（Embedding）、排序（Ranking）等专用模型。话题检测/记忆整理/内容总结等 LLM 辅助功能请在上方选择。",
+  "modelSelectionTopicDetection": "话题检测",
+  "modelSelectionTopicDetectionHint": "检测对话话题、意图分类",
+  "modelSelectionMemoryOrganization": "记忆整理",
+  "modelSelectionMemoryOrganizationHint": "整理长期记忆、知识提取",
+  "modelSelectionContentSummarization": "内容总结",
+  "modelSelectionContentSummarizationHint": "对话/文档摘要生成",
+  "modelSelectionEmbeddingHint": "用于文本嵌入向量生成",
+  "modelSelectionRankingModel": "排序模型",
+  "modelSelectionRankingHint": "用于搜索结果重排序",
+  "modelSelectionNoModelsFound": "未找到可用的模型，请先在设置中添加对应模型",
+  "modelSelectionPickTitle": "选择模型",
+
+  "systemPrompt": "系统提示词",
+
+  "customPromptEditTitle": "自定义提示词注入",
+  "customPromptLength": "共 {length} 个字符",
+  "@customPromptLength": {
+    "placeholders": { "length": {} }
+  },
+  "notSetting": "未设置",
+  "customPromptHint": "在此输入的内容将注入到系统提示的 \"用户自定义指令\" 块中。留空则不注入。",
+  "customPromptHintTemplate": "例如：喜欢简洁的回答、偏好中文、注重代码质量等...",
+
+
+  "memoryFormatJustNow": "刚刚",
+  "memoryFormatMinutesAgo": "{minutes} 分钟前",
+  "@memoryFormatMinutesAgo": {
+    "placeholders": { "minutes": {} }
+  },
+  "memoryFormatHoursAgo": "{hours} 小时前",
+  "@memoryFormatHoursAgo": {
+    "placeholders": { "hours": {} }
+  },
+  "memoryFormatDaysAgo": "{days} 天前",
+  "@memoryFormatDaysAgo": {
+    "placeholders": { "days": {} }
+  },
+
+  "mediaTypeImage": "图片",
+  "mediaTypeVideo": "视频",
+  "mediaTypeAudio": "音频",
+  "mediaTypeFile": "文件",
+
+  "settingsSectionAbout": "关于",
+  "settingsSectionLanguage": "语言",
+  "settingsLanguageSystem": "跟随系统",
+  "settingsLanguageZh": "简体中文",
+  "settingsLanguageEn": "English",
+
+  "modelTypeText": "文本生成",
+  "modelTypeImage": "文生图",
+  "modelTypeVideo": "文生视频",
+  "modelTypeSpeech": "文生语音",
+  "modelTypeEmbedding": "嵌入",
+  "modelTypeRanking": "排序",
+
+  "modelTagText": "文本",
+  "modelTagVision": "视觉",
+  "modelTagAudible": "音频",
+  "modelTagVideo": "视频",
+
+  "modelTagsOmni": "全模态",
+  "modelTagsTextOnly": "纯文本",
+
+  "toolboxLabel": "资料库"
+}

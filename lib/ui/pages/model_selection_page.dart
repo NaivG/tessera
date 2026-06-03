@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../core/core.dart';
+import '../../l10n/model_localization.dart';
 import '../../state/settings_state.dart';
+import 'package:tessera/l10n/app_localizations.dart';
 
 /// 模型选择设置页
 ///
@@ -60,16 +62,17 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('模型选择')),
+      appBar: AppBar(title: Text(l10n.modelSelectionAppBarTitle)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _sectionHeader('主模型（文本 LLM）'),
+          _sectionHeader(l10n.modelSelectionSectionMain),
           const SizedBox(height: 4),
           Text(
-            '最基础的文本对话任务交给哪个模型',
+            l10n.modelSelectionMainSubtitle,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.outline,
             ),
@@ -77,7 +80,7 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
           const SizedBox(height: 8),
           _buildSlotTile(
             label: _config.mainModel.displayLabel(_state),
-            subtitle: '主模型',
+            subtitle: l10n.modelSelectionMainLabel,
             onTap: () => _pickModel((slot) {
               if (slot != null) _state.setMainModel(slot);
             }, filterType: ModelType.text),
@@ -85,11 +88,10 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
 
           const Divider(height: 32),
 
-          _sectionHeader('输入模态'),
+          _sectionHeader(l10n.modelSelectionSectionInput),
           const SizedBox(height: 4),
           Text(
-            '处理用户输入的图片、音频、视频时使用哪个模型。'
-            '若主模型支持该模态，可选择"使用主模型"。',
+            '${l10n.modelSelectionInputSubtitle}${l10n.modelSelectionInputHint}',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.outline,
             ),
@@ -101,10 +103,10 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
 
           const Divider(height: 32),
 
-          _sectionHeader('输出模态'),
+          _sectionHeader(l10n.modelSelectionSectionOutput),
           const SizedBox(height: 4),
           Text(
-            '生成图片、视频、语音等非文本输出时使用哪个模型。',
+            l10n.modelSelectionOutputSubtitle,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.outline,
             ),
@@ -121,10 +123,10 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
 
           const Divider(height: 32),
 
-          _sectionHeader('LLM 辅助功能'),
+          _sectionHeader(l10n.modelSelectionSectionLlm),
           const SizedBox(height: 4),
           Text(
-            '话题检测、记忆整理、内容总结等辅助任务。留空默认使用主模型。',
+            l10n.modelSelectionLlmSubtitle,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.outline,
             ),
@@ -132,37 +134,44 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
           const SizedBox(height: 8),
           _buildOtherRow(
             'topic_detection',
-            '话题检测',
-            '检测对话话题、意图分类',
+            l10n.modelSelectionTopicDetection,
+            l10n.modelSelectionTopicDetectionHint,
             canUseMain: true,
           ),
           _buildOtherRow(
             'memory_organization',
-            '记忆整理',
-            '整理长期记忆、知识提取',
+            l10n.modelSelectionMemoryOrganization,
+            l10n.modelSelectionMemoryOrganizationHint,
             canUseMain: true,
           ),
           _buildOtherRow(
             'content_summarization',
-            '内容总结',
-            '对话/文档摘要生成',
+            l10n.modelSelectionContentSummarization,
+            l10n.modelSelectionContentSummarizationHint,
             canUseMain: true,
           ),
 
           const Divider(height: 32),
 
-          _sectionHeader('其他模型'),
+          _sectionHeader(l10n.modelSelectionSectionOther),
           const SizedBox(height: 4),
           Text(
-            '嵌入（Embedding）、排序（Ranking）等专用模型。'
-            '话题检测/记忆整理/内容总结等 LLM 辅助功能请在上方选择。',
+            l10n.modelSelectionOtherSubtitle,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.outline,
             ),
           ),
           const SizedBox(height: 8),
-          _buildOtherRow('embedding', '嵌入模型', '用于文本嵌入向量生成'),
-          _buildOtherRow('ranking', '排序模型', '用于搜索结果重排序'),
+          _buildOtherRow(
+            'embedding',
+            l10n.modelSelectionSectionEmbedding,
+            l10n.modelSelectionEmbeddingHint,
+          ),
+          _buildOtherRow(
+            'ranking',
+            l10n.modelSelectionRankingModel,
+            l10n.modelSelectionRankingHint,
+          ),
 
           const SizedBox(height: 40),
         ],
@@ -174,6 +183,7 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
 
   Widget _buildInputRow(ModelTag tag) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final slot = _config.inputModalities[tag];
     final mainOk = _mainSupports(tag);
 
@@ -181,9 +191,9 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
     if (slot != null) {
       currentLabel = slot.displayLabel(_state);
     } else if (mainOk) {
-      currentLabel = '使用主模型';
+      currentLabel = l10n.modelSelectionUseMainModel;
     } else {
-      currentLabel = '未配置';
+      currentLabel = l10n.modelSelectionNotConfigured;
     }
 
     return Card(
@@ -197,7 +207,7 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
               children: [
                 _buildTagChip(theme, tag),
                 const SizedBox(width: 8),
-                Text(tag.displayName, style: theme.textTheme.titleSmall),
+                Text(l10n.modelTagName(tag), style: theme.textTheme.titleSmall),
               ],
             ),
             const SizedBox(height: 8),
@@ -208,7 +218,9 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
                     onTap: () => _pickModel(
                       (newSlot) => _state.setInputModality(tag, newSlot),
                       allowClear: true,
-                      clearLabel: mainOk ? '使用主模型' : '清除',
+                      clearLabel: mainOk
+                          ? l10n.modelSelectionUseMainModel
+                          : l10n.commonClear,
                       filterTag: tag,
                     ),
                     borderRadius: BorderRadius.circular(8),
@@ -254,7 +266,10 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
               TextButton.icon(
                 onPressed: () => _state.setInputModality(tag, null),
                 icon: const Icon(Icons.undo, size: 14),
-                label: const Text('使用主模型', style: TextStyle(fontSize: 12)),
+                label: Text(
+                  l10n.modelSelectionUseMainModel,
+                  style: const TextStyle(fontSize: 12),
+                ),
                 style: TextButton.styleFrom(
                   visualDensity: VisualDensity.compact,
                 ),
@@ -270,8 +285,11 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
 
   Widget _buildOutputRow(ModelType type) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final slot = _config.outputModalities[type];
-    final currentLabel = slot != null ? slot.displayLabel(_state) : '未配置';
+    final currentLabel = slot != null
+        ? slot.displayLabel(_state)
+        : l10n.modelSelectionNotConfigured;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -286,7 +304,7 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    type.displayName,
+                    l10n.modelTypeName(type),
                     style: theme.textTheme.titleSmall,
                   ),
                 ),
@@ -358,14 +376,15 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
     bool canUseMain = false,
   }) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final slot = _config.otherModels[key];
     final String currentLabel;
     if (slot != null) {
       currentLabel = slot.displayLabel(_state);
     } else if (canUseMain) {
-      currentLabel = '使用主模型';
+      currentLabel = l10n.modelSelectionUseMainModel;
     } else {
-      currentLabel = '未配置';
+      currentLabel = l10n.modelSelectionNotConfigured;
     }
 
     return Card(
@@ -398,7 +417,9 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
               onTap: () => _pickModel(
                 (newSlot) => _state.setOtherModel(key, newSlot),
                 allowClear: true,
-                clearLabel: canUseMain ? '使用主模型' : '清除选择',
+                clearLabel: canUseMain
+                    ? l10n.modelSelectionUseMainModel
+                    : l10n.modelSelectionClearSelection,
                 filterType: _otherKeyToType(key),
               ),
               borderRadius: BorderRadius.circular(8),
@@ -439,7 +460,10 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
               TextButton.icon(
                 onPressed: () => _state.setOtherModel(key, null),
                 icon: const Icon(Icons.undo, size: 14),
-                label: const Text('使用主模型', style: TextStyle(fontSize: 12)),
+                label: Text(
+                  l10n.modelSelectionUseMainModel,
+                  style: const TextStyle(fontSize: 12),
+                ),
                 style: TextButton.styleFrom(
                   visualDensity: VisualDensity.compact,
                 ),
@@ -479,10 +503,12 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
   Future<void> _pickModel(
     void Function(ModelSlot? slot) onSelected, {
     bool allowClear = false,
-    String clearLabel = '清除选择',
+    String clearLabel = '',
     ModelType? filterType,
     ModelTag? filterTag,
   }) async {
+    final l10n = AppLocalizations.of(context)!;
+    if (clearLabel.isEmpty) clearLabel = l10n.modelSelectionClearSelection;
     var allModels = _allModels;
     if (filterType != null) {
       allModels = allModels.where((e) => e.model.type == filterType).toList();
@@ -494,9 +520,9 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
     }
     if (allModels.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('未找到可用的模型，请先在设置中添加对应模型')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.modelSelectionNoModelsFound)),
+        );
       }
       return;
     }
@@ -506,7 +532,7 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
       builder: (ctx) {
         final theme = Theme.of(ctx);
         return AlertDialog(
-          title: const Text('选择模型'),
+          title: Text(l10n.modelSelectionPickTitle),
           content: SizedBox(
             width: double.maxFinite,
             child: ListView.builder(
@@ -527,7 +553,7 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
                 final entry = allModels[index];
                 final isLLM = entry.model.type == ModelType.text;
                 final tagsStr = entry.model.isMultimodal
-                    ? ' \u00b7 ${entry.model.tagsLabel}'
+                    ? ' \u00b7 ${l10n.modelTagsLabel(entry.model)}'
                     : '';
 
                 return ListTile(
@@ -541,7 +567,7 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
                     style: const TextStyle(fontSize: 14),
                   ),
                   subtitle: Text(
-                    '${entry.provider.displayName}${entry.model.type == ModelType.text ? "" : " \u00b7 ${entry.model.type.displayName}"}$tagsStr',
+                    '${entry.provider.displayName}${entry.model.type == ModelType.text ? "" : " \u00b7 ${l10n.modelTypeName(entry.model.type)}"}$tagsStr',
                     style: const TextStyle(fontSize: 12),
                   ),
                   onTap: () => Navigator.pop(
@@ -558,7 +584,7 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('取消'),
+              child: Text(l10n.commonCancel),
             ),
           ],
         );

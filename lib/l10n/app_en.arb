@@ -1,0 +1,294 @@
+{
+  "@@locale": "en",
+
+  "localeDescription": "English",
+
+  "createdBy": "Localized by NaivG",
+
+  "appTitle": "Tessera",
+
+  "commonCancel": "Cancel",
+  "commonDelete": "Delete",
+  "commonSave": "Save",
+  "commonConfirm": "OK",
+  "commonClear": "Clear",
+
+  "chatNewConversation": "New Chat",
+  "chatNewLabel": "New Conversation",
+  "chatNoConversations": "No conversations",
+  "chatSend": "Send",
+  "chatModifyMessage": "Modify Message",
+  "chatNewContentHint": "Enter new content",
+  "chatConfigureProviderFirst": "Please configure an LLM provider and select a model in Settings first",
+  "chatGoToSettings": "Settings",
+  "chatWelcomeTitle": "Tessera AI",
+  "chatWelcomeSubtitle": "Start a new conversation by sending a message",
+
+  "bubbleThinking": "Thinking...",
+  "bubbleThought": "Thought",
+  "bubbleToolCall": "Calling tool...",
+  "bubbleNoArgs": "(no arguments)",
+  "bubbleCopy": "Copy",
+  "bubbleCopyMarkdown": "Markdown",
+  "bubbleCopyPlainText": "Plain Text",
+  "bubbleModify": "Modify",
+  "bubbleRegenerate": "Regenerate",
+  "bubbleShare": "Share",
+
+  "sidebarTitle": "Tessera AI",
+  "sidebarCollapseTooltip": "Collapse sidebar",
+  "sidebarCloseTooltip": "Close",
+  "sidebarConversationsLabel": "Conversations",
+  "sidebarRename": "Rename",
+  "sidebarRenameDialogTitle": "Rename Conversation",
+  "sidebarRenameHint": "Enter a new name",
+  "sidebarDeleteDialogTitle": "Delete Conversation",
+  "sidebarDeleteConfirm": "Are you sure you want to delete \"{title}\"?",
+  "@sidebarDeleteConfirm": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "sidebarDefaultUserName": "User",
+
+  "settingsTitle": "Settings",
+  "settingsSectionUser": "User",
+  "settingsUserProfile": "User Profile",
+  "settingsUserProfileSubtitle": "Set personal info to help AI understand you better",
+  "settingsSectionLlmProviders": "LLM Providers",
+  "settingsEmptyProviders": "No LLM providers configured yet",
+  "settingsEmptyProvidersSub": "Click the button below to add one",
+  "settingsAddProvider": "Add Provider",
+  "settingsSectionModelSelection": "Model Selection",
+  "settingsModelAssignment": "Model Assignment",
+  "settingsModelAssignmentSubtitle": "Assign models for each capability (text, vision, speech, embedding, etc.)",
+  "settingsSectionRequest": "Request",
+  "settingsStreamEnabled": "Enable streaming",
+  "settingsStreamEnabledSubtitle": "Display AI responses in real-time. Disable to wait for the full response.",
+  "settingsDeepThinking": "Enable deep thinking",
+  "settingsDeepThinkingSubtitle": "Show the model's reasoning process (enabled by default on some models)",
+  "settingsSectionSpeech": "Speech",
+  "settingsTtsEnabled": "Enable Text-to-Speech (TTS)",
+  "settingsTtsEnabledSubtitle": "Read AI responses aloud automatically",
+  "settingsSttEnabled": "Enable Speech-to-Text (STT)",
+  "settingsSttEnabledSubtitle": "Input messages via voice",
+  "settingsSectionPrompt": "Prompts",
+  "settingsLightweightMode": "Lightweight Mode",
+  "settingsLightweightModeSubtitle": "Greatly reduces system prompts — only keeps core constraints, skips memory loading.",
+  "settingsCustomPrompt": "Custom Prompt",
+
+  "settingsEdit": "Edit",
+  "settingsEditProvider": "Edit {name}",
+  "@settingsEditProvider": {
+    "placeholders": { "name": {} }
+  },
+  "settingsModelCount": "Models ({count}):",
+  "@settingsModelCount": {
+    "placeholders": { "count": {} }
+  },
+  "settingsEditModel": "Edit Models",
+
+  "settingsAddProviderDialogTitle": "Add LLM Provider",
+  "settingsProviderFormat": "Provider Format",
+  "settingsProviderNameLabel": "Provider Name (leave empty to use format name)",
+  "settingsProviderNameHint": "e.g. DeepSeek, Custom Proxy...",
+  "settingsBaseUrl": "Base URL",
+  "settingsApiKey": "API Key",
+  "settingsApiKeyOptional": "API Key (not needed)",
+  "settingsApiKeyHint": "Enter API Key...",
+  "settingsApiKeyNotNeeded": "(Ollama does not need an API Key)",
+  "settingsApiKeyEditHint": "Leave empty to keep current...",
+  "settingsProviderAdd": "Add",
+
+  "settingsDeleteConfirmTitle": "Confirm Deletion",
+  "settingsDeleteConfirm": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+  "@settingsDeleteConfirm": {
+    "placeholders": { "name": {} }
+  },
+
+  "messageInputImage": "Image",
+  "messageInputImageSubtitle": "Pick from gallery",
+  "messageInputCamera": "Camera",
+  "messageInputCameraSubtitle": "Take a photo",
+  "messageInputFile": "File",
+  "messageInputFileSubtitle": "Select any file",
+
+  "memoryAppBarTitle": "Memory",
+  "memoryEmpty": "No memories yet",
+  "memoryEmptySubtitle": "Memories extracted from conversations will appear here",
+  "memoryTypeUser": "User",
+  "memoryTypeKnowledge": "Knowledge",
+  "memoryTypeEvent": "Event",
+  "memoryTypeConversational": "Conversational",
+  "memoryTypeLongTerm": "Long-term",
+
+  "libraryAppBarTitle": "Library",
+  "libraryClearTooltip": "Clear library",
+  "libraryEmpty": "Library is empty",
+  "libraryEmptySubtitle": "Images, files, etc. uploaded in conversations are saved here automatically",
+  "libraryDeleteDialogTitle": "Delete File",
+  "libraryDeleteConfirm": "Are you sure you want to delete \"{name}\"?",
+  "@libraryDeleteConfirm": {
+    "placeholders": { "name": {} }
+  },
+  "libraryClearDialogTitle": "Clear Library",
+  "libraryClearConfirm": "Are you sure you want to delete all files in the library? This action cannot be undone.",
+
+  "profileAppBarTitle": "User Profile",
+  "profileSaving": "Saving…",
+  "profileSave": "Save",
+  "profileInfoCard": "The information you provide will be injected into the system prompt to help AI understand your preferences and background, delivering more personalized responses. Empty fields will be ignored.",
+  "profileSectionBasic": "Basic Info",
+  "profileDisplayName": "Display Name",
+  "profileDisplayNameHint": "e.g. John Doe",
+  "profileAlias": "Preferred Name / Alias",
+  "profileAliasHint": "e.g. John, JD",
+  "profileRole": "Role / Relationship with AI",
+  "profileRoleHint": "e.g. Software Engineer, Student",
+  "profileSectionPersonalization": "Personalization",
+  "profilePreferences": "Preferences & Style",
+  "profilePreferencesHint": "e.g. prefers concise answers, enjoys technical depth",
+  "profileFacts": "Relevant Facts",
+  "profileFactsHint": "e.g. lives in New York, uses Flutter, learning Rust",
+  "profileSaveButton": "Save Profile",
+  "profileClearButton": "Clear All Profile Info",
+  "profileUnsavedDialogTitle": "Unsaved Changes",
+  "profileUnsavedDialogContent": "You have unsaved changes. Are you sure you want to leave?",
+  "profileLeave": "Leave",
+  "profileSavedSnackbar": "Profile saved",
+  "profileClearDialogTitle": "Clear Profile",
+  "profileClearDialogContent": "Are you sure you want to clear all profile info? This action cannot be undone.",
+
+  "errorTitle": "Oops! An unexpected error occurred.",
+  "errorSubtitle": "An unhandled exception occurred. Please report the following information to the developer.",
+  "errorType": "Error Type",
+  "errorMessage": "Error Message",
+  "errorStackTrace": "Stack Trace",
+  "errorCopyInfo": "Copy Info",
+  "errorRestart": "Restart App",
+  "errorCopied": "Error info copied to clipboard",
+  "errorRestartFailed": "Restart failed: {error}",
+  "@errorRestartFailed": {
+    "placeholders": { "error": {} }
+  },
+
+  "shortcutLibrary": "Library",
+  "shortcutMemory": "Memory",
+
+  "modelEditAppBarTitle": "Edit Models - {name}",
+  "@modelEditAppBarTitle": {
+    "placeholders": { "name": {} }
+  },
+  "modelEditAddModelDialogTitle": "Add Model: {modelId}",
+  "@modelEditAddModelDialogTitle": {
+    "placeholders": { "modelId": {} }
+  },
+  "modelEditModelIdLabel": "Model ID",
+  "modelEditModelTypeLabel": "Model Type",
+  "modelEditModalTagsLabel": "Modality Tags",
+  "modelEditSelectedTags": "Selected Tags: {tags}",
+  "@modelEditSelectedTags": {
+    "placeholders": { "tags": {} }
+  },
+  "modelEditApiInfoFetched": "Model info fetched from API, please confirm",
+
+  "modelEditTitle": "Edit Models",
+  "modelEditDeleteTitle": "Delete Model",
+  "modelEditDeleteConfirm": "Are you sure you want to delete model \"{model}\"?",
+  "@modelEditDeleteConfirm": {
+    "placeholders": { "model": {} }
+  },
+  "modelEditAddModel": "Add Model",
+  "modelEditAddedModels": "Added Models ({count})",
+  "@modelEditAddedModels": {
+    "placeholders": { "count": {} }
+  },
+  "modelEditFetching": "Fetching model list…",
+  "modelEditSearchHint": "Search or enter model ID…",
+  "modelEditAddTooltip": "Add model",
+  "modelEditNoModels": "No models added yet",
+  "modelEditAddPrompt": "Search or enter a model ID above to add it",
+  "modelEditDeleteTooltip": "Delete model",
+
+  "modelSelectionAppBarTitle": "Model Selection",
+  "modelSelectionSectionMain": "Main Model (Text LLM)",
+  "modelSelectionMainSubtitle": "Which model handles basic text chat tasks",
+  "modelSelectionSectionInput": "Multimodal Input",
+  "modelSelectionInputSubtitle": "Which model processes user images, audio, and video.",
+  "modelSelectionInputHint": "If the main model supports this modality, you can select \"Use Main Model\".",
+  "modelSelectionSectionOutput": "Multimodal Output",
+  "modelSelectionSectionOther": "Other Models",
+  "modelSelectionSectionEmbedding": "Embedding Model",
+  "modelSelectionMainLabel": "Main Model",
+  "modelSelectionUseMainModel": "Use Main Model",
+  "modelSelectionNotConfigured": "Not configured",
+  "modelSelectionClearSelection": "Clear selection",
+  "modelSelectionSectionLlm": "LLM Assist Features",
+  "modelSelectionOutputSubtitle": "Which model generates non-text outputs (images, video, speech, etc.)",
+  "modelSelectionLlmSubtitle": "Auxiliary tasks like topic detection, memory organization, and content summarization. Leave empty to use the main model by default.",
+  "modelSelectionOtherSubtitle": "Specialized models for Embedding, Ranking, etc. Select LLM assist features (topic detection / memory / summarization) above.",
+  "modelSelectionTopicDetection": "Topic Detection",
+  "modelSelectionTopicDetectionHint": "Detect conversation topics and intent classification",
+  "modelSelectionMemoryOrganization": "Memory Organization",
+  "modelSelectionMemoryOrganizationHint": "Organize long-term memory and extract knowledge",
+  "modelSelectionContentSummarization": "Content Summarization",
+  "modelSelectionContentSummarizationHint": "Generate conversation/document summaries",
+  "modelSelectionEmbeddingHint": "Generate text embedding vectors",
+  "modelSelectionRankingModel": "Ranking Model",
+  "modelSelectionRankingHint": "Re-rank search results",
+  "modelSelectionNoModelsFound": "No available models found. Please add the corresponding model in Settings first.",
+  "modelSelectionPickTitle": "Select Model",
+
+  "systemPrompt": "System Prompt",
+
+  "customPromptEditTitle": "Edit Custom Prompt",
+  "customPromptLength": "{length} chars",
+  "@customPromptLength": {
+    "placeholders": { "length": {} }
+  },
+  "notSetting": "not set",
+  "customPromptHint": "Content entered here will be injected into the \"User Custom Instruction\" block of the system prompt. Leave empty to skip.",
+  "customPromptHintTemplate": "For example: prefer concise answers, favor English, emphasize code quality, etc.",
+
+  "memoryFormatJustNow": "Just now",
+  "memoryFormatMinutesAgo": "{minutes} min ago",
+  "@memoryFormatMinutesAgo": {
+    "placeholders": { "minutes": {} }
+  },
+  "memoryFormatHoursAgo": "{hours}h ago",
+  "@memoryFormatHoursAgo": {
+    "placeholders": { "hours": {} }
+  },
+  "memoryFormatDaysAgo": "{days}d ago",
+  "@memoryFormatDaysAgo": {
+    "placeholders": { "days": {} }
+  },
+
+  "mediaTypeImage": "Image",
+  "mediaTypeVideo": "Video",
+  "mediaTypeAudio": "Audio",
+  "mediaTypeFile": "File",
+
+  "settingsSectionAbout": "About",
+  "settingsSectionLanguage": "Language",
+  "settingsLanguageSystem": "Follow System",
+  "settingsLanguageZh": "简体中文",
+  "settingsLanguageEn": "English",
+
+  "modelTypeText": "Text Generation",
+  "modelTypeImage": "Text-to-Image",
+  "modelTypeVideo": "Text-to-Video",
+  "modelTypeSpeech": "Text-to-Speech",
+  "modelTypeEmbedding": "Embedding",
+  "modelTypeRanking": "Ranking",
+
+  "modelTagText": "Text",
+  "modelTagVision": "Vision",
+  "modelTagAudible": "Audio",
+  "modelTagVideo": "Video",
+
+  "modelTagsOmni": "Omni-modal",
+  "modelTagsTextOnly": "Text-only",
+
+  "toolboxLabel": "Library"
+}

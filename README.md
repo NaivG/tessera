@@ -1,195 +1,161 @@
-# Tessera AI
 
-<p align="center">
-  <strong>一个跨平台的 AI 聊天客户端，一站式接入多个大语言模型</strong>
+
+<div align="center">
+
+# Tessera
+
+<p>
+  <strong>All-in-one LLM client. Make a multimodal AI yourself.</strong>
 </p>
 
-<p align="center">
-  Flutter 构建 | macOS · Windows · Linux · Android · iOS · Web
+<p>
+  <em>Your own multimodal AI assistant — powered by the models you choose, running on every device you own.</em>
 </p>
+
+![Stars](https://shields.io/github/stars/NaivG/tessera.svg)
+![Forks](https://img.shields.io/github/forks/NaivG/tessera.svg)
+![Issues](https://img.shields.io/github/issues/NaivG/tessera.svg)
+[![Flutter](https://img.shields.io/badge/Flutter-3.41.1-02569B.svg?logo=flutter)](https://flutter.dev/)
+[![Dart](https://img.shields.io/badge/Dart-3.11.0-0175C2.svg?logo=dart)](https://dart.dev/)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/NaivG/tessera)](https://github.com/NaivG/tessera/releases)
+[![License](https://img.shields.io/badge/License-AGPL3.0-blue.svg)](LICENSE)
+
+<p>
+  <a href="#features">Features</a> •
+  <a href="#screenshots">Screenshots</a> •
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#architecture">Architecture</a> •
+  <a href="#tech-stack">Tech Stack</a> •
+  <a href="#project-structure">Project Structure</a> •
+  <a href="#license">License</a>
+</p>
+
+<p style="font-size: 1.1em;">
+  <a>English</a> |
+  <a href="README_ZH.md">中文文档</a>
+</p>
+
+</div>
 
 ---
 
-## 功能
+**Tessera** (τέσσερα, Greek for "four" — the four corners of one unified piece) is a cross-platform AI chat client built with Flutter. It brings together multiple large language model providers under one roof, seamlessly routing multimodal tasks — vision, audio, image generation, speech synthesis — to the right models without you ever leaving the conversation.
 
-### 🤖 多提供商 LLM 接入
-同一界面无缝切换多个 AI 模型提供商：
-
-- **OpenAI** — GPT 系列模型
-- **Anthropic** — Claude 系列模型
-- **Google AI** — Gemini 系列模型
-- **Ollama** — 本地部署的开源模型
-
-每个提供商支持独立的 API Key、Base URL 和模型配置。
-
-### 🔄 流式对话
-实时逐 token 显示 AI 回复，支持 Markdown 渲染、代码高亮。对话过程中可随时取消、继续或切换话题。
-
-### 🧠 能力转译系统 (Capability Adapter)
-当主对话模型不具备某些能力时，自动路由到专用模型：
-
-| 能力 | 说明 |
-|------|------|
-| **Vision** | 将图片/视频发送给视觉模型分析，返回文字描述 |
-| **Audible** | 将音频发送给音频模型处理 |
-| **Image Generate** | 调用文生图模型生成图片 |
-| **Speech Generate** | 调用文生语音模型生成语音 |
-
-AI 自动判断何时需要调用这些子能力，对用户透明。
-
-### 💾 智能提示缓存
-三块可拆分系统提示词模板，基于内容哈希的增量缓存：
-
-1. **Agent Rules** — 静态安全规则，高优先级服务端缓存
-2. **User Profile** — 用户信息与长期记忆，客户端缓存
-3. **User-Defined Prompt** — 用户自定义指令，客户端缓存
-
-仅变更的部分会发送给 LLM 提供商，显著降低 token 消耗。
-
-### 🎤 语音交互
-- **语音输入**：Speech-to-Text，边说边识别
-- **语音输出**：Text-to-Speech，朗读 AI 回复（支持中文）
-
-### 📚 对话管理
-- SQLite 本地持久化存储，对话永不丢失
-- 对话列表：创建、重命名、删除
-- 媒体库：图片、视频、音频文件管理，可在对话中引用
-
-### 🎨 用户体验
-- Material 3 设计语言
-- 亮色 / 暗色 / 跟随系统 三档主题
-- 桌面端可拖拽调整窗口大小
-- 媒体附件预览
+With a built-in long-term memory system that extracts, retrieves, compresses, and forgets like a human mind, Tessera goes beyond simple chatbot interfaces to deliver a truly personal assistant.
 
 ---
 
-## 快速开始
+## Features
 
-### 环境要求
+### 🤖 Multi-Provider LLM Access
+Switch between AI providers effortlessly from a single interface:
+
+| Provider | Example Models |
+|----------|--------|
+| **OpenAI** | GPT-5.5, GPT-4o |
+| **Anthropic** | Claude 4.7 Opus, Claude 4.6 Sonnet, Claude 4.5 Haiku |
+| **Google AI** | Gemini 3 Pro, Gemini 3 Flash |
+| **Ollama** | Llama, Mistral, Qwen, DeepSeek — any open-source model running locally |
+
+Each provider maintains its own **API Key**, **Base URL**, and **model configuration**. Add as many **compatible** provider instances as you need.
+
+### 🔄 Streaming Conversations
+Real-time token-by-token AI responses with full Markdown rendering and syntax-highlighted code blocks. Cancel, continue, or switch topics mid-conversation without losing context.
+
+### 🧠 Capability Adapter System
+When your main chat model can't handle a modality, Tessera's Capability Adapter automatically routes it to a specialized model:
+
+| Capability | Description |
+|-----------|-------------|
+| **Vision** | Send images/videos to a vision model, return text descriptions |
+| **Audible** | Forward audio to an audio-processing model |
+| **Image Generate** | Call a text-to-image model to generate pictures |
+| **Speech Generate** | Call a text-to-speech model to generate speech |
+
+The AI decides when to invoke these sub-capabilities — the process is transparent to you, and results flow back into the main conversation seamlessly.
+
+### 💾 Intelligent Prompt Caching
+Three-block system prompt template with SHA256 hash-based delta caching:
+
+1. **Agent Rules** — Static safety rules, high-priority server-side cache
+2. **User Profile** — User info & long-term memory, client-side cache
+3. **User-Defined Prompt** — Custom instructions, client-side cache
+
+Only the blocks that actually changed are re-sent to the LLM provider, significantly reducing token consumption and latency.
+
+### 🧠 Long-Term Memory
+Tessera features a sophisticated, biologically inspired memory system that evolves with your conversations:
+
+- **MemoryExtractor** — Periodically calls an LLM to extract structured facts (user preferences, knowledge, events) from conversation turns
+- **MemoryRetriever** — Uses SimHash (128-bit) with bucket-based indexing and Hamming distance scoring for fast semantic memory search
+- **MemoryCompressor** — Clusters similar memories via simplified DBSCAN and merges them using LLM summarization; auto-purges low-importance, aged-out events
+- **MemoryForgetter** — Applies exponential time-decay and access-decay to calculate forgetting scores; memory fades naturally if unused
+- **ConversationalMemoryManager** — Generates rolling summaries of the current conversation (every N turns) to keep context intact without unbounded token growth
+
+> Memory is not just stored — it's lived. Retrieved. Compressed. Forgotten. Just like you.
+
+### 🎤 Voice Interaction
+- **Speech-to-Text**: Speak naturally, see it transcribed in real time
+- **Text-to-Speech**: Listen to AI responses read aloud (including Chinese)
+
+### 📚 Conversation Management
+- **SQLite** local persistent storage — conversations never get lost
+- Create, rename, delete conversations
+- **Media Library**: Manage images, videos, and audio files; reference them in conversations
+
+### 🎨 User Experience
+- **Material 3** design language
+- Light / Dark / System theme
+- Desktop window: resize, drag, minimum 400×600, default 480×720
+- Media attachment preview (images, video, audio)
+- Streaming text with Markdown rendering & code highlighting
+- Global error handling with dedicated error page
+
+### 🌐 Localization
+- English & Chinese (fully localized)
+- Easy to extend with Flutter's l10n system
+
+---
+
+## Quick Start
+
+### Prerequisites
 
 - [Flutter SDK](https://docs.flutter.dev/get-started/install) 3.11+
-- 各平台对应的构建工具（Xcode、Android Studio、Visual Studio 等）
+- Platform-specific build tools (Xcode, Android Studio, Visual Studio, etc.)
 
-### 安装与运行
+### Install & Run
 
 ```bash
-# 克隆项目
-git clone <your-repo-url> tessera
+# Clone the repository
+git clone https://github.com/NaivG/tessera.git
 cd tessera
 
-# 安装依赖
+# Install dependencies
 flutter pub get
 
-# 运行（自动检测当前平台）
+# Run (auto-detects current platform)
 flutter run
 ```
 
-桌面端运行后会自动配置窗口：最小 400×600，默认 480×720。
+Desktop builds auto-configure the window: minimum 400×600, default 480×720, centered on screen.
 
-### 配置 API Key
+### Configure API Key
 
-1. 启动应用后进入 **设置** 页面
-2. 选择需要使用的 LLM 提供商（OpenAI / Anthropic / Google / Ollama）
-3. 填入 API Key 和可选的 Base URL
-4. 选择主对话模型及各项专用模型
-5. 返回主页开始对话
-
----
-
-## 项目结构
-
-```
-tessera/
-├── lib/
-│   ├── main.dart                  # 入口，窗口初始化
-│   ├── app.dart                   # MaterialApp、路由、主题配置
-│   ├── core/                      # 核心抽象
-│   │   ├── llm_provider.dart      # LLM 提供商统一接口
-│   │   ├── capability_adapter.dart# 能力转译路由
-│   │   ├── tool_registry.dart     # 工具注册与执行
-│   │   ├── system_prompt_builder.dart # 系统提示构建
-│   │   ├── prompt_template_store.dart # 提示模板存储
-│   │   └── models/                # 数据模型
-│   │       ├── message.dart
-│   │       ├── conversation.dart
-│   │       ├── llm_config.dart
-│   │       ├── model_info.dart
-│   │       ├── stream_chunk.dart
-│   │       └── tool.dart
-│   ├── providers/                 # 各 LLM SDK 封装
-│   │   ├── openai_provider.dart
-│   │   ├── anthropic_provider.dart
-│   │   ├── google_provider.dart
-│   │   ├── ollama_provider.dart
-│   │   └── provider_factory.dart
-│   ├── services/                  # 业务服务
-│   │   ├── conversation_service.dart # 对话持久化 (SQLite)
-│   │   ├── speech_service.dart       # STT/TTS
-│   │   ├── media_library.dart        # 媒体文件管理
-│   │   └── settings_service.dart     # 设置持久化
-│   ├── state/                     # 状态管理 (ChangeNotifier)
-│   │   ├── chat_state.dart        # 对话流状态
-│   │   └── settings_state.dart    # 设置状态
-│   ├── cache/                     # 提示缓存系统
-│   │   ├── cache_manager.dart
-│   │   ├── cache_store.dart
-│   │   └── prompt_section.dart
-│   ├── ui/
-│   │   ├── pages/                 # 页面
-│   │   │   ├── main_page.dart
-│   │   │   ├── chat_page.dart
-│   │   │   ├── settings_page.dart
-│   │   │   ├── library_page.dart
-│   │   │   ├── model_selection_page.dart
-│   │   │   └── model_edit_page.dart
-│   │   └── widgets/               # 复用组件
-│   │       ├── chat_bubble.dart
-│   │       ├── chat_content_view.dart
-│   │       ├── message_input.dart
-│   │       ├── processing_block.dart
-│   │       └── sidebar.dart
-│   └── utils/
-│       └── logger.dart
-├── assets/
-│   └── system_prompt.txt          # 三块系统提示模板
-├── ai_clients_dart/               # 上游 Dart SDK 源码（submodule）
-│   └── packages/
-│       ├── openai_dart/
-│       ├── anthropic_sdk_dart/
-│       ├── googleai_dart/
-│       ├── ollama_dart/
-│       └── ...
-├── android/                       # Android 平台文件
-├── ios/                           # iOS 平台文件
-├── macos/                         # macOS 平台文件
-├── windows/                       # Windows 平台文件
-├── linux/                         # Linux 平台文件
-├── web/                           # Web 平台文件
-└── test/                          # 测试
-```
+1. Launch the app and navigate to **Settings**
+2. Add an LLM provider (OpenAI / Anthropic / Google / Ollama)
+3. Enter your API Key and optional Base URL
+4. Configure model from provider
+5. Select your main chat model and specialized models for each capability
+6. Return to the main page and start a conversation
 
 ---
 
-## 技术栈
+## Architecture
 
-| 类别 | 技术 |
-|------|------|
-| 框架 | Flutter 3.11+ / Dart |
-| 状态管理 | ChangeNotifier + ListenableBuilder |
-| 持久化 | sqflite (对话) + shared_preferences (设置) |
-| LLM SDK | openai_dart / anthropic_sdk_dart / googleai_dart / ollama_dart |
-| 语音 | speech_to_text / flutter_tts |
-| UI | Material 3 / flutter_streaming_text_markdown / flutter_context_menu |
-| 媒体 | image_picker / file_picker / video_player / gal |
-| 平台 | window_manager (桌面端) / flutter_local_notifications |
+### Provider Abstraction
 
----
-
-## 架构设计
-
-### 提供商抽象
-
-所有 LLM 提供商实现统一的 `LlmProvider` 接口：
+All LLM providers implement the unified `LlmProvider` interface:
 
 ```dart
 abstract class LlmProvider {
@@ -200,23 +166,161 @@ abstract class LlmProvider {
 }
 ```
 
-上层业务逻辑无需感知具体 SDK，通过 `ProviderFactory.get(providerId)` 即可获取实例。
+Business logic never touches SDK specifics — `ProviderFactory.get(providerId)` returns the right instance.
 
-### 能力转译
+### Capability Translation
 
-主模型处理对话，专用模型处理多模态任务。`CapabilityAdapter` 根据用户配置的模型矩阵自动注册工具到 `ToolRegistry`，AI 按需调用对应工具，结果以文字形式返回主模型。
+The main text model handles conversation; specialized models handle multimodal tasks. `CapabilityAdapter` reads the model matrix from `ModelSelectionConfig` and registers tools into `ToolRegistry`. The AI invokes these tools as needed, and results return as text to the main model.
 
-### 提示缓存
+```
+┌─────────────────────────────────────────────────────────┐
+│                   Main Chat Model                        │
+│   (e.g. GPT-4o, Claude 4, Gemini 2.5 Pro)               │
+└──────────┬──────────┬──────────┬──────────┬──────────────┘
+           │          │          │          │
+     ┌─────▼──┐ ┌────▼───┐ ┌───▼────┐ ┌───▼──────┐
+     │Vision  │ │Audible │ │Image   │ │Speech    │
+     │Model   │ │Model   │ │Gen     │ │Gen Model │
+     └────────┘ └────────┘ └────────┘ └──────────┘
+```
 
-`CacheManager` 将提示词分解为独立分块，通过 SHA256 哈希追踪变更。不变的分块复用上次请求的缓存标记，减少重复 token 发送。
+### Prompt Caching
 
-## 📄 许可证
+`CacheManager` decomposes the system prompt into independent `PromptSection`s. Each section is tracked by its SHA256 hash. Unchanged sections reuse the previous request's cache markers, reducing redundant token transmission.
 
-本项目采用 GNU AFFERO GENERAL PUBLIC LICENSE v3.0 许可证，详情请参见 [LICENSE](LICENSE) 文件。
+### Model Selection Matrix
 
-```license
+`ModelSelectionConfig` defines a flexible slot-based matrix:
+
+- **Main Model** — The primary chat LLM
+- **Input Modalities** — vision, audible (per-modal model assignment)
+- **Output Modalities** — image generation, speech generation
+- **Other** — embeddings, reranking, etc.
+
+Each slot is a `ModelSlot` pointing to a specific provider config + model via stable UUID references — resilient to reordering or deletion.
+
+### Memory System Pipeline
+
+```
+Conversation Turns
+       ↓ (accumulate N rounds)
+MemoryExtractor
+       ↓ (LLM extracts facts)
+Structured Memories (user / knowledge / event)
+       ↓
+MemoryRetriever ← SimHash indexing ← SQLite
+       ↓ (query-time retrieval)
+MemoryContext injected into system prompt
+       ↑
+MemoryCompressor (clustering + LLM merge)
+MemoryForgetter   (time-decay scoring)
+```
+
+---
+
+## Tech Stack
+
+| Category | Technology |
+|----------|-----------|
+| Framework | Flutter 3.11+ / Dart |
+| State Management | ChangeNotifier + ListenableBuilder |
+| Persistence | sqflite (conversations) + shared_preferences (settings) |
+| LLM SDKs | openai_dart / anthropic_sdk_dart / googleai_dart / ollama_dart |
+| Voice | speech_to_text / flutter_tts |
+| UI | Material 3 / flutter_streaming_text_markdown / flutter_context_menu |
+| Media | image_picker / file_picker / video_player / gal |
+| Platform | window_manager (desktop) / flutter_local_notifications |
+| Memory Search | SimHash (128-bit) + jieba (Chinese segmentation) |
+| Localization | Flutter l10n (intl) |
+
+---
+
+## Project Structure
+
+```
+tessera/
+├── lib/
+│   ├── main.dart                      # Entry point, window init, global error handler
+│   ├── app.dart                       # MaterialApp, routing, theme, localization
+│   ├── core/                          # Core abstractions
+│   │   ├── llm_provider.dart          # Unified LLM provider interface
+│   │   ├── capability_adapter.dart    # Capability translation routing
+│   │   ├── tool_registry.dart         # Tool registration & execution
+│   │   ├── system_prompt_builder.dart # 3-block system prompt assembly
+│   │   └── prompt_template_store.dart # Prompt template storage
+│   ├── llm/                           # LLM SDK wrappers
+│   │   ├── openai_provider.dart
+│   │   ├── anthropic_provider.dart
+│   │   ├── google_provider.dart
+│   │   ├── ollama_provider.dart
+│   │   └── provider_factory.dart
+│   ├── models/                        # Data models
+│   │   ├── message.dart / conversation.dart / tool.dart
+│   │   ├── llm_config.dart / model_info.dart
+│   │   ├── model_selection_config.dart / stream_chunk.dart
+│   │   ├── media_attachment.dart / prompt_template.dart
+│   │   ├── memory_entry.dart / memory_type.dart / memory_relation.dart / memory_extraction.dart
+│   │   └── llm_provider_config.dart
+│   ├── services/                      # Business services
+│   │   ├── conversation_service.dart  # SQLite conversation persistence
+│   │   ├── memory_service.dart        # Memory persistence
+│   │   ├── speech_service.dart        # STT/TTS
+│   │   ├── media_library.dart         # Media file management
+│   │   └── settings_service.dart      # Settings persistence
+│   ├── state/                         # State management (ChangeNotifier)
+│   │   ├── chat_state.dart            # Chat flow state
+│   │   ├── settings_state.dart        # Settings state
+│   │   └── memory_state.dart          # Memory state
+│   ├── cache/                         # Prompt caching system
+│   │   ├── cache_manager.dart
+│   │   ├── cache_store.dart
+│   │   └── prompt_section.dart
+│   ├── memory/                        # Long-term memory system
+│   │   ├── memory_extractor.dart      # LLM-based fact extraction
+│   │   ├── memory_retriever.dart      # SimHash semantic search
+│   │   ├── memory_compressor.dart     # Clustering & merging
+│   │   ├── memory_forgetter.dart      # Time-decay forgetting
+│   │   ├── memory_middleware.dart     # Conversational summary management
+│   │   └── simhash.dart              # 128-bit SimHash engine (jieba tokenizer)
+│   ├── ui/
+│   │   ├── pages/                     # Pages
+│   │   │   ├── main_page.dart / chat_page.dart
+│   │   │   ├── settings_page.dart / user_profile_page.dart
+│   │   │   ├── library_page.dart / memory_page.dart
+│   │   │   ├── model_selection_page.dart / model_edit_page.dart
+│   │   │   └── error_page.dart
+│   │   └── widgets/                   # Reusable components
+│   │       ├── chat_bubble.dart / chat_content_view.dart
+│   │       ├── message_input.dart / processing_block.dart
+│   │       └── sidebar.dart
+│   ├── l10n/                          # Localization
+│   │   ├── app_en.arb / app_zh.arb
+│   │   ├── app_localizations.dart
+│   │   └── model_localization.dart
+│   └── utils/
+│       └── logger.dart
+├── assets/
+│   ├── system_prompt.txt              # 3-block system prompt template
+│   └── dict*.txt / idf_dict.txt       # jieba dictionaries
+├── android/ ios/ macos/ windows/ linux/ web/
+└── test/
+```
+
+---
+
+## Screenshots
+
+> *(Coming soon — screenshots of chat, settings, model selection, memory viewer, and media library)*
+
+---
+
+## License
+
 Copyright (C) 2026 NaivG and contributors.
 
+This project is licensed under the **GNU Affero General Public License v3.0** — see the [LICENSE](LICENSE) file for details.
+
+```
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
 published by the Free Software Foundation, either version 3 of the

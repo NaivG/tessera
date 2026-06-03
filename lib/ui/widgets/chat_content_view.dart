@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:tessera/l10n/app_localizations.dart';
 import '../../core/core.dart';
 import '../../state/chat_state.dart';
 import 'chat_bubble.dart';
@@ -127,6 +128,7 @@ class _ChatContentViewState extends State<ChatContentView> {
   }
 
   Widget _buildWelcomeView(ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -134,7 +136,7 @@ class _ChatContentViewState extends State<ChatContentView> {
           Icon(Icons.smart_toy, size: 64, color: theme.colorScheme.primary),
           const SizedBox(height: 16),
           Text(
-            'Tessera AI',
+            l10n.chatWelcomeTitle,
             style: theme.textTheme.headlineSmall?.copyWith(
               color: theme.colorScheme.primary,
               fontWeight: FontWeight.bold,
@@ -142,7 +144,7 @@ class _ChatContentViewState extends State<ChatContentView> {
           ),
           const SizedBox(height: 8),
           Text(
-            '开始新对话，发送消息即可',
+            l10n.chatWelcomeSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.outline,
             ),

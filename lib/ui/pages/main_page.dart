@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:share_plus/share_plus.dart';
 
+import 'package:tessera/l10n/app_localizations.dart';
+
 import '../../models/conversation.dart';
 import '../../models/message.dart';
 import '../../state/chat_state.dart';
@@ -187,10 +189,14 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   }
 
   void _showNoConfigWarning() {
+    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('请先在设置中配置 LLM 提供商并选择模型'),
-        action: SnackBarAction(label: '去设置', onPressed: _openSettings),
+        content: Text(l10n.chatConfigureProviderFirst),
+        action: SnackBarAction(
+          label: l10n.chatGoToSettings,
+          onPressed: _openSettings,
+        ),
       ),
     );
   }
@@ -198,25 +204,26 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   // --- 上下文菜单 ---
 
   void _handleModify(Message msg) async {
+    final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(text: msg.content);
     final newContent = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('修改消息'),
+        title: Text(l10n.chatModifyMessage),
         content: TextField(
           controller: controller,
           autofocus: true,
           maxLines: 5,
-          decoration: const InputDecoration(hintText: '输入新内容'),
+          decoration: InputDecoration(hintText: l10n.chatNewContentHint),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('发送'),
+            child: Text(l10n.chatSend),
           ),
         ],
       ),
@@ -246,7 +253,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   /// 当前对话标题
   String get _title {
     final conv = _chatState?.conversation;
-    return conv?.title ?? '新对话';
+    return conv?.title ?? AppLocalizations.of(context)!.chatNewConversation;
   }
 
   // --- 工具方法 ---
@@ -293,7 +300,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            tooltip: '新建对话',
+            tooltip: AppLocalizations.of(context)!.chatNewLabel,
             onPressed: () => _scaffoldKey.currentState?.openDrawer(),
           ),
         ],
@@ -361,7 +368,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                   if (!_sidebarVisible)
                     IconButton(
                       icon: const Icon(Icons.add),
-                      tooltip: '新建对话',
+                      tooltip: AppLocalizations.of(context)!.chatNewLabel,
                       onPressed: () {
                         if (!_sidebarVisible) _toggleSidebar();
                       },

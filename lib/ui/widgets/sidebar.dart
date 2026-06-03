@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_context_menu/flutter_context_menu.dart';
 
 import '../../models/conversation.dart';
+import 'package:tessera/l10n/app_localizations.dart';
 
 /// 侧边栏组件
 ///
@@ -39,15 +40,16 @@ class Sidebar extends StatefulWidget {
 
 class _SidebarState extends State<Sidebar> {
   ContextMenu _buildConversationContextMenu(Conversation conv) {
+    final l10n = AppLocalizations.of(context)!;
     return ContextMenu(
       entries: [
         MenuItem(
-          label: const Text('重命名'),
+          label: Text(l10n.sidebarRename),
           icon: const Icon(Icons.edit),
           onSelected: (_) => _showRenameDialog(conv),
         ),
         MenuItem(
-          label: const Text('删除'),
+          label: Text(l10n.commonDelete),
           icon: const Icon(Icons.delete, color: Colors.red),
           onSelected: (_) => _confirmDelete(conv),
         ),
@@ -56,24 +58,25 @@ class _SidebarState extends State<Sidebar> {
   }
 
   Future<void> _showRenameDialog(Conversation conv) async {
+    final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(text: conv.title);
     final newTitle = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('重命名对话'),
+        title: Text(l10n.sidebarRenameDialogTitle),
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(hintText: '输入新名称'),
+          decoration: InputDecoration(hintText: l10n.sidebarRenameHint),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('确认'),
+            child: Text(l10n.commonConfirm),
           ),
         ],
       ),
@@ -85,20 +88,24 @@ class _SidebarState extends State<Sidebar> {
   }
 
   Future<void> _confirmDelete(Conversation conv) async {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除对话'),
-        content: Text('确定要删除「${conv.title}」吗？'),
+        title: Text(l10n.sidebarDeleteDialogTitle),
+        content: Text(l10n.sidebarDeleteConfirm(conv.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('删除', style: TextStyle(color: theme.colorScheme.error)),
+            child: Text(
+              l10n.commonDelete,
+              style: TextStyle(color: theme.colorScheme.error),
+            ),
           ),
         ],
       ),
@@ -112,6 +119,7 @@ class _SidebarState extends State<Sidebar> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return DrawerHeaderStyle(
       theme: theme,
@@ -134,7 +142,7 @@ class _SidebarState extends State<Sidebar> {
               children: [
                 Expanded(
                   child: Text(
-                    'Tessera AI',
+                    l10n.sidebarTitle,
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: colorScheme.primary,
@@ -144,13 +152,13 @@ class _SidebarState extends State<Sidebar> {
                 if (widget.onToggleCollapse != null)
                   IconButton(
                     icon: const Icon(Icons.chevron_left),
-                    tooltip: '收回侧边栏',
+                    tooltip: l10n.sidebarCollapseTooltip,
                     onPressed: widget.onToggleCollapse,
                   ),
                 if (widget.onToggleCollapse == null && !widget.isPermanent)
                   IconButton(
                     icon: const Icon(Icons.close),
-                    tooltip: '关闭',
+                    tooltip: l10n.sidebarCloseTooltip,
                     onPressed: () => Navigator.of(context).pop(),
                   ),
               ],
@@ -201,7 +209,9 @@ class _SidebarState extends State<Sidebar> {
                     borderRadius: BorderRadius.circular(8),
                     onTap: widget.onProfile,
                     child: Text(
-                      widget.displayName.isNotEmpty ? widget.displayName : '用户',
+                      widget.displayName.isNotEmpty
+                          ? widget.displayName
+                          : l10n.sidebarDefaultUserName,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
@@ -210,7 +220,7 @@ class _SidebarState extends State<Sidebar> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.settings),
-                  tooltip: '设置',
+                  tooltip: l10n.settingsTitle,
                   onPressed: widget.onSettings,
                 ),
               ],
@@ -224,6 +234,7 @@ class _SidebarState extends State<Sidebar> {
   // ── 对话 Tab ──
 
   Widget _buildConversationsTab(ThemeData theme, ColorScheme colorScheme) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         // 新建对话（框式按钮）
@@ -234,7 +245,7 @@ class _SidebarState extends State<Sidebar> {
             child: OutlinedButton.icon(
               onPressed: widget.onNewConversation,
               icon: const Icon(Icons.add_comment, size: 18),
-              label: const Text('新建对话'),
+              label: Text(l10n.chatNewLabel),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -258,7 +269,7 @@ class _SidebarState extends State<Sidebar> {
           child: Row(
             children: [
               Text(
-                '对话',
+                l10n.sidebarConversationsLabel,
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: colorScheme.outline,
                 ),
@@ -276,7 +287,7 @@ class _SidebarState extends State<Sidebar> {
           child: widget.conversations.isEmpty
               ? Center(
                   child: Text(
-                    '暂无对话',
+                    l10n.chatNoConversations,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.outline,
                     ),
@@ -326,6 +337,7 @@ class _SidebarState extends State<Sidebar> {
   // ── 底部快捷按钮 (资料库 / 记忆) ──
 
   Widget _buildLibraryTab(ThemeData theme, ColorScheme colorScheme) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Row(
@@ -333,7 +345,7 @@ class _SidebarState extends State<Sidebar> {
           Expanded(
             child: _buildShortcutButton(
               icon: Icons.photo_library_outlined,
-              label: '资料库',
+              label: l10n.shortcutLibrary,
               route: '/library',
               theme: theme,
               colorScheme: colorScheme,
@@ -343,7 +355,7 @@ class _SidebarState extends State<Sidebar> {
           Expanded(
             child: _buildShortcutButton(
               icon: Icons.psychology_outlined,
-              label: '记忆',
+              label: l10n.shortcutMemory,
               route: '/memory',
               theme: theme,
               colorScheme: colorScheme,

@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:tessera/l10n/app_localizations.dart';
+import 'package:tessera/l10n/app_localizations_en.dart';
+import 'package:tessera/l10n/app_localizations_zh.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/llm_provider_config.dart';
 import '../../models/model_info.dart';
@@ -43,28 +47,35 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final state = widget.settingsState;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('设置')),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListenableBuilder(
         listenable: state,
         builder: (context, _) {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              // --- 语言设置 ---
+              _SectionHeader(l10n.settingsSectionLanguage),
+              const SizedBox(height: 8),
+              _buildLocaleSelector(theme, state, l10n),
+              const Divider(height: 24),
+
               // --- 用户档案 ---
-              _SectionHeader('用户'),
+              _SectionHeader(l10n.settingsSectionUser),
               const SizedBox(height: 8),
               ListTile(
                 leading: Icon(
                   Icons.person_outline,
                   color: theme.colorScheme.primary,
                 ),
-                title: const Text('用户档案'),
+                title: Text(l10n.settingsUserProfile),
                 subtitle: Text(
                   state.userDisplayName.isNotEmpty
                       ? state.userDisplayName
-                      : '设置个人信息以让 AI 更好地了解你',
+                      : l10n.settingsUserProfileSubtitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -85,11 +96,11 @@ class _SettingsPageState extends State<SettingsPage> {
               const Divider(height: 24),
 
               // --- 提供商配置列表 ---
-              _SectionHeader('LLM 提供商'),
+              _SectionHeader(l10n.settingsSectionLlmProviders),
               const SizedBox(height: 8),
 
               if (state.providerConfigs.isEmpty)
-                _buildEmptyHint(theme)
+                _buildEmptyHint(theme, l10n)
               else
                 ...state.providerConfigs.map(
                   (config) => _buildProviderCard(theme, config),
@@ -101,7 +112,7 @@ class _SettingsPageState extends State<SettingsPage> {
               OutlinedButton.icon(
                 onPressed: () => _showAddProviderDialog(context),
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('添加提供商'),
+                label: Text(l10n.settingsAddProvider),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -113,12 +124,12 @@ class _SettingsPageState extends State<SettingsPage> {
               const Divider(height: 24),
 
               // 模型选择入口
-              _SectionHeader('模型选择'),
+              _SectionHeader(l10n.settingsSectionModelSelection),
               const SizedBox(height: 8),
               ListTile(
                 leading: Icon(Icons.tune, color: theme.colorScheme.primary),
-                title: const Text('模型分配'),
-                subtitle: const Text('为各能力方向（文本/视觉/语音/嵌入等）指定模型'),
+                title: Text(l10n.settingsModelAssignment),
+                subtitle: Text(l10n.settingsModelAssignmentSubtitle),
                 trailing: const Icon(Icons.chevron_right),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -138,18 +149,18 @@ class _SettingsPageState extends State<SettingsPage> {
               const Divider(height: 40),
 
               // 请求设置
-              _SectionHeader('请求'),
+              _SectionHeader(l10n.settingsSectionRequest),
               const SizedBox(height: 8),
               SwitchListTile(
-                title: const Text('启用流式请求'),
-                subtitle: const Text('实时显示 AI 回复，关闭后等待完整回复'),
+                title: Text(l10n.settingsStreamEnabled),
+                subtitle: Text(l10n.settingsStreamEnabledSubtitle),
                 value: state.streamEnabled,
                 onChanged: (v) => state.setStreamEnabled(v),
               ),
               const Divider(height: 8),
               SwitchListTile(
-                title: const Text('启用深度思考'),
-                subtitle: const Text('显示模型的推理思考过程（部分模型默认开启）'),
+                title: Text(l10n.settingsDeepThinking),
+                subtitle: Text(l10n.settingsDeepThinkingSubtitle),
                 value: state.deepThinkingEnabled,
                 onChanged: (v) => state.setDeepThinkingEnabled(v),
               ),
@@ -157,17 +168,17 @@ class _SettingsPageState extends State<SettingsPage> {
               const Divider(height: 32),
 
               // 语音设置
-              _SectionHeader('语音'),
+              _SectionHeader(l10n.settingsSectionSpeech),
               const SizedBox(height: 8),
               SwitchListTile(
-                title: const Text('启用文字转语音 (TTS)'),
-                subtitle: const Text('AI 回复时自动朗读'),
+                title: Text(l10n.settingsTtsEnabled),
+                subtitle: Text(l10n.settingsTtsEnabledSubtitle),
                 value: state.ttsEnabled,
                 onChanged: (v) => state.setTtsEnabled(v),
               ),
               SwitchListTile(
-                title: const Text('启用语音输入 (STT)'),
-                subtitle: const Text('通过语音输入消息'),
+                title: Text(l10n.settingsSttEnabled),
+                subtitle: Text(l10n.settingsSttEnabledSubtitle),
                 value: state.sttEnabled,
                 onChanged: (v) => state.setSttEnabled(v),
               ),
@@ -175,11 +186,11 @@ class _SettingsPageState extends State<SettingsPage> {
               const Divider(height: 32),
 
               // 提示词设置
-              _SectionHeader('提示词'),
+              _SectionHeader(l10n.settingsSectionPrompt),
               const SizedBox(height: 8),
               SwitchListTile(
-                title: const Text('轻量模式'),
-                subtitle: const Text('大幅缩减系统提示词，仅保留核心约束并不再限制安全指令，开启后跳过记忆加载。'),
+                title: Text(l10n.settingsLightweightMode),
+                subtitle: Text(l10n.settingsLightweightModeSubtitle),
                 value: state.lightweightSystemPrompt,
                 onChanged: (v) => state.setLightweightSystemPrompt(v),
                 secondary: Icon(
@@ -187,8 +198,48 @@ class _SettingsPageState extends State<SettingsPage> {
                   color: theme.colorScheme.primary,
                 ),
               ),
-              const Divider(height: 8),
+              const SizedBox(height: 8),
               _buildCustomPromptTile(theme, state),
+
+              const Divider(height: 24),
+              _SectionHeader(l10n.settingsSectionAbout),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: Icon(
+                  Icons.info_outline,
+                  color: theme.colorScheme.primary,
+                ),
+                title: const Text('Tessera'),
+                subtitle: const Text('v1.0.0'),
+                trailing: const Icon(Icons.chevron_right),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                tileColor: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
+                onTap: () => _showAboutDialog(context),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                leading: Icon(
+                  Icons.open_in_new,
+                  color: theme.colorScheme.primary,
+                ),
+                title: const Text('GitHub'),
+                subtitle: const Text('Check out the source code'),
+                trailing: const Icon(Icons.chevron_right),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                tileColor: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
+                onTap: () {
+                  final url = Uri.parse('https://github.com/NaivG/tessera');
+                  launchUrl(url, mode: LaunchMode.externalApplication);
+                },
+              ),
             ],
           );
         },
@@ -196,10 +247,123 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  // ==================== 语言选择器 (对话框) ====================
+
+  Widget _buildLocaleSelector(
+    ThemeData theme,
+    SettingsState state,
+    AppLocalizations l10n,
+  ) {
+    final currentLocale = state.locale;
+
+    // 直接实例化各语言类，获取目标语言的 localeDescription 和 createdBy
+    final enL10n = AppLocalizationsEn();
+    final zhL10n = AppLocalizationsZh();
+
+    final currentLabel = switch (currentLocale) {
+      'zh' => zhL10n.localeDescription,
+      'en' => enL10n.localeDescription,
+      _ => l10n.settingsLanguageSystem,
+    };
+
+    return ListTile(
+      leading: Icon(Icons.language, color: theme.colorScheme.primary),
+      title: Text(l10n.settingsSectionLanguage),
+      subtitle: Text(
+        currentLabel,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+      trailing: const Icon(Icons.chevron_right),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      tileColor: theme.colorScheme.surfaceContainerHighest.withValues(
+        alpha: 0.5,
+      ),
+      onTap: () =>
+          _showLocaleDialog(theme, state, l10n, enL10n, zhL10n, currentLocale),
+    );
+  }
+
+  void _showLocaleDialog(
+    ThemeData theme,
+    SettingsState state,
+    AppLocalizations l10n,
+    AppLocalizations enL10n,
+    AppLocalizations zhL10n,
+    String currentLocale,
+  ) {
+    showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        return SimpleDialog(
+          title: Text(l10n.settingsSectionLanguage),
+          children: [
+            _buildLocaleOption(
+              ctx,
+              theme,
+              'system',
+              l10n.settingsLanguageSystem,
+              null,
+              currentLocale,
+              state,
+            ),
+            _buildLocaleOption(
+              ctx,
+              theme,
+              'zh',
+              zhL10n.localeDescription,
+              zhL10n.createdBy,
+              currentLocale,
+              state,
+            ),
+            _buildLocaleOption(
+              ctx,
+              theme,
+              'en',
+              enL10n.localeDescription,
+              enL10n.createdBy,
+              currentLocale,
+              state,
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildLocaleOption(
+    BuildContext ctx,
+    ThemeData theme,
+    String value,
+    String title,
+    String? subtitle,
+    String currentLocale,
+    SettingsState state,
+  ) {
+    final isSelected = currentLocale == value;
+    return RadioListTile<String>(
+      title: Text(title),
+      subtitle: subtitle != null && subtitle.isNotEmpty ? Text(subtitle) : null,
+      value: value,
+      groupValue: currentLocale,
+      onChanged: (v) {
+        if (v != null && v != currentLocale) {
+          state.setLocale(v);
+          Navigator.pop(ctx);
+        }
+      },
+      selected: isSelected,
+    );
+  }
+
   // ==================== 提供商卡片 ====================
 
   Widget _buildProviderCard(ThemeData theme, LlmProviderConfig config) {
     final state = widget.settingsState;
+    final l10n = AppLocalizations.of(context)!;
     final providerId = config.id;
     final needsApiKey = LlmProviderConfig.formatNeedsApiKey(config.format);
 
@@ -231,11 +395,17 @@ class _SettingsPageState extends State<SettingsPage> {
                 const SizedBox(width: 4),
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert, size: 20),
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'edit', child: Text('编辑')),
+                  itemBuilder: (_) => [
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Text(l10n.settingsEdit),
+                    ),
                     PopupMenuItem(
                       value: 'delete',
-                      child: Text('删除', style: TextStyle(color: Colors.red)),
+                      child: Text(
+                        l10n.commonDelete,
+                        style: const TextStyle(color: Colors.red),
+                      ),
                     ),
                   ],
                   onSelected: (action) {
@@ -263,13 +433,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 'API Key',
                 '${config.apiKey.substring(0, 8)}…',
               ),
-            if (!needsApiKey) _buildInfoRow(theme, 'API Key', '(无需)'),
+            if (!needsApiKey)
+              _buildInfoRow(theme, 'API Key', l10n.settingsApiKeyOptional),
 
             // 模型列表
             if (config.models.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
-                '模型 (${config.models.length}):',
+                l10n.settingsModelCount(config.models.length),
                 style: theme.textTheme.labelMedium,
               ),
               const SizedBox(height: 4),
@@ -305,7 +476,10 @@ class _SettingsPageState extends State<SettingsPage> {
                 );
               },
               icon: const Icon(Icons.edit, size: 16),
-              label: const Text('编辑模型', style: TextStyle(fontSize: 13)),
+              label: Text(
+                l10n.settingsEditModel,
+                style: const TextStyle(fontSize: 13),
+              ),
             ),
           ],
         ),
@@ -375,7 +549,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildEmptyHint(ThemeData theme) {
+  Widget _buildEmptyHint(ThemeData theme, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
@@ -383,14 +557,14 @@ class _SettingsPageState extends State<SettingsPage> {
           Icon(Icons.cloud_off, size: 40, color: theme.colorScheme.outline),
           const SizedBox(height: 8),
           Text(
-            '尚未配置任何 LLM 提供商',
+            l10n.settingsEmptyProviders,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.outline,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            '点击下方按钮添加',
+            l10n.settingsEmptyProvidersSub,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.outline,
             ),
@@ -405,6 +579,7 @@ class _SettingsPageState extends State<SettingsPage> {
   /// 添加提供商
   Future<void> _showAddProviderDialog(BuildContext context) async {
     final state = widget.settingsState;
+    final l10n = AppLocalizations.of(context)!;
     final nameCtrl = TextEditingController();
     final apiKeyCtrl = TextEditingController();
     final baseUrlCtrl = TextEditingController();
@@ -419,14 +594,14 @@ class _SettingsPageState extends State<SettingsPage> {
               selectedFormat,
             );
             return AlertDialog(
-              title: const Text('添加 LLM 提供商'),
+              title: Text(l10n.settingsAddProviderDialogTitle),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 格式选择
-                    _DialogLabel('提供商格式'),
+                    _DialogLabel(l10n.settingsProviderFormat),
                     const SizedBox(height: 6),
                     Wrap(
                       spacing: 8,
@@ -447,19 +622,19 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     const SizedBox(height: 16),
                     // 名称
-                    _DialogLabel('提供商名称（留空使用格式名称）'),
+                    _DialogLabel(l10n.settingsProviderNameLabel),
                     const SizedBox(height: 6),
                     TextField(
                       controller: nameCtrl,
-                      decoration: const InputDecoration(
-                        hintText: '如: DeepSeek、自定义代理...',
+                      decoration: InputDecoration(
+                        hintText: l10n.settingsProviderNameHint,
                         isDense: true,
                         border: OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 16),
                     // Base URL
-                    _DialogLabel('Base URL'),
+                    _DialogLabel(l10n.settingsBaseUrl),
                     const SizedBox(height: 6),
                     TextField(
                       controller: baseUrlCtrl,
@@ -473,7 +648,11 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     const SizedBox(height: 16),
                     // API Key
-                    _DialogLabel(needsApiKey ? 'API Key' : 'API Key（无需）'),
+                    _DialogLabel(
+                      needsApiKey
+                          ? l10n.settingsApiKey
+                          : l10n.settingsApiKeyOptional,
+                    ),
                     const SizedBox(height: 6),
                     TextField(
                       controller: apiKeyCtrl,
@@ -481,8 +660,8 @@ class _SettingsPageState extends State<SettingsPage> {
                       enabled: needsApiKey,
                       decoration: InputDecoration(
                         hintText: needsApiKey
-                            ? '输入 API Key...'
-                            : '(Ollama 不需要 API Key)',
+                            ? l10n.settingsApiKeyHint
+                            : l10n.settingsApiKeyNotNeeded,
                         isDense: true,
                         border: const OutlineInputBorder(),
                       ),
@@ -493,7 +672,7 @@ class _SettingsPageState extends State<SettingsPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('取消'),
+                  child: Text(l10n.commonCancel),
                 ),
                 FilledButton(
                   onPressed: () {
@@ -504,7 +683,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       'baseUrl': baseUrlCtrl.text.trim(),
                     });
                   },
-                  child: const Text('添加'),
+                  child: Text(l10n.settingsProviderAdd),
                 ),
               ],
             );
@@ -535,6 +714,7 @@ class _SettingsPageState extends State<SettingsPage> {
     LlmProviderConfig config,
   ) async {
     final state = widget.settingsState;
+    final l10n = AppLocalizations.of(context)!;
     final nameCtrl = TextEditingController(text: config.name);
     final apiKeyCtrl = TextEditingController(text: config.apiKey);
     final baseUrlCtrl = TextEditingController(text: config.baseUrl);
@@ -544,24 +724,24 @@ class _SettingsPageState extends State<SettingsPage> {
       builder: (ctx) {
         final needsApiKey = LlmProviderConfig.formatNeedsApiKey(config.format);
         return AlertDialog(
-          title: Text('编辑 ${config.displayName}'),
+          title: Text(l10n.settingsEditProvider(config.displayName)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _DialogLabel('提供商名称（留空使用格式名称）'),
+                _DialogLabel(l10n.settingsProviderNameLabel),
                 const SizedBox(height: 6),
                 TextField(
                   controller: nameCtrl,
-                  decoration: const InputDecoration(
-                    hintText: '如: DeepSeek、自定义代理...',
+                  decoration: InputDecoration(
+                    hintText: l10n.settingsProviderNameHint,
                     isDense: true,
                     border: OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 16),
-                _DialogLabel('Base URL'),
+                _DialogLabel(l10n.settingsBaseUrl),
                 const SizedBox(height: 6),
                 TextField(
                   controller: baseUrlCtrl,
@@ -574,14 +754,18 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _DialogLabel(needsApiKey ? 'API Key' : 'API Key（无需）'),
+                _DialogLabel(
+                  needsApiKey
+                      ? l10n.settingsApiKey
+                      : l10n.settingsApiKeyOptional,
+                ),
                 const SizedBox(height: 6),
                 TextField(
                   controller: apiKeyCtrl,
                   obscureText: true,
                   enabled: needsApiKey,
-                  decoration: const InputDecoration(
-                    hintText: '留空不修改...',
+                  decoration: InputDecoration(
+                    hintText: l10n.settingsApiKeyEditHint,
                     isDense: true,
                     border: OutlineInputBorder(),
                   ),
@@ -592,34 +776,29 @@ class _SettingsPageState extends State<SettingsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('取消'),
+              child: Text(l10n.commonCancel),
             ),
             FilledButton(
               onPressed: () {
                 Navigator.pop(ctx, {
                   'name': nameCtrl.text.trim(),
-                  'apiKey': apiKeyCtrl.text.trim(),
                   'baseUrl': baseUrlCtrl.text.trim(),
+                  'apiKey': apiKeyCtrl.text.trim(),
                 });
               },
-              child: const Text('保存'),
+              child: Text(l10n.commonSave),
             ),
           ],
         );
       },
     );
 
-    // the widget might unmount later, so we don't dispose them here
-    // nameCtrl.dispose();
-    // apiKeyCtrl.dispose();
-    // baseUrlCtrl.dispose();
-
     if (result != null) {
       await state.updateProviderConfig(
         providerId,
-        name: result['name']!.isEmpty ? null : result['name'],
-        apiKey: result['apiKey']!.isEmpty ? null : result['apiKey'],
-        baseUrl: result['baseUrl']!.isEmpty ? null : result['baseUrl'],
+        name: result['name'],
+        apiKey: result['apiKey'],
+        baseUrl: result['baseUrl'],
         clearName: result['name']!.isEmpty,
         clearApiKey: result['apiKey']!.isEmpty,
         clearBaseUrl: result['baseUrl']!.isEmpty,
@@ -627,25 +806,27 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  /// 确认删除提供商
   Future<void> _confirmDeleteProvider(
     String providerId,
     LlmProviderConfig config,
   ) async {
-    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除提供商'),
-        content: Text('确定要删除「${config.displayName}」及其所有模型配置吗？'),
+        title: Text(l10n.settingsDeleteConfirmTitle),
+        content: Text(l10n.settingsDeleteConfirm(config.displayName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(l10n.commonCancel),
           ),
-          TextButton(
+          FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('删除', style: TextStyle(color: theme.colorScheme.error)),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -656,19 +837,20 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  // ==================== 自定义系统提示 ====================
+  // ==================== 自定义提示词 ====================
 
   Widget _buildCustomPromptTile(ThemeData theme, SettingsState state) {
+    final l10n = AppLocalizations.of(context)!;
     final prompt = state.userCustomPrompt;
     final hasContent = prompt.trim().isNotEmpty;
 
     return ListTile(
       leading: Icon(Icons.auto_awesome, color: theme.colorScheme.primary),
-      title: const Text('自定义提示词注入'),
+      title: Text(l10n.customPromptEditTitle),
       subtitle: Text(
         hasContent
-            ? '${prompt.length} 个字符 · ${prompt.length > 60 ? '${prompt.substring(0, 60)}…' : prompt}'
-            : '未设置',
+            ? '${l10n.customPromptLength(prompt.length)} · ${prompt.length > 60 ? '${prompt.substring(0, 60)}…' : prompt}'
+            : l10n.notSetting,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: theme.textTheme.bodySmall?.copyWith(
@@ -685,6 +867,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _showEditCustomPromptDialog(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final state = widget.settingsState;
     final textCtrl = TextEditingController(text: state.userCustomPrompt);
 
@@ -692,16 +875,16 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('自定义提示词注入'),
+          title: Text(l10n.customPromptEditTitle),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _DialogLabel('系统提示词'),
+                _DialogLabel(l10n.systemPrompt),
                 const SizedBox(height: 6),
                 Text(
-                  '在此输入的内容将注入到系统提示的 "用户自定义指令" 块中。留空则不注入。',
+                  l10n.customPromptHint,
                   style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
                     color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                   ),
@@ -711,8 +894,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   controller: textCtrl,
                   maxLines: 8,
                   minLines: 3,
-                  decoration: const InputDecoration(
-                    hintText: '例如：用简洁风格回答，优先使用中文…',
+                  decoration: InputDecoration(
+                    hintText: l10n.customPromptHintTemplate,
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -722,11 +905,11 @@ class _SettingsPageState extends State<SettingsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('取消'),
+              child: Text(l10n.commonCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, textCtrl.text),
-              child: const Text('保存'),
+              child: Text(l10n.commonSave),
             ),
           ],
         );
@@ -737,38 +920,62 @@ class _SettingsPageState extends State<SettingsPage> {
       await state.setUserCustomPrompt(result.trim());
     }
   }
-}
 
-// ==================== 辅助组件 ====================
+  // ==================== 关于对话框 ====================
 
-class _SectionHeader extends StatelessWidget {
-  final String text;
-
-  const _SectionHeader(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: Theme.of(
-        context,
-      ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+  void _showAboutDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    showAboutDialog(
+      context: context,
+      applicationName: 'Tessera',
+      applicationVersion: '1.0.0',
+      applicationLegalese: '\u00a9 2026 NaivG',
+      children: [
+        const SizedBox(height: 8),
+        Text(
+          l10n.chatWelcomeSubtitle,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ],
     );
   }
 }
 
-class _DialogLabel extends StatelessWidget {
-  final String text;
+// ==================== 辅助组件 ====================
 
-  const _DialogLabel(this.text);
+/// 设置页面的分组标题
+class _SectionHeader extends StatelessWidget {
+  final String label;
+  const _SectionHeader(this.label);
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Text(
+        label,
+        style: theme.textTheme.titleSmall?.copyWith(
+          color: theme.colorScheme.primary,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
+
+/// 对话框中的标签
+class _DialogLabel extends StatelessWidget {
+  final String label;
+  const _DialogLabel(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Text(
-      text,
-      style: Theme.of(
-        context,
-      ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+      label,
+      style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
     );
   }
 }

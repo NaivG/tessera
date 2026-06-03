@@ -15,15 +15,15 @@ enum ModelType {
   embedding,
   ranking;
 
-  /// 中文显示名称
+  /// 默认英文显示名称。UI 中应通过 AppLocalizations.modelTypeName() 获取本地化文本。
   String get displayName {
     return switch (this) {
-      ModelType.text => '文本生成',
-      ModelType.image => '文生图',
-      ModelType.video => '文生视频',
-      ModelType.speech => '文生语音',
-      ModelType.embedding => '嵌入',
-      ModelType.ranking => '排序',
+      ModelType.text => 'Text Generation',
+      ModelType.image => 'Text-to-Image',
+      ModelType.video => 'Text-to-Video',
+      ModelType.speech => 'Text-to-Speech',
+      ModelType.embedding => 'Embedding',
+      ModelType.ranking => 'Ranking',
     };
   }
 
@@ -56,13 +56,13 @@ enum ModelTag {
   audible,
   video;
 
-  /// 中文显示名称
+  /// 默认英文显示名称。UI 中应通过 AppLocalizations.modelTagName() 获取本地化文本。
   String get displayName {
     return switch (this) {
-      ModelTag.text => '文本',
-      ModelTag.vision => '视觉',
-      ModelTag.audible => '音频',
-      ModelTag.video => '视频',
+      ModelTag.text => 'Text',
+      ModelTag.vision => 'Vision',
+      ModelTag.audible => 'Audio',
+      ModelTag.video => 'Video',
     };
   }
 
@@ -138,10 +138,10 @@ class ModelInfo {
   /// 标签的简短描述字符串，如 "text+vision"
   String get tagsShortLabel => tags.map((t) => t.name).join('+');
 
-  /// 标签的完整描述字符串
+  /// 标签的完整描述字符串（默认英文）。UI 中应通过 AppLocalizations.modelTagsLabel() 获取本地化文本。
   String get tagsLabel {
-    if (isOmni) return '全模态';
-    if (tags.length == 1 && tags.first == ModelTag.text) return '纯文本';
+    if (isOmni) return 'Omni-modal';
+    if (tags.length == 1 && tags.first == ModelTag.text) return 'Text-only';
     return tags.map((t) => t.displayName).join('+');
   }
 

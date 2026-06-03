@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:restart_app/restart_app.dart';
 
+import 'package:tessera/l10n/app_localizations.dart';
+
 /// 全局错误页面 — runZonedGuarded / FlutterError.onError 捕获异常后路由至此。
 ///
 /// 清空导航栈后显示该页面，防止用户回到已损坏的页面树。
@@ -43,6 +45,7 @@ class ErrorPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final loc = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: isDark
@@ -62,7 +65,7 @@ class ErrorPage extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Oops! An unexpected error occurred.',
+                loc.errorTitle,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   color: theme.colorScheme.onSurface,
                   fontWeight: FontWeight.w600,
@@ -71,7 +74,7 @@ class ErrorPage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                '应用发生了未处理的异常, 请将以下信息反馈给开发者',
+                loc.errorSubtitle,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
@@ -80,13 +83,13 @@ class ErrorPage extends StatelessWidget {
               const SizedBox(height: 24),
               // 错误类型
               _SectionCard(
-                title: '错误类型',
+                title: loc.errorType,
                 child: Text('${error.runtimeType}', style: _monoStyle(context)),
               ),
               const SizedBox(height: 12),
               // 错误信息
               _SectionCard(
-                title: '错误信息',
+                title: loc.errorMessage,
                 child: SelectableText(
                   _formatError(error),
                   style: _monoStyle(context),
@@ -96,7 +99,7 @@ class ErrorPage extends StatelessWidget {
               // 堆栈跟踪
               Expanded(
                 child: _SectionCard(
-                  title: '堆栈跟踪',
+                  title: loc.errorStackTrace,
                   expandChild: true,
                   child: SingleChildScrollView(
                     child: SelectableText(
@@ -114,7 +117,7 @@ class ErrorPage extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: () => _copyToClipboard(context),
                       icon: const Icon(Icons.copy, size: 18),
-                      label: const Text('复制信息'),
+                      label: Text(loc.errorCopyInfo),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -122,7 +125,7 @@ class ErrorPage extends StatelessWidget {
                     child: FilledButton.icon(
                       onPressed: () => _restartApp(context),
                       icon: const Icon(Icons.refresh, size: 18),
-                      label: const Text('重启应用'),
+                      label: Text(loc.errorRestart),
                     ),
                   ),
                 ],
@@ -173,18 +176,21 @@ class ErrorPage extends StatelessWidget {
     buffer.writeln(_formatStack(stackTrace));
 
     Clipboard.setData(ClipboardData(text: buffer.toString()));
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('错误信息已复制到剪贴板')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context)!.errorCopied)),
+    );
   }
 
   Future<void> _restartApp(BuildContext context) async {
     // 使用 restart_app 包重启应用
     final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
     try {
       await Restart.restartApp(mode: RestartMode.process);
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('重启失败: $e')));
+      messenger.showSnackBar(
+        SnackBar(content: Text(loc.errorRestartFailed(e))),
+      );
     }
   }
 

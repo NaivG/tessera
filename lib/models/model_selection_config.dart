@@ -197,21 +197,21 @@ class ModelSelectionConfig {
   List<String> validateAll(dynamic state) {
     final errors = <String>[];
     if (!mainModel.isValid(state)) {
-      errors.add('主模型无效');
+      errors.add('Main model is invalid');
     }
     for (final entry in inputModalities.entries) {
       if (entry.value != null && !entry.value!.isValid(state)) {
-        errors.add('${entry.key.displayName}输入模型无效');
+        errors.add('${entry.key.displayName} input model is invalid');
       }
     }
     for (final entry in outputModalities.entries) {
       if (entry.value != null && !entry.value!.isValid(state)) {
-        errors.add('${entry.key.displayName}输出模型无效');
+        errors.add('${entry.key.displayName} output model is invalid');
       }
     }
     for (final entry in otherModels.entries) {
       if (entry.value != null && !entry.value!.isValid(state)) {
-        errors.add('${entry.key}模型无效');
+        errors.add('${entry.key} model is invalid');
       }
     }
     return errors;

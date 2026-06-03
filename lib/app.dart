@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'l10n/app_localizations.dart';
 import 'state/settings_state.dart';
 import 'ui/pages/error_page.dart';
 import 'ui/pages/library_page.dart';
@@ -81,6 +83,7 @@ class _TesseraAppState extends State<TesseraApp> {
     setState(() => _initialized = true);
   }
 
+  /// 解析主题模式
   ThemeMode _parseThemeMode(String mode) {
     return switch (mode) {
       'light' => ThemeMode.light,
@@ -89,11 +92,25 @@ class _TesseraAppState extends State<TesseraApp> {
     };
   }
 
+  /// 解析语言环境，返回 null 使用系统默认
+  Locale? _resolveLocale() {
+    final localeStr = _settingsState.locale;
+    if (localeStr == 'system') return null;
+    return Locale(localeStr);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_initialized) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('zh'), Locale('en')],
         home: const Scaffold(body: Center(child: CircularProgressIndicator())),
       );
     }
@@ -102,8 +119,17 @@ class _TesseraAppState extends State<TesseraApp> {
       listenable: _settingsState,
       builder: (context, _) {
         return MaterialApp(
-          title: 'Tessera',
+          title:
+              'Tessera', // this should use localization, however, since AppLocalizations is in builder, we can't access it here. Ingore it for now.
           debugShowCheckedModeBanner: false,
+          locale: _resolveLocale(),
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('zh'), Locale('en')],
           navigatorKey: globalNavigatorKey,
           themeMode: _parseThemeMode(_settingsState.themeMode),
           theme: ThemeData(

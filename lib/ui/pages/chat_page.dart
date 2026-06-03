@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:tessera/l10n/app_localizations.dart';
+
 import '../../core/core.dart';
 import '../../state/chat_state.dart';
 import '../../state/settings_state.dart';
@@ -74,7 +76,8 @@ class _ChatPageState extends State<ChatPage> {
         return Scaffold(
           appBar: AppBar(
             title: Text(
-              _chatState.conversation?.title ?? '新对话',
+              _chatState.conversation?.title ??
+                  AppLocalizations.of(context)!.chatNewConversation,
               style: theme.textTheme.titleMedium,
             ),
             actions: [

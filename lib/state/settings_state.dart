@@ -24,6 +24,7 @@ class SettingsState extends ChangeNotifier {
   bool _deepThinkingEnabled = false;
   String _userCustomPrompt = '';
   bool _lightweightSystemPrompt = false;
+  String _locale = 'system';
 
   // 用户档案字段
   String _userDisplayName = '';
@@ -43,6 +44,7 @@ class SettingsState extends ChangeNotifier {
   bool get deepThinkingEnabled => _deepThinkingEnabled;
   String get userCustomPrompt => _userCustomPrompt;
   bool get lightweightSystemPrompt => _lightweightSystemPrompt;
+  String get locale => _locale;
   String get userDisplayName => _userDisplayName;
   String get userAlias => _userAlias;
   String get userRole => _userRole;
@@ -62,6 +64,7 @@ class SettingsState extends ChangeNotifier {
     _deepThinkingEnabled = await _service.isDeepThinkingEnabled();
     _userCustomPrompt = await _service.getUserCustomPrompt();
     _lightweightSystemPrompt = await _service.isLightweightSystemPrompt();
+    _locale = await _service.getLocale();
     _userDisplayName = await _service.getUserDisplayName();
     _userAlias = await _service.getUserAlias();
     _userRole = await _service.getUserRole();
@@ -316,6 +319,14 @@ class SettingsState extends ChangeNotifier {
   Future<void> setLightweightSystemPrompt(bool v) async {
     _lightweightSystemPrompt = v;
     await _service.setLightweightSystemPrompt(v);
+    notifyListeners();
+  }
+
+  // --- 语言 ---
+
+  Future<void> setLocale(String locale) async {
+    _locale = locale;
+    await _service.setLocale(locale);
     notifyListeners();
   }
 

@@ -9,6 +9,7 @@ import 'package:flutter_streaming_text_markdown/flutter_streaming_text_markdown.
 import '../../core/core.dart';
 import '../../services/media_library.dart';
 import 'processing_block.dart';
+import 'package:tessera/l10n/app_localizations.dart';
 
 /// 聊天气泡组件
 ///
@@ -89,8 +90,12 @@ class ChatBubble extends StatelessWidget {
                           thinkingStream != null))
                     ProcessingBlock(
                       icon: Icons.psychology,
-                      inProgressTitle: '思考中...',
-                      completedTitle: '已思考',
+                      inProgressTitle: AppLocalizations.of(
+                        context,
+                      )!.bubbleThinking,
+                      completedTitle: AppLocalizations.of(
+                        context,
+                      )!.bubbleThought,
                       isProcessing: isStreaming,
                       content: message.thinking,
                       contentStream: thinkingStream,
@@ -126,14 +131,19 @@ class ChatBubble extends StatelessWidget {
                   if (message.toolCalls != null &&
                       message.toolCalls!.isNotEmpty)
                     ...message.toolCalls!.map((tc) {
-                      final argsText = _formatToolArguments(tc.arguments);
+                      final argsText = _formatToolArguments(
+                        context,
+                        tc.arguments,
+                      );
                       final resultText = message.toolResults?[tc.id];
                       final content = resultText != null
                           ? '$argsText\n\n── 结果 ──\n$resultText'
                           : argsText;
                       return ProcessingBlock(
                         icon: Icons.terminal,
-                        inProgressTitle: '调用工具...',
+                        inProgressTitle: AppLocalizations.of(
+                          context,
+                        )!.bubbleToolCall,
                         completedTitle: tc.name,
                         isProcessing: false,
                         content: content,
@@ -175,7 +185,7 @@ class ChatBubble extends StatelessWidget {
     if (message.status == MessageStatus.completed &&
         message.content.isNotEmpty) {
       return ContextMenuRegion(
-        contextMenu: _buildContextMenu(isUser),
+        contextMenu: _buildContextMenu(context, isUser),
         child: bubble,
       );
     }
@@ -183,19 +193,20 @@ class ChatBubble extends StatelessWidget {
     return bubble;
   }
 
-  ContextMenu _buildContextMenu(bool isUser) {
+  ContextMenu _buildContextMenu(BuildContext context, bool isUser) {
+    final l10n = AppLocalizations.of(context)!;
     final entries = <ContextMenuEntry>[
       MenuItem.submenu(
-        label: const Text('复制'),
+        label: Text(l10n.bubbleCopy),
         icon: const Icon(Icons.copy),
         items: [
           MenuItem(
-            label: const Text('Markdown'),
+            label: Text(l10n.bubbleCopyMarkdown),
             icon: const Icon(Icons.code),
             onSelected: (_) => _copyContent(),
           ),
           MenuItem(
-            label: const Text('纯文本'),
+            label: Text(l10n.bubbleCopyPlainText),
             icon: const Icon(Icons.text_fields),
             onSelected: (_) => _copyPlainText(),
           ),
@@ -206,7 +217,7 @@ class ChatBubble extends StatelessWidget {
     if (isUser && onModify != null) {
       entries.add(
         MenuItem(
-          label: const Text('修改'),
+          label: Text(l10n.bubbleModify),
           icon: const Icon(Icons.edit),
           onSelected: (_) => onModify?.call(),
         ),
@@ -216,7 +227,7 @@ class ChatBubble extends StatelessWidget {
     if (!isUser && onRegenerate != null) {
       entries.add(
         MenuItem(
-          label: const Text('重新生成'),
+          label: Text(l10n.bubbleRegenerate),
           icon: const Icon(Icons.refresh),
           onSelected: (_) => onRegenerate?.call(),
         ),
@@ -226,7 +237,7 @@ class ChatBubble extends StatelessWidget {
     if (onShare != null) {
       entries.add(
         MenuItem(
-          label: const Text('分享'),
+          label: Text(l10n.bubbleShare),
           icon: const Icon(Icons.share),
           onSelected: (_) => onShare?.call(),
         ),
@@ -275,8 +286,8 @@ class ChatBubble extends StatelessWidget {
 }
 
 /// 格式化工具调用参数为可读文本
-String _formatToolArguments(Map<String, dynamic> args) {
-  if (args.isEmpty) return '(无参数)';
+String _formatToolArguments(BuildContext context, Map<String, dynamic> args) {
+  if (args.isEmpty) return AppLocalizations.of(context)!.bubbleNoArgs;
   final buf = StringBuffer();
   for (final entry in args.entries) {
     buf.writeln('${entry.key}: ${entry.value}');

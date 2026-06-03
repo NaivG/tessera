@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import 'package:tessera/l10n/app_localizations.dart';
+
 import '../../models/media_attachment.dart';
 import '../../services/media_library.dart';
 
@@ -24,12 +26,12 @@ class _LibraryPageState extends State<LibraryPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('资料库'),
+        title: Text(AppLocalizations.of(context)!.libraryAppBarTitle),
         actions: [
           if (entries.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_sweep),
-              tooltip: '清空资料库',
+              tooltip: AppLocalizations.of(context)!.libraryClearTooltip,
               onPressed: _confirmClear,
             ),
         ],
@@ -52,14 +54,14 @@ class _LibraryPageState extends State<LibraryPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            '资料库为空',
+            AppLocalizations.of(context)!.libraryEmpty,
             style: theme.textTheme.titleMedium?.copyWith(
               color: theme.colorScheme.outline,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            '在对话中上传的图片、文件等会自动保存在这里',
+            AppLocalizations.of(context)!.libraryEmptySubtitle,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.outline,
             ),
@@ -105,20 +107,21 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   Future<void> _deleteEntry(LibraryEntry entry) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除文件'),
-        content: Text('确定要删除「${entry.attachment.fileName}」吗？'),
+        title: Text(l10n.libraryDeleteDialogTitle),
+        content: Text(l10n.libraryDeleteConfirm(entry.attachment.fileName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              '删除',
+              l10n.commonDelete,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
@@ -132,20 +135,24 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   Future<void> _confirmClear() async {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('清空资料库'),
-        content: const Text('确定要删除资料库中的所有文件吗？此操作不可撤销。'),
+        title: Text(l10n.libraryClearDialogTitle),
+        content: Text(l10n.libraryClearConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('清空', style: TextStyle(color: theme.colorScheme.error)),
+            child: Text(
+              l10n.commonClear,
+              style: TextStyle(color: theme.colorScheme.error),
+            ),
           ),
         ],
       ),
@@ -213,7 +220,7 @@ class _LibraryGridItem extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      _buildInfoText(att),
+                      _buildInfoText(att, context),
                       style: theme.textTheme.labelSmall?.copyWith(
                         fontSize: 10,
                         color: colorScheme.outline,
@@ -279,12 +286,13 @@ class _LibraryGridItem extends StatelessWidget {
     return Center(child: Icon(icon, size: 40, color: color));
   }
 
-  String _buildInfoText(MediaAttachment att) {
+  String _buildInfoText(MediaAttachment att, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final typeLabel = switch (att.type) {
-      MediaType.image => '图片',
-      MediaType.video => '视频',
-      MediaType.audio => '音频',
-      MediaType.file => '文件',
+      MediaType.image => l10n.mediaTypeImage,
+      MediaType.video => l10n.mediaTypeVideo,
+      MediaType.audio => l10n.mediaTypeAudio,
+      MediaType.file => l10n.mediaTypeFile,
     };
     final sizeStr = att.fileSizeLabel ?? '';
     return '$typeLabel${sizeStr.isNotEmpty ? ' · $sizeStr' : ''}';

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:tessera/l10n/app_localizations.dart';
+
 import '../../state/settings_state.dart';
 
 /// 用户档案页面 — 编辑用户基础信息
@@ -80,9 +82,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
       );
       setState(() => _hasChanges = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('用户档案已保存')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.profileSavedSnackbar),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -94,16 +98,18 @@ class _UserProfilePageState extends State<UserProfilePage> {
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('未保存的更改'),
-        content: const Text('你有未保存的更改，确定要离开吗？'),
+        title: Text(AppLocalizations.of(context)!.profileUnsavedDialogTitle),
+        content: Text(
+          AppLocalizations.of(context)!.profileUnsavedDialogContent,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(AppLocalizations.of(context)!.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('离开'),
+            child: Text(AppLocalizations.of(context)!.profileLeave),
           ),
         ],
       ),
@@ -132,7 +138,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('用户档案'),
+          title: Text(AppLocalizations.of(context)!.profileAppBarTitle),
           actions: [
             if (_hasChanges)
               TextButton.icon(
@@ -144,7 +150,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.save, size: 18),
-                label: Text(_saving ? '保存中…' : '保存'),
+                label: Text(
+                  _saving
+                      ? AppLocalizations.of(context)!.profileSaving
+                      : AppLocalizations.of(context)!.profileSave,
+                ),
               ),
           ],
         ),
@@ -165,8 +175,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        '你填写的信息将注入系统提示词，帮助 AI 了解你的偏好和背景，'
-                        '提供更加个性化的回复。空字段将被忽略。',
+                        AppLocalizations.of(context)!.profileInfoCard,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onPrimaryContainer,
                         ),
@@ -179,46 +188,48 @@ class _UserProfilePageState extends State<UserProfilePage> {
             const SizedBox(height: 16),
 
             // 基本信息
-            _SectionHeader('基本信息'),
+            _SectionHeader(AppLocalizations.of(context)!.profileSectionBasic),
             const SizedBox(height: 12),
             _buildTextField(
               controller: _displayNameCtrl,
-              label: '显示名称',
-              hint: '例如：张三',
+              label: AppLocalizations.of(context)!.profileDisplayName,
+              hint: AppLocalizations.of(context)!.profileDisplayNameHint,
               icon: Icons.badge_outlined,
             ),
             const SizedBox(height: 12),
             _buildTextField(
               controller: _aliasCtrl,
-              label: '偏好称呼 / 别名',
-              hint: '例如：小张、Alice',
+              label: AppLocalizations.of(context)!.profileAlias,
+              hint: AppLocalizations.of(context)!.profileAliasHint,
               icon: Icons.alternate_email_outlined,
             ),
             const SizedBox(height: 12),
             _buildTextField(
               controller: _roleCtrl,
-              label: '角色 / 与 AI 的关系',
-              hint: '例如：软件工程师、学生',
+              label: AppLocalizations.of(context)!.profileRole,
+              hint: AppLocalizations.of(context)!.profileRoleHint,
               icon: Icons.work_outline,
             ),
 
             const Divider(height: 32),
 
             // 个性化信息
-            _SectionHeader('个性化信息'),
+            _SectionHeader(
+              AppLocalizations.of(context)!.profileSectionPersonalization,
+            ),
             const SizedBox(height: 12),
             _buildTextField(
               controller: _preferencesCtrl,
-              label: '偏好与风格',
-              hint: '例如：喜欢简洁的回答、偏好中文、注重代码质量',
+              label: AppLocalizations.of(context)!.profilePreferences,
+              hint: AppLocalizations.of(context)!.profilePreferencesHint,
               icon: Icons.tune_outlined,
               maxLines: 4,
             ),
             const SizedBox(height: 12),
             _buildTextField(
               controller: _factsCtrl,
-              label: '相关事实',
-              hint: '例如：住在北京、使用 Flutter 开发、正在学习 Rust',
+              label: AppLocalizations.of(context)!.profileFacts,
+              hint: AppLocalizations.of(context)!.profileFactsHint,
               icon: Icons.fact_check_outlined,
               maxLines: 4,
             ),
@@ -235,7 +246,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.save),
-              label: Text(_saving ? '保存中…' : '保存用户档案'),
+              label: Text(
+                _saving
+                    ? AppLocalizations.of(context)!.profileSaving
+                    : AppLocalizations.of(context)!.profileSaveButton,
+              ),
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -250,7 +265,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               TextButton.icon(
                 onPressed: _confirmClear,
                 icon: const Icon(Icons.delete_outline, size: 18),
-                label: const Text('清除所有档案信息'),
+                label: Text(AppLocalizations.of(context)!.profileClearButton),
                 style: TextButton.styleFrom(
                   foregroundColor: theme.colorScheme.error,
                   padding: const EdgeInsets.symmetric(vertical: 14),
@@ -330,16 +345,19 @@ class _UserProfilePageState extends State<UserProfilePage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('清除用户档案'),
-        content: const Text('确定要清除所有档案信息吗？此操作不可撤销。'),
+        title: Text(AppLocalizations.of(context)!.profileClearDialogTitle),
+        content: Text(AppLocalizations.of(context)!.profileClearDialogContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(AppLocalizations.of(context)!.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('清除', style: TextStyle(color: theme.colorScheme.error)),
+            child: Text(
+              AppLocalizations.of(context)!.commonClear,
+              style: TextStyle(color: theme.colorScheme.error),
+            ),
           ),
         ],
       ),

@@ -8,6 +8,7 @@ import 'package:file_picker/file_picker.dart';
 import '../../core/core.dart';
 import '../../services/media_library.dart';
 import '../../services/speech_service.dart';
+import 'package:tessera/l10n/app_localizations.dart';
 
 /// 发送参数 — 封装用户发送的内容
 class SendPayload {
@@ -139,6 +140,7 @@ class _MessageInputState extends State<MessageInput> {
 
   Future<void> _showAttachmentMenu() async {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final result = await showModalBottomSheet<int>(
       context: context,
       builder: (ctx) {
@@ -150,8 +152,8 @@ class _MessageInputState extends State<MessageInput> {
               children: [
                 ListTile(
                   leading: Icon(Icons.image, color: theme.colorScheme.primary),
-                  title: const Text('图片'),
-                  subtitle: const Text('从相册选择图片'),
+                  title: Text(l10n.messageInputImage),
+                  subtitle: Text(l10n.messageInputImageSubtitle),
                   onTap: () => Navigator.pop(ctx, 1),
                 ),
                 ListTile(
@@ -159,8 +161,8 @@ class _MessageInputState extends State<MessageInput> {
                     Icons.camera_alt,
                     color: theme.colorScheme.primary,
                   ),
-                  title: const Text('相机'),
-                  subtitle: const Text('使用相机拍摄'),
+                  title: Text(l10n.messageInputCamera),
+                  subtitle: Text(l10n.messageInputCameraSubtitle),
                   onTap: () => Navigator.pop(ctx, 2),
                 ),
                 ListTile(
@@ -168,8 +170,8 @@ class _MessageInputState extends State<MessageInput> {
                     Icons.attach_file,
                     color: theme.colorScheme.primary,
                   ),
-                  title: const Text('文件'),
-                  subtitle: const Text('选择任意文件'),
+                  title: Text(l10n.messageInputFile),
+                  subtitle: Text(l10n.messageInputFileSubtitle),
                   onTap: () => Navigator.pop(ctx, 3),
                 ),
               ],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:tessera/l10n/app_localizations.dart';
 
+import '../../l10n/model_localization.dart';
 import '../../models/llm_provider_config.dart';
 import '../../models/model_info.dart';
 import '../../llm/provider_factory.dart';
@@ -157,20 +159,21 @@ class _ModelEditPageState extends State<ModelEditPage> {
       orElse: () => ModelInfo(id: ''),
     );
     if (model.id.isEmpty) return;
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除模型'),
-        content: Text('确定要删除模型「${model.id}」吗？'),
+        title: Text(l10n.modelEditDeleteTitle),
+        content: Text(l10n.modelEditDeleteConfirm(model.id)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              '删除',
+              l10n.commonDelete,
               style: TextStyle(color: Theme.of(ctx).colorScheme.error),
             ),
           ),
@@ -209,6 +212,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
     String modelId,
     ModelInfo? fetchedInfo,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final state = widget.settingsState;
 
     ModelType selectedType = fetchedInfo?.type ?? ModelType.text;
@@ -230,14 +234,14 @@ class _ModelEditPageState extends State<ModelEditPage> {
             final theme = Theme.of(ctx);
 
             return AlertDialog(
-              title: Text('添加模型: $modelId'),
+              title: Text(l10n.modelEditAddModelDialogTitle(modelId)),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 模型 ID（只读）
-                    _DialogLabel('模型 ID'),
+                    _DialogLabel(l10n.modelEditModelIdLabel),
                     const SizedBox(height: 4),
                     Text(
                       modelId,
@@ -249,7 +253,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
                     const SizedBox(height: 20),
 
                     // 类型选择
-                    _DialogLabel('模型类型'),
+                    _DialogLabel(l10n.modelEditModelTypeLabel),
                     const SizedBox(height: 6),
                     Wrap(
                       spacing: 6,
@@ -258,7 +262,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
                         final isSel = t == selectedType;
                         return ChoiceChip(
                           label: Text(
-                            t.displayName,
+                            l10n.modelTypeName(t),
                             style: const TextStyle(fontSize: 12),
                           ),
                           selected: isSel,
@@ -284,7 +288,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
                     // 标签选择（仅 LLM 类型）
                     if (isLLM) ...[
                       const SizedBox(height: 16),
-                      _DialogLabel('模态标签'),
+                      _DialogLabel(l10n.modelEditModalTagsLabel),
                       const SizedBox(height: 6),
                       Wrap(
                         spacing: 6,
@@ -293,7 +297,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
                           final isSel = selectedTags.contains(tag);
                           return FilterChip(
                             label: Text(
-                              tag.displayName,
+                              l10n.modelTagName(tag),
                               style: const TextStyle(fontSize: 12),
                             ),
                             selected: isSel,
@@ -316,8 +320,11 @@ class _ModelEditPageState extends State<ModelEditPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '已选标签: '
-                        '${selectedTags.map((t) => t.displayName).join(" + ")}',
+                        l10n.modelEditSelectedTags(
+                          selectedTags
+                              .map((t) => l10n.modelTagName(t))
+                              .join(' + '),
+                        ),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.outline,
                         ),
@@ -337,7 +344,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              '已从 API 获取到模型信息，请确认',
+                              l10n.modelEditApiInfoFetched,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.outline,
                               ),
@@ -352,7 +359,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('取消'),
+                  child: Text(l10n.commonCancel),
                 ),
                 FilledButton(
                   onPressed: () {
@@ -365,7 +372,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
                       ),
                     );
                   },
-                  child: const Text('添加'),
+                  child: Text(l10n.settingsProviderAdd),
                 ),
               ],
             );
@@ -383,17 +390,20 @@ class _ModelEditPageState extends State<ModelEditPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final config = widget.config;
 
     return Scaffold(
-      appBar: AppBar(title: Text('编辑模型 - ${config.displayName}')),
+      appBar: AppBar(
+        title: Text(l10n.modelEditAppBarTitle(config.displayName)),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // ===== 添加模型区域 =====
           Text(
-            '添加模型',
+            l10n.modelEditAddModel,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -410,7 +420,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
 
           // ===== 已添加模型列表 =====
           Text(
-            '已添加模型 (${config.models.length})',
+            l10n.modelEditAddedModels(config.models.length),
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -430,10 +440,11 @@ class _ModelEditPageState extends State<ModelEditPage> {
 
   /// 加载中的输入框
   Widget _buildLoadingField(ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     return TextField(
       enabled: false,
       decoration: InputDecoration(
-        hintText: '正在获取模型列表…',
+        hintText: l10n.modelEditFetching,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         isDense: true,
         suffixIcon: Padding(
@@ -453,6 +464,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
   /// 替代原先的 [Autocomplete] 组件，将建议列表作为内联元素嵌入页面中，
   /// 避免 [Autocomplete] 的 [Overlay] 悬浮下拉遮挡下方内容。
   Widget _buildAutocompleteField(ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     final suggestions = _getSuggestions(_searchQuery).toList();
 
     return Column(
@@ -463,13 +475,13 @@ class _ModelEditPageState extends State<ModelEditPage> {
           focusNode: _searchFocusNode,
           autocorrect: false,
           decoration: InputDecoration(
-            hintText: '搜索或输入模型 ID…',
+            hintText: l10n.modelEditSearchHint,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             isDense: true,
             suffixIcon: IconButton(
               icon: Icon(Icons.add_circle, color: theme.colorScheme.primary),
               onPressed: () => _onAddPressed(_searchController.text),
-              tooltip: '添加模型',
+              tooltip: l10n.modelEditAddTooltip,
             ),
           ),
           onSubmitted: (value) => _onAddPressed(value),
@@ -537,6 +549,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
 
   /// 空模型列表提示
   Widget _buildEmptyModels(ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
@@ -548,14 +561,14 @@ class _ModelEditPageState extends State<ModelEditPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            '尚未添加任何模型',
+            l10n.modelEditNoModels,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.outline,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            '在上方输入框中搜索或输入模型 ID 进行添加',
+            l10n.modelEditAddPrompt,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.outline,
             ),
@@ -567,6 +580,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
 
   /// 单个模型卡片
   Widget _buildModelCard(ThemeData theme, ModelInfo model) {
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -606,7 +620,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
                 color: theme.colorScheme.error,
               ),
               onPressed: () => _onDeleteModel(model.uid),
-              tooltip: '删除模型',
+              tooltip: l10n.modelEditDeleteTooltip,
               visualDensity: VisualDensity.compact,
             ),
           ],
@@ -639,10 +653,11 @@ class _ModelEditPageState extends State<ModelEditPage> {
 
   /// 模型元信息描述文本，如 "LLM · 文本+视觉"
   String _modelMetaLabel(ModelInfo model) {
-    final typeLabel = model.type.displayName;
+    final l10n = AppLocalizations.of(context)!;
+    final typeLabel = l10n.modelTypeName(model.type);
     if (model.type != ModelType.text) return typeLabel;
     if (model.tags.isEmpty) return typeLabel;
-    return '$typeLabel · ${model.tags.map((t) => t.displayName).join("+")}';
+    return '$typeLabel · ${model.tags.map((t) => l10n.modelTagName(t)).join("+")}';
   }
 }
 
