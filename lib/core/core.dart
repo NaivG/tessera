@@ -1,0 +1,17 @@
+// 核心导出
+export 'llm_provider.dart';
+export '../cache/cache.dart';
+export 'tool_registry.dart';
+export 'capability_adapter.dart';
+export 'prompt_template_store.dart';
+export 'system_prompt_builder.dart';
+export '../models/message.dart';
+export '../models/media_attachment.dart';
+export '../models/conversation.dart';
+export '../models/llm_config.dart';
+export '../models/llm_provider_config.dart';
+export '../models/model_info.dart';
+export '../models/model_selection_config.dart';
+export '../models/prompt_template.dart';
+export '../models/stream_chunk.dart';
+export '../models/tool.dart';
