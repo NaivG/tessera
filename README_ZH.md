@@ -1,4 +1,9 @@
+<!-- ![Tessera](docs/logo.png) -->
 <div align="center">
+
+<div>
+    <img src="./docs/favicon.png" alt="logo" style="width: 20%; height: auto;">
+</div>
 
 # Tessera
 
