@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
@@ -15,7 +17,7 @@ class SpeechService {
   bool get isSpeaking => _isSpeaking;
 
   /// STT 是否可用
-  Future<bool> get isSttAvailable => _stt.initialize();
+  Future<bool> get isSttAvailable => (!kIsWeb && !Platform.isLinux) ? _stt.initialize() : Future.value(false); // STT 在 Web 和 Linux 上不可用
 
   /// TTS 是否可用（通常总是可用）
   bool get isTtsAvailable => true;

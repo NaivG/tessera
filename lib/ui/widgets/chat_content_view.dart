@@ -133,7 +133,7 @@ class _ChatContentViewState extends State<ChatContentView> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.smart_toy, size: 64, color: theme.colorScheme.primary),
+          Icon(Icons.assistant, size: 64, color: theme.colorScheme.primary),
           const SizedBox(height: 16),
           Text(
             l10n.chatWelcomeTitle,

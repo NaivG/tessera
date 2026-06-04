@@ -44,7 +44,7 @@
 
 **Tessera** (τέσσερα, Greek for "four" — the four corners of one unified piece) is a cross-platform AI chat client built with Flutter. It brings together multiple large language model providers under one roof, seamlessly routing multimodal tasks — vision, audio, image generation, speech synthesis — to the right models without you ever leaving the conversation.
 
-With a built-in long-term memory system that extracts, retrieves, compresses, and forgets like a human mind, Tessera goes beyond simple chatbot interfaces to deliver a truly personal assistant.
+With a experimental built-in long-term memory system that extracts, retrieves, compresses, and forgets like a human mind, Tessera goes beyond simple chatbot interfaces to deliver a truly personal assistant.
 
 ---
 
