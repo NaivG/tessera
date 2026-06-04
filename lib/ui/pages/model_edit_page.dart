@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tessera/l10n/app_localizations.dart';
 
 import '../../l10n/model_localization.dart';
 import '../../models/llm_provider_config.dart';
 import '../../models/model_info.dart';
 import '../../llm/provider_factory.dart';
-import '../../state/settings_state.dart';
+import '../../providers/providers.dart';
 
 /// 编辑模型页面
 ///
@@ -16,23 +17,21 @@ import '../../state/settings_state.dart';
 ///
 /// 当从自动补全下拉中选择已有模型时，自动从 API 获取模型信息，
 /// 并弹出类型与标签选择对话框供用户确认后添加。
-class ModelEditPage extends StatefulWidget {
+class ModelEditPage extends ConsumerStatefulWidget {
   final String providerId;
   final LlmProviderConfig config;
-  final SettingsState settingsState;
 
   const ModelEditPage({
     super.key,
     required this.providerId,
     required this.config,
-    required this.settingsState,
   });
 
   @override
-  State<ModelEditPage> createState() => _ModelEditPageState();
+  ConsumerState<ModelEditPage> createState() => _ModelEditPageState();
 }
 
-class _ModelEditPageState extends State<ModelEditPage> {
+class _ModelEditPageState extends ConsumerState<ModelEditPage> {
   List<ModelInfo>? _allModels;
   bool _isLoadingModels = false;
 
@@ -46,7 +45,6 @@ class _ModelEditPageState extends State<ModelEditPage> {
     _searchController = TextEditingController();
     _searchFocusNode = FocusNode();
     _searchController.addListener(_onSearchChanged);
-    widget.settingsState.addListener(_onStateChanged);
     _fetchModels();
   }
 
@@ -55,7 +53,6 @@ class _ModelEditPageState extends State<ModelEditPage> {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     _searchFocusNode.dispose();
-    widget.settingsState.removeListener(_onStateChanged);
     super.dispose();
   }
 
@@ -65,9 +62,13 @@ class _ModelEditPageState extends State<ModelEditPage> {
     });
   }
 
-  void _onStateChanged() {
-    if (!mounted) return;
-    setState(() {});
+  SettingsData get _settings => ref.watch(settingsProvider);
+
+  LlmProviderConfig get _config {
+    final cfg = _settings.providerConfigs.where(
+      (c) => c.id == widget.providerId,
+    ).firstOrNull;
+    return cfg ?? widget.config;
   }
 
   Future<void> _fetchModels() async {
@@ -154,7 +155,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
 
   /// 删除模型
   Future<void> _onDeleteModel(String modelUid) async {
-    final model = widget.config.models.firstWhere(
+    final model = _config.models.firstWhere(
       (m) => m.uid == modelUid,
       orElse: () => ModelInfo(id: ''),
     );
@@ -182,7 +183,10 @@ class _ModelEditPageState extends State<ModelEditPage> {
     );
 
     if (confirmed == true) {
-      await widget.settingsState.removeModel(widget.providerId, modelUid);
+      await ref.read(settingsProvider.notifier).removeModel(
+        widget.providerId,
+        modelUid,
+      );
     }
   }
 
@@ -190,11 +194,11 @@ class _ModelEditPageState extends State<ModelEditPage> {
 
   Future<ModelInfo?> _fetchModelInfo(String modelId) async {
     try {
-      final provider = ProviderFactory.get(widget.config.format);
+      final provider = ProviderFactory.get(_config.format);
       return await provider.getModelInfo(
         modelId,
-        apiKey: widget.config.apiKey,
-        baseUrl: widget.config.baseUrl,
+        apiKey: _config.apiKey,
+        baseUrl: _config.baseUrl,
       );
     } catch (_) {
       return null;
@@ -213,7 +217,6 @@ class _ModelEditPageState extends State<ModelEditPage> {
     ModelInfo? fetchedInfo,
   ) async {
     final l10n = AppLocalizations.of(context)!;
-    final state = widget.settingsState;
 
     ModelType selectedType = fetchedInfo?.type ?? ModelType.text;
     final selectedTags = <ModelTag>{};
@@ -382,7 +385,10 @@ class _ModelEditPageState extends State<ModelEditPage> {
     );
 
     if (result != null) {
-      await state.addModel(widget.providerId, result);
+      await ref.read(settingsProvider.notifier).addModel(
+        widget.providerId,
+        result,
+      );
     }
   }
 
@@ -392,7 +398,7 @@ class _ModelEditPageState extends State<ModelEditPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final config = widget.config;
+    final config = _config;
 
     return Scaffold(
       appBar: AppBar(

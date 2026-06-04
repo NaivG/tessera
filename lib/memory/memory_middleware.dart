@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
@@ -7,12 +7,12 @@ import '../models/llm_config.dart';
 import '../models/message.dart';
 import '../models/memory_type.dart';
 import '../models/memory_entry.dart';
-import '../state/memory_state.dart';
+import '../providers/memory_provider.dart';
 import '../utils/json_extractor.dart';
 
 /// 对话记忆管理器 — 延迟 Summary 模型
 class ConversationalMemoryManager {
-  final MemoryState _memoryState;
+  final MemoryNotifier _memoryNotifier;
 
   /// 每 N 轮触发一次摘要
   final int summaryInterval;
@@ -42,9 +42,9 @@ class ConversationalMemoryManager {
 ''';
 
   ConversationalMemoryManager({
-    required MemoryState memoryState,
+    required MemoryNotifier memoryNotifier,
     this.summaryInterval = 5,
-  }) : _memoryState = memoryState;
+  }) : _memoryNotifier = memoryNotifier;
 
   void incrementTurn() {
     _turnCount++;
@@ -77,7 +77,7 @@ class ConversationalMemoryManager {
     );
 
     if (summary != null && summary.isNotEmpty) {
-      final entry = await _memoryState.createLongTermMemory(
+      final entry = await _memoryNotifier.createLongTermMemory(
         summary,
         importance: 0.7,
         confidence: 1.0,
@@ -86,7 +86,7 @@ class ConversationalMemoryManager {
         type: MemoryType.conversational,
         conversationId: conversationId,
       );
-      await _memoryState.updateMemory(convEntry);
+      await _memoryNotifier.updateMemory(convEntry);
 
       _summaryMemoryId = convEntry.id;
       _lastSummaryText = summary;
@@ -124,7 +124,7 @@ class ConversationalMemoryManager {
           confidence: 1.0,
           conversationId: conversationId,
         );
-        await _memoryState.updateMemory(entry);
+        await _memoryNotifier.updateMemory(entry);
       }
 
       _lastSummaryText = summary;
@@ -160,7 +160,7 @@ class ConversationalMemoryManager {
           confidence: 1.0,
           conversationId: conversationId,
         );
-        await _memoryState.updateMemory(entry);
+        await _memoryNotifier.updateMemory(entry);
       }
       _lastSummaryText = summary;
       debugPrint('[ConversationalMemory] 最终摘要完成');

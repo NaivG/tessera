@@ -17,7 +17,7 @@ export 'memory_forgetter.dart';
 export '../services/memory_service.dart';
 
 // 状态
-export '../state/memory_state.dart';
+export '../providers/memory_provider.dart';
 
 // 集成
 export 'memory_middleware.dart';

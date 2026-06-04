@@ -246,7 +246,7 @@ MemoryForgetter   (time-decay scoring)
 | Category | Technology |
 |----------|-----------|
 | Framework | Flutter 3.11+ / Dart |
-| State Management | ChangeNotifier + ListenableBuilder |
+| State Management | Riverpod (ref.watch / ref.read) |
 | Persistence | sqflite (conversations) + shared_preferences (settings) |
 | LLM SDKs | openai_dart / anthropic_sdk_dart / googleai_dart / ollama_dart |
 | Voice | speech_to_text / flutter_tts |
@@ -290,10 +290,14 @@ tessera/
 │   │   ├── speech_service.dart        # STT/TTS
 │   │   ├── media_library.dart         # Media file management
 │   │   └── settings_service.dart      # Settings persistence
-│   ├── state/                         # State management (ChangeNotifier)
-│   │   ├── chat_state.dart            # Chat flow state
-│   │   ├── settings_state.dart        # Settings state
-│   │   └── memory_state.dart          # Memory state
+│   ├── providers/                     # State management (Riverpod)
+│   │   ├── chat_provider.dart         # Chat flow state
+│   │   ├── settings_provider.dart     # Settings state
+│   │   ├── memory_provider.dart       # Memory state
+│   │   ├── conversation_service_provider.dart # Conversation service
+│   │   ├── memory_service_provider.dart       # Memory service
+│   │   ├── settings_service_provider.dart      # Settings service
+│   │   └── providers.dart             # Barrel export
 │   ├── cache/                         # Prompt caching system
 │   │   ├── cache_manager.dart
 │   │   ├── cache_store.dart

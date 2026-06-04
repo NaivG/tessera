@@ -1,42 +1,35 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:tessera/l10n/app_localizations.dart';
 
 import '../../models/conversation.dart';
 import '../../models/message.dart';
-import '../../state/chat_state.dart';
-import '../../state/settings_state.dart';
+import '../../providers/providers.dart';
 import '../../services/conversation_service.dart';
 import '../widgets/chat_content_view.dart';
 import '../widgets/message_input.dart';
 import '../widgets/sidebar.dart';
 
 /// 主页面 — 响应式侧边栏 + 聊天区域
-///
-/// - 竖屏 / 窄屏 (width < 600): 侧边栏作为 Scaffold.drawer
-/// - 横屏 / 宽屏 (width >= 600): 侧边栏常驻嵌入，与聊天区域并排
-class MainPage extends StatefulWidget {
-  final SettingsState settingsState;
-
-  const MainPage({super.key, required this.settingsState});
+class MainPage extends ConsumerStatefulWidget {
+  const MainPage({super.key});
 
   @override
-  State<MainPage> createState() => _MainPageState();
+  ConsumerState<MainPage> createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
+class _MainPageState extends ConsumerState<MainPage>
+    with TickerProviderStateMixin {
   final ConversationService _convService = ConversationService();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  /// 持久化的对话列表（用于侧边栏展示）
   List<Conversation> _conversations = [];
   Set<String> _conversationIds = {};
   bool _loading = true;
-
-  ChatState? _chatState;
-  String? _activeConversationId;
 
   // 横屏模式侧边栏动画
   late final AnimationController _sidebarAnimController;
@@ -55,56 +48,23 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
       curve: Curves.easeInOut,
     );
     _sidebarAnimController.value = 1.0;
-    _chatState = ChatState();
-    _chatState!.configureCapabilities(widget.settingsState);
-    _chatState!.addListener(_onChatStateChanged);
-    _chatState!.init(); // 提前加载 SystemPromptBuilder + CacheManager
+
+    // 初始化 ChatNotifier
+    final chat = ref.read(chatProvider.notifier);
+    final settings = ref.read(settingsProvider);
+    chat.configureCapabilities(settings);
+    chat.init();
+
     _loadConversations();
-    widget.settingsState.addListener(_onSettingsChanged);
   }
 
   @override
   void dispose() {
-    widget.settingsState.removeListener(_onSettingsChanged);
-    _chatState?.removeListener(_onChatStateChanged);
     _sidebarAnimController.dispose();
-    _chatState?.dispose();
     super.dispose();
   }
 
-  void _onSettingsChanged() {
-    if (!mounted) return;
-    setState(() {});
-  }
-
-  void _onChatStateChanged() {
-    if (!mounted) return;
-    final conv = _chatState?.conversation;
-    if (conv != null) {
-      if (!_conversationIds.contains(conv.id)) {
-        // 新对话创建：加入侧边栏并刷新完整列表
-        _conversationIds.add(conv.id);
-        _conversations.insert(0, conv);
-        _activeConversationId = conv.id;
-        _loadConversations();
-      } else {
-        // 已有对话：同步标题变更（如主题生成更新了标题）
-        final idx = _conversations.indexWhere((c) => c.id == conv.id);
-        if (idx >= 0 && _conversations[idx].title != conv.title) {
-          _conversations[idx] = _conversations[idx].copyWith(title: conv.title);
-        }
-      }
-    }
-    setState(() {});
-  }
-
-  /// 绑定或切换 [ChatState] 实例，自动管理 listener
-  void _bindChatState(ChatState cs) {
-    _chatState?.removeListener(_onChatStateChanged);
-    _chatState?.dispose();
-    cs.addListener(_onChatStateChanged);
-    _chatState = cs;
-  }
+  // ── 对话列表 ──
 
   Future<void> _loadConversations() async {
     setState(() => _loading = true);
@@ -120,47 +80,45 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     }
   }
 
-  // --- 对话操作 ---
+  String? get _activeConversationId {
+    final conv = ref.read(chatProvider).conversation;
+    return conv?.id;
+  }
+
+  // ── 对话操作 ──
 
   void _selectConversation(Conversation conv) async {
     if (_scaffoldKey.currentState?.isDrawerOpen == true) {
       Navigator.of(context).pop();
     }
-
-    final cs = ChatState();
-    cs.configureCapabilities(widget.settingsState);
-    await cs.init();
-    await cs.loadConversation(conv.id);
-    _bindChatState(cs);
-    setState(() {
-      _activeConversationId = conv.id;
-    });
+    final notifier = ref.read(chatProvider.notifier);
+    notifier.configureCapabilities(ref.read(settingsProvider));
+    await notifier.init();
+    await notifier.loadConversation(conv.id);
   }
 
-  /// 进入新对话状态
   void _newConversation() {
     if (_scaffoldKey.currentState?.isDrawerOpen == true) {
       Navigator.of(context).pop();
     }
-    _chatState?.clear();
-    _activeConversationId = null;
+    ref.read(chatProvider.notifier).clear();
   }
 
   Future<void> _deleteConversation(String id) async {
     await _convService.deleteConversation(id);
     _conversationIds.remove(id);
     if (_activeConversationId == id) {
-      _chatState?.clear();
-      _activeConversationId = null;
+      ref.read(chatProvider.notifier).clear();
     }
     _loadConversations();
   }
 
   Future<void> _renameConversation(String id, String newTitle) async {
     await _convService.renameConversation(id, newTitle);
-    // 同步更新内存中的标题，使 AppBar 即时反映变更
-    if (_chatState?.conversation?.id == id) {
-      _chatState!.conversation!.title = newTitle;
+    // 同步更新内存中的标题
+    final conv = ref.read(chatProvider).conversation;
+    if (conv?.id == id) {
+      conv!.title = newTitle;
     }
     _loadConversations();
   }
@@ -169,23 +127,23 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     Navigator.of(context).pushNamed('/settings');
   }
 
-  // --- 发送消息 ---
+  // ── 发送消息 ──
 
   void _handleSend(SendPayload payload) {
-    final config = widget.settingsState.buildMainLlmConfig();
+    final notifier = ref.read(settingsProvider.notifier);
+    final config = notifier.buildMainLlmConfig();
     if (config == null) {
       _showNoConfigWarning();
       return;
     }
 
-    _chatState?.sendMessage(
+    final settings = ref.read(settingsProvider);
+    ref.read(chatProvider.notifier).sendMessage(
       payload.text,
       attachments: payload.attachments,
-      streamEnabled: widget.settingsState.streamEnabled,
+      streamEnabled: settings.streamEnabled,
       config: config,
     );
-    // 注：新对话创建后的侧边栏更新由 _onChatStateChanged listener 统一处理，
-    // 避免因 sendMessage 内部异步操作导致竞态漏检。
   }
 
   void _showNoConfigWarning() {
@@ -201,7 +159,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     );
   }
 
-  // --- 上下文菜单 ---
+  // ── 消息操作 ──
 
   void _handleModify(Message msg) async {
     final l10n = AppLocalizations.of(context)!;
@@ -232,16 +190,18 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     if (newContent != null &&
         newContent.isNotEmpty &&
         newContent != msg.content) {
-      _chatState?.modifyAndResend(
+      ref.read(chatProvider.notifier).modifyAndResend(
         msg.id,
         newContent,
-        streamEnabled: widget.settingsState.streamEnabled,
+        streamEnabled: ref.read(settingsProvider).streamEnabled,
       );
     }
   }
 
   void _handleRegenerate() {
-    _chatState?.retry(streamEnabled: widget.settingsState.streamEnabled);
+    ref.read(chatProvider.notifier).retry(
+      streamEnabled: ref.read(settingsProvider).streamEnabled,
+    );
   }
 
   void _handleShare(Message msg) {
@@ -250,13 +210,13 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     );
   }
 
-  /// 当前对话标题
   String get _title {
-    final conv = _chatState?.conversation;
-    return conv?.title ?? AppLocalizations.of(context)!.chatNewConversation;
+    final state = ref.watch(chatProvider);
+    return state.conversation?.title ??
+        AppLocalizations.of(context)!.chatNewConversation;
   }
 
-  // --- 工具方法 ---
+  // ── 布局 ──
 
   static const double _sidebarWidth = 280;
   static const double _breakpoint = 600;
@@ -264,6 +224,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final chatData = ref.watch(chatProvider);
 
     if (_loading) {
       return Scaffold(
@@ -276,9 +237,8 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isWide = constraints.maxWidth >= _breakpoint;
-
         if (isWide) {
-          return _buildWideLayout(theme);
+          return _buildWideLayout(theme, chatData);
         } else {
           return _buildNarrowLayout(theme);
         }
@@ -286,9 +246,10 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     );
   }
 
-  // ============ 窄屏（竖屏 / 手机）============
-
   Widget _buildNarrowLayout(ThemeData theme) {
+    final settings = ref.watch(settingsProvider);
+    final chatNotifier = ref.read(chatProvider.notifier);
+
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
@@ -298,11 +259,19 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
         ),
         title: Text(_title, style: theme.textTheme.titleMedium),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: AppLocalizations.of(context)!.chatNewLabel,
-            onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-          ),
+          if (ref.watch(chatProvider).isStreaming)
+            IconButton(
+              icon: const Icon(Icons.stop),
+              onPressed: () => chatNotifier.stopStreaming(),
+            ),
+          if (!ref.watch(chatProvider).isStreaming &&
+              ref.watch(chatProvider).messages.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () => chatNotifier.retry(
+                streamEnabled: ref.read(settingsProvider).streamEnabled,
+              ),
+            ),
         ],
       ),
       drawer: Drawer(
@@ -315,7 +284,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
           onDeleteConversation: _deleteConversation,
           onRenameConversation: _renameConversation,
           onSettings: _openSettings,
-          displayName: widget.settingsState.userDisplayName,
+          displayName: settings.userDisplayName,
           onProfile: () => Navigator.of(context).pushNamed('/profile'),
         ),
       ),
@@ -323,13 +292,13 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     );
   }
 
-  // ============ 宽屏（横屏 / 平板/桌面）============
+  Widget _buildWideLayout(ThemeData theme, ChatData chatData) {
+    final settings = ref.watch(settingsProvider);
+    final chatNotifier = ref.read(chatProvider.notifier);
 
-  Widget _buildWideLayout(ThemeData theme) {
     return Scaffold(
       body: Row(
         children: [
-          // 侧边栏（带动画）
           AnimatedBuilder(
             animation: _sidebarAnim,
             builder: (context, child) {
@@ -347,13 +316,11 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
               onRenameConversation: _renameConversation,
               onSettings: _openSettings,
               onToggleCollapse: _toggleSidebar,
-              displayName: widget.settingsState.userDisplayName,
+              displayName: settings.userDisplayName,
               onProfile: () => Navigator.of(context).pushNamed('/profile'),
             ),
           ),
-          // 分隔线
           Container(width: 1, color: theme.colorScheme.outlineVariant),
-          // 聊天区域
           Expanded(
             child: Scaffold(
               appBar: AppBar(
@@ -365,26 +332,16 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                       ),
                 title: Text(_title, style: theme.textTheme.titleMedium),
                 actions: [
-                  if (!_sidebarVisible)
-                    IconButton(
-                      icon: const Icon(Icons.add),
-                      tooltip: AppLocalizations.of(context)!.chatNewLabel,
-                      onPressed: () {
-                        if (!_sidebarVisible) _toggleSidebar();
-                      },
-                    ),
-                  if (_chatState != null && _chatState!.isStreaming)
+                  if (chatData.isStreaming)
                     IconButton(
                       icon: const Icon(Icons.stop),
-                      onPressed: () => _chatState!.stopStreaming(),
+                      onPressed: () => chatNotifier.stopStreaming(),
                     ),
-                  if (_chatState != null &&
-                      !_chatState!.isStreaming &&
-                      _chatState!.messages.isNotEmpty)
+                  if (!chatData.isStreaming && chatData.messages.isNotEmpty)
                     IconButton(
                       icon: const Icon(Icons.refresh),
-                      onPressed: () => _chatState!.retry(
-                        streamEnabled: widget.settingsState.streamEnabled,
+                      onPressed: () => chatNotifier.retry(
+                        streamEnabled: ref.read(settingsProvider).streamEnabled,
                       ),
                     ),
                 ],
@@ -408,11 +365,8 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     });
   }
 
-  // ============ 聊天区域 ============
-
   Widget _buildChatArea(ThemeData theme) {
     return ChatContentView(
-      chatState: _chatState ?? ChatState(),
       onSend: _handleSend,
       onModify: _handleModify,
       onRegenerate: _handleRegenerate,

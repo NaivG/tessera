@@ -255,7 +255,7 @@ MemoryForgetter（记忆遗忘器：时间衰减评分）
 | 类别 | 技术 |
 |------|------|
 | 框架 | Flutter 3.11+ / Dart |
-| 状态管理 | ChangeNotifier + ListenableBuilder |
+| 状态管理 | Riverpod（ref.watch / ref.read） |
 | 持久化 | sqflite（对话）+ shared_preferences（设置） |
 | LLM SDK | openai_dart / anthropic_sdk_dart / googleai_dart / ollama_dart |
 | 语音 | speech_to_text / flutter_tts |
@@ -299,10 +299,14 @@ tessera/
 │   │   ├── speech_service.dart        # 语音识别/合成
 │   │   ├── media_library.dart         # 媒体文件管理
 │   │   └── settings_service.dart      # 设置持久化
-│   ├── state/                         # 状态管理（ChangeNotifier）
-│   │   ├── chat_state.dart            # 对话流状态
-│   │   ├── settings_state.dart        # 设置状态
-│   │   └── memory_state.dart          # 记忆状态
+│   ├── providers/                     # 状态管理（Riverpod）
+│   │   ├── chat_provider.dart         # 对话流状态
+│   │   ├── settings_provider.dart     # 设置状态
+│   │   ├── memory_provider.dart       # 记忆状态
+│   │   ├── conversation_service_provider.dart # 对话服务
+│   │   ├── memory_service_provider.dart       # 记忆服务
+│   │   ├── settings_service_provider.dart      # 设置服务
+│   │   └── providers.dart             # Barrel 导出
 │   ├── cache/                         # 提示缓存系统
 │   │   ├── cache_manager.dart
 │   │   ├── cache_store.dart

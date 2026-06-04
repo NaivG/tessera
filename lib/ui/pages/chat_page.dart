@@ -1,103 +1,60 @@
 import 'package:flutter/material.dart';
-
-import 'package:tessera/l10n/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/core.dart';
-import '../../state/chat_state.dart';
-import '../../state/settings_state.dart';
+import '../../providers/chat_provider.dart';
+import '../../providers/settings_provider.dart';
 import '../widgets/chat_content_view.dart';
 import '../widgets/message_input.dart';
 
 /// 聊天页面 — 独立路由模式（不含侧边栏）
-///
-/// 直接作为路由目标使用时，拥有完整的 Scaffold + AppBar。
-/// 在 MainPage 中通过 [ChatContentView] 复用消息列表和输入栏。
-class ChatPage extends StatefulWidget {
+class ChatPage extends ConsumerStatefulWidget {
   final LlmConfig? config;
   final String? systemPrompt;
-  final Conversation? existingConversation;
-  final SettingsState settingsState;
 
-  /// 创建新对话
   const ChatPage({
     super.key,
     this.config,
     this.systemPrompt,
-    this.existingConversation,
-    required this.settingsState,
   });
 
-  /// 从已有对话加载
-  ChatPage.fromConversation(Conversation conv, this.settingsState)
-    : config = conv.config,
-      systemPrompt = conv.systemPrompt,
-      existingConversation = conv,
-      super(key: const ValueKey('chat'));
-
   @override
-  State<ChatPage> createState() => _ChatPageState();
+  ConsumerState<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> {
-  final ChatState _chatState = ChatState();
-
+class _ChatPageState extends ConsumerState<ChatPage> {
   @override
   void initState() {
     super.initState();
-    _chatState.configureCapabilities(widget.settingsState);
-
-    if (widget.existingConversation != null) {
-      _chatState.loadConversation(widget.existingConversation!.id);
-    }
-  }
-
-  @override
-  void dispose() {
-    _chatState.dispose();
-    super.dispose();
+    final chat = ref.read(chatProvider.notifier);
+    chat.configureCapabilities(ref.read(settingsProvider));
+    chat.init();
   }
 
   void _handleSend(SendPayload payload) {
-    _chatState.sendMessage(
+    final config = widget.config ??
+        ref.read(settingsProvider.notifier).buildMainLlmConfig();
+    if (config == null) return;
+
+    ref.read(chatProvider.notifier).sendMessage(
       payload.text,
       attachments: payload.attachments,
-      streamEnabled: widget.settingsState.streamEnabled,
-      config: widget.config ?? widget.existingConversation?.config,
+      streamEnabled: ref.read(settingsProvider).streamEnabled,
+      config: config,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final state = ref.watch(chatProvider);
 
-    return ListenableBuilder(
-      listenable: _chatState,
-      builder: (context, _) {
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(
-              _chatState.conversation?.title ??
-                  AppLocalizations.of(context)!.chatNewConversation,
-              style: theme.textTheme.titleMedium,
-            ),
-            actions: [
-              if (_chatState.isStreaming)
-                IconButton(
-                  icon: const Icon(Icons.stop),
-                  onPressed: () => _chatState.stopStreaming(),
-                ),
-              if (!_chatState.isStreaming && _chatState.messages.isNotEmpty)
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: () => _chatState.retry(
-                    streamEnabled: widget.settingsState.streamEnabled,
-                  ),
-                ),
-            ],
-          ),
-          body: ChatContentView(chatState: _chatState, onSend: _handleSend),
-        );
-      },
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(state.conversation?.title ?? 'Chat'),
+      ),
+      body: ChatContentView(
+        onSend: _handleSend,
+      ),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
@@ -83,7 +84,7 @@ void main() {
         return Container(color: Colors.transparent);
       };
 
-      runApp(const TesseraApp());
+      runApp(const ProviderScope(child: TesseraApp()));
     },
     (Object error, StackTrace stack) {
       // Zone 级别未捕获异常（同 Zone 内的同步/异步异常）
@@ -116,7 +117,7 @@ void main() {
 //         // 非桌面平台或初始化失败时忽略
 //       }
 
-//       runApp(const TesseraApp());
+//       runApp(const ProviderScope(child: TesseraApp()));
 // }
 
 // -----------------------------------------------------------------------------

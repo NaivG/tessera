@@ -1,87 +1,127 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/core.dart';
-import '../memory/memory.dart';
 import '../llm/provider_factory.dart';
+import '../memory/memory.dart';
 import '../services/conversation_service.dart';
 import '../utils/json_extractor.dart';
-import 'settings_state.dart';
+import 'settings_provider.dart';
 
-/// 聊天状态 — 管理当前对话的消息流和发送逻辑
-class ChatState extends ChangeNotifier {
-  final ConversationService _convService = ConversationService();
-  final ToolRegistry _toolRegistry = ToolRegistry();
-  final CacheManager _cacheManager = CacheManager();
+// =============================================================================
+// ChatData
+// =============================================================================
 
-  Conversation? _conversation;
-  bool _isStreaming = false;
-  String? _error;
+class ChatData {
+  final Conversation? conversation;
+  final bool isStreaming;
+  final bool isPreprocessing;
+  final String preprocessingTitle;
+  final String preprocessingText;
+  final String? error;
+  final String memoryContextText;
 
-  /// 系统提示词构建器（从 asset 延迟加载）
-  SystemPromptBuilder? _promptBuilder;
+  const ChatData({
+    this.conversation,
+    this.isStreaming = false,
+    this.isPreprocessing = false,
+    this.preprocessingTitle = '',
+    this.preprocessingText = '',
+    this.error,
+    this.memoryContextText = '',
+  });
 
-  /// 缓存的设置状态引用
-  SettingsState? _settingsState;
-
-  bool _initialized = false;
-
-  bool _isPreprocessing = false;
-  String _preprocessingTitle = '正在分析附件...';
-  String _preprocessingText = '';
-
-  final StreamController<String> _preprocessingStreamController =
-      StreamController<String>.broadcast();
-
-  CapabilityAdapter? _adapter;
-
-  // 记忆系统
-  final MemoryState _memoryState = MemoryState();
-  final MemoryExtractor _memoryExtractor = MemoryExtractor(
-    extractRoundCount: 5,
-  );
-  late final ConversationalMemoryManager _convMemManager;
-  String _memoryContextText = '';
-  bool _memoryInitialized = false;
-
-  StreamSubscription<StreamChunk>? _streamSubscription;
-  final Map<String, StreamController<String>> _activeStreams = {};
-  final Map<String, StreamController<String>> _activeThinkingStreams = {};
-
-  Conversation? get conversation => _conversation;
-  List<Message> get messages => _conversation?.messages ?? [];
-
+  List<Message> get messages => conversation?.messages ?? [];
   List<Message> get displayMessages {
     final all = messages;
     if (all.isEmpty) return all;
     return all.where((m) => m.role != MessageRole.tool).toList();
   }
 
-  bool get isStreaming => _isStreaming;
-  bool get isPreprocessing => _isPreprocessing;
-  String get preprocessingTitle => _preprocessingTitle;
-  String get preprocessingText => _preprocessingText;
-  Stream<String> get preprocessingStream =>
-      _preprocessingStreamController.stream;
-  String? get error => _error;
-  bool get hasConversation => _conversation != null;
+  bool get hasConversation => conversation != null;
 
-  CacheManager get cacheManager => _cacheManager;
-  MemoryState get memoryState => _memoryState;
-  String get memoryContextText => _memoryContextText;
-  String? get conversationSummary => _convMemManager.currentSummary;
 
-  Stream<String>? getContentStream(String messageId) {
-    return _activeStreams[messageId]?.stream;
+  ChatData copyWith({
+    Conversation? conversation,
+    bool? isStreaming,
+    bool? isPreprocessing,
+    String? preprocessingTitle,
+    String? preprocessingText,
+    String? error,
+    String? memoryContextText,
+    bool clearConversation = false,
+    bool clearError = false,
+  }) {
+    return ChatData(
+      conversation: clearConversation ? null : conversation ?? this.conversation,
+      isStreaming: isStreaming ?? this.isStreaming,
+      isPreprocessing: isPreprocessing ?? this.isPreprocessing,
+      preprocessingTitle: preprocessingTitle ?? this.preprocessingTitle,
+      preprocessingText: preprocessingText ?? this.preprocessingText,
+      error: clearError ? null : error ?? this.error,
+      memoryContextText: memoryContextText ?? this.memoryContextText,
+    );
+  }
+}
+
+// =============================================================================
+// ChatNotifier
+// =============================================================================
+
+class ChatNotifier extends Notifier<ChatData> {
+  final ConversationService _convService = ConversationService();
+  final ToolRegistry _toolRegistry = ToolRegistry();
+  final CacheManager _cacheManager = CacheManager();
+  final MemoryExtractor _memoryExtractor = MemoryExtractor(
+    extractRoundCount: 5,
+  );
+  late final ConversationalMemoryManager _convMemManager;
+
+  SystemPromptBuilder? _promptBuilder;
+  SettingsData? _settingsData;
+  bool _initialized = false;
+  bool _memoryInitialized = false;
+
+  StreamSubscription<StreamChunk>? _streamSubscription;
+  final Map<String, StreamController<String>> _activeStreams = {};
+  final Map<String, StreamController<String>> _activeThinkingStreams = {};
+  final StreamController<String> _preprocessingStreamController =
+      StreamController<String>.broadcast();
+
+  CapabilityAdapter? _adapter;
+
+  MemoryNotifier get _memory => ref.read(memoryProvider.notifier);
+
+  @override
+  ChatData build() {
+    ref.onDispose(_onDispose);
+    return const ChatData();
   }
 
-  Stream<String>? getThinkingStream(String messageId) {
-    return _activeThinkingStreams[messageId]?.stream;
+  void _onDispose() {
+    _streamSubscription?.cancel();
+    _closeAllStreams();
+    _preprocessingStreamController.close();
   }
 
-  void configureCapabilities(SettingsState settings) {
-    _settingsState = settings;
+  // ── 内部 helper ──
+
+  void _setConversation(Conversation? conv) {
+    state = state.copyWith(conversation: conv);
+  }
+
+  void _updateConversation(Conversation Function(Conversation) transform) {
+    final c = state.conversation;
+    if (c == null) return;
+    state = state.copyWith(conversation: transform(c));
+  }
+
+  // ── 初始化 ──
+
+  void configureCapabilities(SettingsData settings) {
+    _settingsData = settings;
     final config = settings.modelSelectionConfig;
     _adapter = CapabilityAdapter(
       config: config,
@@ -98,14 +138,16 @@ class ChatState extends ChangeNotifier {
     _promptBuilder = await SystemPromptBuilder.load();
 
     if (!_memoryInitialized) {
-      await _memoryState.init();
-      _convMemManager = ConversationalMemoryManager(memoryState: _memoryState);
+      await _memory.init();
+      _convMemManager = ConversationalMemoryManager(memoryNotifier: _memory);
       _memoryInitialized = true;
     }
 
     _initialized = true;
-    debugPrint('[ChatState] 初始化完成：${_promptBuilder!.toString()}，记忆系统就绪');
+    debugPrint('[ChatNotifier] 初始化完成，记忆系统就绪');
   }
+
+  // ── 系统提示词 ──
 
   Future<void> _ensurePromptBuilder() async {
     if (_promptBuilder != null) return;
@@ -114,63 +156,69 @@ class ChatState extends ChangeNotifier {
 
   String _buildSystemPromptString() {
     if (_promptBuilder == null) return '';
-    if (_settingsState?.lightweightSystemPrompt == true) {
-      final base = _promptBuilder!.buildLightweightSystemPromptString(
-        customPrompt: _settingsState?.userCustomPrompt,
+    if (_settingsData?.lightweightSystemPrompt == true) {
+      return _promptBuilder!.buildLightweightSystemPromptString(
+        customPrompt: _settingsData?.userCustomPrompt,
       );
-      return base;
     }
     final base = _promptBuilder!.buildSystemPromptString(
-      displayName: _settingsState?.userDisplayName,
-      alias: _settingsState?.userAlias,
-      role: _settingsState?.userRole,
-      preferences: _settingsState?.userPreferences,
-      facts: _settingsState?.userFacts,
-      customPrompt: _settingsState?.userCustomPrompt,
+      displayName: _settingsData?.userDisplayName,
+      alias: _settingsData?.userAlias,
+      role: _settingsData?.userRole,
+      preferences: _settingsData?.userPreferences,
+      facts: _settingsData?.userFacts,
+      customPrompt: _settingsData?.userCustomPrompt,
     );
-    if (_memoryContextText.isNotEmpty) {
-      return '$base\n\n$_memoryContextText';
+    if (state.memoryContextText.isNotEmpty) {
+      return '$base\n\n${state.memoryContextText}';
     }
     return base;
   }
+
+  // ── 对话管理 ──
 
   void createConversation({
     required LlmConfig config,
     String? systemPrompt,
     String title = '新对话',
   }) {
-    debugPrint('[ChatState] 创建新对话：$title');
+    debugPrint('[ChatNotifier] 创建新对话：$title');
     _streamSubscription?.cancel();
-    _conversation = Conversation(
+    final conv = Conversation(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       title: title,
       config: config,
       systemPrompt: systemPrompt,
     );
-    _isStreaming = false;
-    _error = null;
     _cacheManager.resetSession();
     _convMemManager.reset();
     _memoryExtractor.clear();
-    _memoryContextText = '';
-    _memoryState.beginConversation(_conversation!.id);
-    notifyListeners();
+    _memory.beginConversation(conv.id);
+    state = state.copyWith(
+      conversation: conv,
+      isStreaming: false,
+      error: null,
+      memoryContextText: '',
+    );
   }
 
   Future<void> loadConversation(String id) async {
     _streamSubscription?.cancel();
     final conv = await _convService.getConversation(id);
     if (conv != null) {
-      _conversation = conv;
-      _isStreaming = false;
-      _error = null;
       await _ensurePromptBuilder();
       _convMemManager.reset();
       _memoryExtractor.clear();
-      _memoryContextText = '';
-      notifyListeners();
+      state = state.copyWith(
+        conversation: conv,
+        isStreaming: false,
+        error: null,
+        memoryContextText: '',
+      );
     }
   }
+
+  // ── 发送消息 ──
 
   Future<void> sendMessage(
     String content, {
@@ -178,20 +226,14 @@ class ChatState extends ChangeNotifier {
     bool streamEnabled = true,
     LlmConfig? config,
   }) async {
-    if (_isStreaming) return;
+    if (state.isStreaming) return;
 
-    _error = null;
-    debugPrint('[ChatState] 发送用户消息：$content');
-
-    if (_conversation == null) {
+    if (state.conversation == null) {
       if (config == null) {
-        _error = '无法创建对话：缺少 LLM 配置';
-        notifyListeners();
+        state = state.copyWith(error: '无法创建对话：缺少 LLM 配置');
         return;
       }
-
       await _ensurePromptBuilder();
-
       final title = _fallbackTopic(content);
       final systemPrompt = _buildSystemPromptString();
       createConversation(
@@ -199,38 +241,43 @@ class ChatState extends ChangeNotifier {
         title: title,
         systemPrompt: systemPrompt.isNotEmpty ? systemPrompt : null,
       );
-      await _convService.saveConversation(_conversation!);
-      debugPrint('[ChatState] 新对话已保存: id=${_conversation!.id}');
-
+      await _convService.saveConversation(state.conversation!);
       unawaited(_generateAndUpdateTopic(content, config));
     }
 
     // 记忆检索
     if (_memoryInitialized) {
-      final memories = await _memoryState.search(
+      final memories = await _memory.search(
         content,
-        excludeConversationId: _conversation?.id,
+        excludeConversationId: state.conversation?.id,
       );
-      _memoryContextText = _memoryState.formatMemoryContext(memories);
-      if (_memoryContextText.isNotEmpty) {
-        debugPrint('[ChatState] 检索到 ${memories.length} 条相关记忆');
+      final memText = _memory.formatMemoryContext(memories);
+      if (memText.isNotEmpty) {
+        debugPrint('[ChatNotifier] 检索到 ${memories.length} 条相关记忆');
       }
-      if (_conversation != null && _promptBuilder != null) {
-        _conversation = _conversation!.copyWith(
-          systemPrompt: _buildSystemPromptString(),
-        );
-      }
+
+      _updateConversation((conv) {
+        if (memText.isNotEmpty && _promptBuilder != null) {
+          return conv.copyWith(
+            systemPrompt: _buildSystemPromptString(),
+          );
+        }
+        return conv;
+      });
+      state = state.copyWith(memoryContextText: memText);
     }
 
-    final effectiveAttachments = attachments != null && attachments.isNotEmpty
-        ? attachments
-        : null;
+    final effectiveAttachments =
+        attachments != null && attachments.isNotEmpty ? attachments : null;
+
     if (effectiveAttachments != null) {
-      _isPreprocessing = true;
-      _preprocessingTitle = '正在分析附件...';
-      _preprocessingText = '正在分析 ${effectiveAttachments.length} 个附件...';
+      state = state.copyWith(
+        isPreprocessing: true,
+        preprocessingTitle: '正在分析附件...',
+        preprocessingText:
+            '正在分析 ${effectiveAttachments.length} 个附件...',
+      );
       _preprocessingStreamController.add('开始分析附件...\n');
-      notifyListeners();
     }
 
     String adaptedContent;
@@ -242,10 +289,11 @@ class ChatState extends ChangeNotifier {
     } finally {
       if (effectiveAttachments != null) {
         _preprocessingStreamController.add('附件分析完成。\n');
-        _isPreprocessing = false;
-        _preprocessingTitle = '';
-        _preprocessingText = '';
-        notifyListeners();
+        state = state.copyWith(
+          isPreprocessing: false,
+          preprocessingTitle: '',
+          preprocessingText: '',
+        );
       }
     }
 
@@ -257,14 +305,21 @@ class ChatState extends ChangeNotifier {
       status: MessageStatus.completed,
       timestamp: DateTime.now(),
     );
-    _conversation!.addMessage(userMsg);
-    notifyListeners();
+
+    _updateConversation(
+      (conv) => conv.copyWith(
+        messages: [...conv.messages, userMsg],
+      ),
+    );
 
     final assistantId = DateTime.now().microsecondsSinceEpoch.toString();
     final streamingMsg = Message.streamingAssistant(id: assistantId);
-    _conversation!.addMessage(streamingMsg);
-    _isStreaming = true;
-    notifyListeners();
+    _updateConversation(
+      (conv) => conv.copyWith(
+        messages: [...conv.messages, streamingMsg],
+      ),
+    );
+    state = state.copyWith(isStreaming: true);
 
     if (streamEnabled) {
       await _sendStreaming(assistantId);
@@ -272,6 +327,8 @@ class ChatState extends ChangeNotifier {
       await _sendNonStreaming(assistantId);
     }
   }
+
+  // ── 流式发送 ──
 
   List<ToolDefinition> get _currentTools {
     return _adapter?.buildTools() ?? [];
@@ -284,15 +341,17 @@ class ChatState extends ChangeNotifier {
     _activeThinkingStreams[assistantId] = thinkingController;
 
     try {
-      final provider = ProviderFactory.get(_conversation!.config.providerId);
+      final conv = state.conversation;
+      if (conv == null) return;
+      final provider = ProviderFactory.get(conv.config.providerId);
       final tools = _currentTools;
       final stream = provider.chatStream(
-        config: _conversation!.config,
-        history: _conversation!.messages.sublist(
+        config: conv.config,
+        history: conv.messages.sublist(
           0,
-          _conversation!.messages.length - 1,
+          conv.messages.length - 1,
         ),
-        systemPrompt: _conversation!.systemPrompt,
+        systemPrompt: conv.systemPrompt,
         tools: tools.isNotEmpty ? tools : null,
       );
 
@@ -310,9 +369,8 @@ class ChatState extends ChangeNotifier {
               _updateAssistant(
                 assistantId,
                 content: accumulatedContent,
-                thinking: accumulatedThinking.isNotEmpty
-                    ? accumulatedThinking
-                    : null,
+                thinking:
+                    accumulatedThinking.isNotEmpty ? accumulatedThinking : null,
               );
               break;
 
@@ -333,9 +391,8 @@ class ChatState extends ChangeNotifier {
                 _updateAssistant(
                   assistantId,
                   content: accumulatedContent,
-                  thinking: accumulatedThinking.isNotEmpty
-                      ? accumulatedThinking
-                      : null,
+                  thinking:
+                      accumulatedThinking.isNotEmpty ? accumulatedThinking : null,
                   toolCalls: accumulatedToolCalls,
                 );
               }
@@ -378,26 +435,30 @@ class ChatState extends ChangeNotifier {
 
   Future<void> _sendNonStreaming(String assistantId) async {
     try {
-      final provider = ProviderFactory.get(_conversation!.config.providerId);
+      final conv = state.conversation;
+      if (conv == null) return;
+      final provider = ProviderFactory.get(conv.config.providerId);
       final tools = _currentTools;
       final response = await provider.chat(
-        config: _conversation!.config,
-        history: _conversation!.messages.sublist(
+        config: conv.config,
+        history: conv.messages.sublist(
           0,
-          _conversation!.messages.length - 1,
+          conv.messages.length - 1,
         ),
-        systemPrompt: _conversation!.systemPrompt,
+        systemPrompt: conv.systemPrompt,
         tools: tools.isNotEmpty ? tools : null,
       );
 
       final toolCalls = response.toolCalls ?? [];
-      final messages = _conversation!.messages;
-      for (int i = messages.length - 1; i >= 0; i--) {
-        if (messages[i].id == assistantId) {
-          messages[i] = response.copyWith(status: MessageStatus.completed);
-          break;
-        }
-      }
+
+      _updateConversation((c) => c.copyWith(
+        messages: c.messages.map((m) {
+          if (m.id == assistantId) {
+            return response.copyWith(status: MessageStatus.completed);
+          }
+          return m;
+        }).toList(),
+      ));
 
       if (toolCalls.isNotEmpty) {
         await _handleToolCallsAndContinue(
@@ -408,29 +469,16 @@ class ChatState extends ChangeNotifier {
         return;
       }
 
-      _isStreaming = false;
-      _convService.saveConversation(_conversation!);
+      state = state.copyWith(isStreaming: false);
+      _convService.saveConversation(state.conversation!);
       unawaited(_commitCache());
       await _triggerMemoryPipeline(assistantId);
-      notifyListeners();
     } catch (e) {
       _setError('发送失败: $e', assistantId);
     }
   }
 
-  void _findAndUpdateMessage(
-    String messageId,
-    Message Function(Message old) transform,
-  ) {
-    if (_conversation == null) return;
-    final messages = _conversation!.messages;
-    for (int i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].id == messageId) {
-        messages[i] = transform(messages[i]);
-        break;
-      }
-    }
-  }
+  // ── 更新消息 ──
 
   void _updateAssistant(
     String assistantId, {
@@ -438,21 +486,23 @@ class ChatState extends ChangeNotifier {
     String? thinking,
     List<ToolCall>? toolCalls,
   }) {
-    if (_conversation == null) return;
-    final messages = _conversation!.messages;
-    for (int i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].id == assistantId) {
-        messages[i] = messages[i].copyWith(
-          content: content ?? messages[i].content,
-          thinking: thinking ?? messages[i].thinking,
-          toolCalls: toolCalls ?? messages[i].toolCalls,
-          clearToolCalls: toolCalls == null && messages[i].toolCalls == null,
-        );
-        break;
-      }
-    }
-    notifyListeners();
+    _updateConversation((conv) => conv.copyWith(
+      messages: conv.messages.map((m) {
+        if (m.id == assistantId) {
+          return m.copyWith(
+            content: content ?? m.content,
+            thinking: thinking ?? m.thinking,
+            toolCalls: toolCalls ?? m.toolCalls,
+            clearToolCalls:
+                toolCalls == null && m.toolCalls == null,
+          );
+        }
+        return m;
+      }).toList(),
+    ));
   }
+
+  // ── Tool 调用 ──
 
   Future<bool> _handleToolCallsAndContinue(
     String assistantId,
@@ -460,40 +510,45 @@ class ChatState extends ChangeNotifier {
     bool streamEnabled = true,
   }) async {
     if (toolCalls.isEmpty) return false;
-
-    debugPrint(
-      '[ChatState] _handleToolCallsAndContinue: count=${toolCalls.length}',
-    );
+    debugPrint('[ChatNotifier] _handleToolCallsAndContinue: count=${toolCalls.length}');
 
     final results = await _toolRegistry.executeAll(toolCalls);
-
     final toolResults = <String, String>{};
     for (final result in results) {
       toolResults[result.toolCallId] = result.content;
     }
-    _findAndUpdateMessage(
-      assistantId,
-      (msg) => msg.copyWith(toolResults: toolResults),
-    );
 
-    for (final result in results) {
-      _conversation!.addMessage(
-        Message(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
-          role: MessageRole.tool,
-          content: result.content,
-          toolCallId: result.toolCallId,
-          status: MessageStatus.completed,
-          timestamp: DateTime.now(),
-        ),
-      );
-    }
-    notifyListeners();
+    _updateConversation((conv) => conv.copyWith(
+      messages: conv.messages.map((m) {
+        if (m.id == assistantId) return m.copyWith(toolResults: toolResults);
+        return m;
+      }).toList(),
+    ));
+
+    _updateConversation((conv) {
+      final newMessages = [...conv.messages];
+      for (final result in results) {
+        newMessages.add(
+          Message(
+            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            role: MessageRole.tool,
+            content: result.content,
+            toolCallId: result.toolCallId,
+            status: MessageStatus.completed,
+            timestamp: DateTime.now(),
+          ),
+        );
+      }
+      return conv.copyWith(messages: newMessages);
+    });
 
     final newAssistantId = DateTime.now().microsecondsSinceEpoch.toString();
-    _conversation!.addMessage(Message.streamingAssistant(id: newAssistantId));
-    _isStreaming = true;
-    notifyListeners();
+    _updateConversation(
+      (conv) => conv.copyWith(
+        messages: [...conv.messages, Message.streamingAssistant(id: newAssistantId)],
+      ),
+    );
+    state = state.copyWith(isStreaming: true);
 
     if (streamEnabled) {
       await _sendStreaming(newAssistantId);
@@ -503,31 +558,40 @@ class ChatState extends ChangeNotifier {
     return true;
   }
 
+  // ── 流完成 ──
+
   Future<void> _finishStreaming(
     String assistantId,
     String content,
     List<ToolCall> toolCalls, [
     String? thinking,
   ]) async {
-    if (_conversation == null) return;
+    final conv = state.conversation;
+    if (conv == null) return;
 
-    final messages = _conversation!.messages;
     int targetIdx = -1;
-    for (int i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].id == assistantId) {
+    for (int i = conv.messages.length - 1; i >= 0; i--) {
+      if (conv.messages[i].id == assistantId) {
         targetIdx = i;
         break;
       }
     }
     if (targetIdx < 0) return;
-    if (messages[targetIdx].status == MessageStatus.completed) return;
+    if (conv.messages[targetIdx].status == MessageStatus.completed) return;
 
-    messages[targetIdx] = messages[targetIdx].copyWith(
-      content: content,
-      thinking: thinking,
-      toolCalls: toolCalls.isNotEmpty ? toolCalls : null,
-      status: MessageStatus.completed,
-    );
+    _updateConversation((c) => c.copyWith(
+      messages: c.messages.map((m) {
+        if (m.id == assistantId) {
+          return m.copyWith(
+            content: content,
+            thinking: thinking,
+            toolCalls: toolCalls.isNotEmpty ? toolCalls : null,
+            status: MessageStatus.completed,
+          );
+        }
+        return m;
+      }).toList(),
+    ));
 
     _activeStreams.remove(assistantId)?.close();
     _activeThinkingStreams.remove(assistantId)?.close();
@@ -541,22 +605,24 @@ class ChatState extends ChangeNotifier {
       return;
     }
 
-    _isStreaming = false;
+    state = state.copyWith(isStreaming: false);
     _streamSubscription = null;
-    _convService.saveConversation(_conversation!);
+    _convService.saveConversation(state.conversation!);
     unawaited(_commitCache());
     await _triggerMemoryPipeline(assistantId);
-    notifyListeners();
   }
 
-  Future<void> _triggerMemoryPipeline(String assistantId) async {
-    if (!_memoryInitialized || _conversation == null) return;
+  // ── 记忆流水线 ──
 
-    final messages = _conversation!.messages;
+  Future<void> _triggerMemoryPipeline(String assistantId) async {
+    if (!_memoryInitialized) return;
+    final conv = state.conversation;
+    if (conv == null) return;
+
     Message? userMsg;
     Message? assistantMsg;
-    for (int i = messages.length - 1; i >= 0; i--) {
-      final msg = messages[i];
+    for (int i = conv.messages.length - 1; i >= 0; i--) {
+      final msg = conv.messages[i];
       if (msg.id == assistantId && msg.role == MessageRole.assistant) {
         assistantMsg = msg;
       } else if (msg.role == MessageRole.user && userMsg == null) {
@@ -570,21 +636,21 @@ class ChatState extends ChangeNotifier {
     _convMemManager.incrementTurn();
 
     if (_memoryExtractor.shouldExtract) {
-      final convId = _conversation!.id;
-      final convConfig = _conversation!.config;
+      // conv.id accessible directly
+      final convConfig = conv.config;
       final provider = ProviderFactory.get(convConfig.providerId);
       final srcMsgId = assistantMsg.id;
       unawaited(
-        _memoryExtractor.extract(provider: provider, config: convConfig).then((
-          extractions,
-        ) {
+        _memoryExtractor
+            .extract(provider: provider, config: convConfig)
+            .then((extractions) {
           if (extractions.isNotEmpty) {
             _memoryExtractor.bufferExtractions(extractions);
             if (_memoryExtractor.shouldFlush) {
               unawaited(
                 _memoryExtractor.flushToMemory(
-                  memoryState: _memoryState,
-                  conversationId: convId,
+                  memoryNotifier: _memory,
+                  conversationId: conv.id,
                   sourceMessageId: srcMsgId,
                 ),
               );
@@ -596,14 +662,11 @@ class ChatState extends ChangeNotifier {
     }
 
     if (_convMemManager.shouldSummarize) {
-      final convId = _conversation!.id;
-      final convConfig = _conversation!.config;
+      final convConfig = conv.config;
       final provider = ProviderFactory.get(convConfig.providerId);
-      final recentMessages = messages.sublist(
-        (messages.length - _convMemManager.turnsSinceLastSummary * 2).clamp(
-          0,
-          messages.length,
-        ),
+      final recentMessages = conv.messages.sublist(
+        (conv.messages.length - _convMemManager.turnsSinceLastSummary * 2)
+            .clamp(0, conv.messages.length),
       );
 
       if (_convMemManager.hasSummary) {
@@ -612,7 +675,7 @@ class ChatState extends ChangeNotifier {
             provider: provider,
             config: convConfig,
             messages: recentMessages,
-            conversationId: convId,
+            conversationId: conv.id,
           ),
         );
       } else {
@@ -621,51 +684,49 @@ class ChatState extends ChangeNotifier {
             provider: provider,
             config: convConfig,
             messages: recentMessages,
-            conversationId: convId,
+            conversationId: conv.id,
           ),
         );
       }
     }
   }
 
-  void _setError(String message, String assistantId) {
-    _error = message;
-    _isStreaming = false;
+  // ── 错误处理 ──
 
-    if (_conversation != null) {
-      final messages = _conversation!.messages;
-      for (int i = messages.length - 1; i >= 0; i--) {
-        if (messages[i].id == assistantId) {
-          messages[i] = messages[i].copyWith(
+  void _setError(String message, String assistantId) {
+    _updateConversation((conv) => conv.copyWith(
+      messages: conv.messages.map((m) {
+        if (m.id == assistantId) {
+          return m.copyWith(
             status: MessageStatus.error,
             errorMessage: message,
           );
-          break;
         }
-      }
-    }
+        return m;
+      }).toList(),
+    ));
+    state = state.copyWith(isStreaming: false, error: message);
 
     _streamSubscription = null;
     _activeStreams.remove(assistantId)?.close();
     _activeThinkingStreams.remove(assistantId)?.close();
-    notifyListeners();
   }
 
-  Future<void> retry({bool streamEnabled = true}) async {
-    if (_conversation == null || _isStreaming) return;
-    final messages = _conversation!.messages;
-    if (messages.length < 2) return;
+  // ── 重试 / 修改 ──
 
-    final lastAssistantIdx = messages.lastIndexWhere(
-      (m) => m.role == MessageRole.assistant,
-    );
-    if (lastAssistantIdx < 0) return;
+  Future<void> retry({bool streamEnabled = true}) async {
+    if (state.conversation == null || state.isStreaming) return;
+    final messages = state.conversation!.messages;
+    if (messages.length < 2) return;
 
     final lastUserIdx = messages.lastIndexWhere(
       (m) => m.role == MessageRole.user,
     );
-    _conversation!.removeLastMessage();
-    notifyListeners();
+
+    // 移除最后一条 assistant 消息
+    _updateConversation((conv) => conv.copyWith(
+      messages: conv.messages.sublist(0, conv.messages.length - 1),
+    ));
 
     if (lastUserIdx >= 0) {
       final lastUserContent = messages[lastUserIdx].content;
@@ -678,51 +739,84 @@ class ChatState extends ChangeNotifier {
     String newContent, {
     bool streamEnabled = true,
   }) async {
-    if (_conversation == null || _isStreaming) return;
+    if (state.conversation == null || state.isStreaming) return;
 
-    final messages = _conversation!.messages;
-    final index = messages.indexWhere((m) => m.id == messageId);
-    if (index < 0 || messages[index].role != MessageRole.user) return;
-    messages[index] = messages[index].copyWith(content: newContent);
-    _conversation!.updatedAt = DateTime.now();
-    messages.removeRange(index + 1, messages.length);
-    notifyListeners();
+    int index = -1;
+    _updateConversation((conv) {
+      index = conv.messages.indexWhere((m) => m.id == messageId);
+      if (index < 0 || conv.messages[index].role != MessageRole.user) {
+        return conv;
+      }
+      return conv.copyWith(
+        messages: [
+          ...conv.messages.take(index),
+          conv.messages[index].copyWith(content: newContent),
+          ...conv.messages.skip(index + 1),
+        ],
+      );
+    });
+
+    if (index < 0) return;
+    final msg = state.conversation!.messages[index];
+    if (msg.role != MessageRole.user) return;
+
+    // 截断后续消息
+    _updateConversation(
+      (conv) => conv.copyWith(messages: conv.messages.sublist(0, index + 1)),
+    );
+
     await sendMessage(newContent, streamEnabled: streamEnabled);
   }
+
+  // ── 停止 ──
 
   void stopStreaming() {
     _streamSubscription?.cancel();
     _streamSubscription = null;
-    _isStreaming = false;
-    _isPreprocessing = false;
-    _preprocessingTitle = '';
-    _preprocessingText = '';
     _closeAllStreams();
-    notifyListeners();
+    state = state.copyWith(
+      isStreaming: false,
+      isPreprocessing: false,
+      preprocessingTitle: '',
+      preprocessingText: '',
+    );
   }
 
-  // 缓存管理
+  // ── 流 Stream API ──
+
+  Stream<String>? getContentStream(String messageId) {
+    return _activeStreams[messageId]?.stream;
+  }
+
+  Stream<String>? getThinkingStream(String messageId) {
+    return _activeThinkingStreams[messageId]?.stream;
+  }
+
+  Stream<String> get preprocessingStream =>
+      _preprocessingStreamController.stream;
+
+  // ── 缓存管理 ──
+
   Future<void> initCache() async {
     await _cacheManager.init();
   }
 
   PromptSectionCollection _buildCacheCollection() {
     final sections = <PromptSection>[];
-
-    final isLightweight = _settingsState?.lightweightSystemPrompt == true;
+    final isLightweight = _settingsData?.lightweightSystemPrompt == true;
 
     if (_promptBuilder != null) {
       final spSections = isLightweight
           ? _promptBuilder!.buildLightweightSystemPrompt(
-              customPrompt: _settingsState?.userCustomPrompt,
+              customPrompt: _settingsData?.userCustomPrompt,
             )
           : _promptBuilder!.buildSystemPrompt(
-              displayName: _settingsState?.userDisplayName,
-              alias: _settingsState?.userAlias,
-              role: _settingsState?.userRole,
-              preferences: _settingsState?.userPreferences,
-              facts: _settingsState?.userFacts,
-              customPrompt: _settingsState?.userCustomPrompt,
+              displayName: _settingsData?.userDisplayName,
+              alias: _settingsData?.userAlias,
+              role: _settingsData?.userRole,
+              preferences: _settingsData?.userPreferences,
+              facts: _settingsData?.userFacts,
+              customPrompt: _settingsData?.userCustomPrompt,
             );
       for (final section in spSections.sections) {
         final existingSection = _cacheManager.cached.sections.where(
@@ -736,22 +830,22 @@ class ChatState extends ChangeNotifier {
           sections.add(section);
         }
       }
-    } else if (_conversation?.systemPrompt != null &&
-        _conversation!.systemPrompt!.isNotEmpty) {
+    } else if (state.conversation?.systemPrompt != null &&
+        state.conversation!.systemPrompt!.isNotEmpty) {
       sections.add(
         _cacheManager.buildPromptSection(
-          _conversation!.systemPrompt!,
+          state.conversation!.systemPrompt!,
           ttlSeconds: 300,
         ),
       );
     }
 
-    if (!isLightweight && _memoryContextText.isNotEmpty) {
+    if (!isLightweight && state.memoryContextText.isNotEmpty) {
       sections.add(
         PromptSection.create(
           id: 'system.block4.memory_context',
           type: PromptSectionType.memory,
-          content: _memoryContextText,
+          content: state.memoryContextText,
           cacheHint: PromptCacheHint(
             cacheable: false,
             clientCache: true,
@@ -765,7 +859,10 @@ class ChatState extends ChangeNotifier {
     if (tools.isNotEmpty) {
       final toolDefsMap = tools.map((t) => t.toOpenAiSchema()).toList();
       sections.add(
-        _cacheManager.buildToolSection(toolDefsMap.toString(), ttlSeconds: 300),
+        _cacheManager.buildToolSection(
+          toolDefsMap.toString(),
+          ttlSeconds: 300,
+        ),
       );
     }
 
@@ -778,21 +875,16 @@ class ChatState extends ChangeNotifier {
     await _cacheManager.persistCacheable(collection);
   }
 
+  // ── 清空 ──
+
   void clear() {
     _streamSubscription?.cancel();
-    _conversation = null;
-    _isStreaming = false;
-    _isPreprocessing = false;
-    _preprocessingTitle = '';
-    _preprocessingText = '';
-    _error = null;
-    _memoryContextText = '';
+    _closeAllStreams();
     _convMemManager.reset();
     _memoryExtractor.clear();
-    _memoryState.clearCache();
-    _closeAllStreams();
+    _memory.clearCache();
     _preprocessingStreamController.add('');
-    notifyListeners();
+    state = const ChatData();
   }
 
   void _closeAllStreams() {
@@ -805,6 +897,8 @@ class ChatState extends ChangeNotifier {
     }
     _activeThinkingStreams.clear();
   }
+
+  // ── 话题生成 ──
 
   Future<void> _generateAndUpdateTopic(
     String userInput,
@@ -820,15 +914,16 @@ class ChatState extends ChangeNotifier {
         config: topicConfig,
         history: [Message.user(prompt)],
       );
-      final topic = JsonExtractor.tryExtractField(response.content, 'topic') ??
-          response.content.trim();
+      final topic =
+          JsonExtractor.tryExtractField(response.content, 'topic') ??
+              response.content.trim();
       if (topic.isEmpty) return;
       final sanitized = topic.length > 25 ? topic.substring(0, 25) : topic;
-      if (_conversation != null) {
-        _conversation!.title = sanitized;
-        await _convService.renameConversation(_conversation!.id, sanitized);
-        notifyListeners();
-      }
+      _updateConversation((conv) {
+        conv.title = sanitized;
+        _convService.renameConversation(conv.id, sanitized);
+        return conv;
+      });
     } catch (_) {}
   }
 
@@ -842,13 +937,12 @@ class ChatState extends ChangeNotifier {
     if (input.length > 20) return '${input.substring(0, 20)}…';
     return input;
   }
-
-  @override
-  void dispose() {
-    _streamSubscription?.cancel();
-    _closeAllStreams();
-    _preprocessingStreamController.close();
-    _memoryState.dispose();
-    super.dispose();
-  }
 }
+
+// =============================================================================
+// Provider
+// =============================================================================
+
+final chatProvider = NotifierProvider<ChatNotifier, ChatData>(
+  ChatNotifier.new,
+);

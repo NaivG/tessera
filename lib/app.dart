@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'l10n/app_localizations.dart';
-import 'state/settings_state.dart';
+import 'providers/providers.dart';
 import 'ui/pages/error_page.dart';
 import 'ui/pages/library_page.dart';
 import 'ui/pages/main_page.dart';
@@ -37,14 +38,14 @@ void stashErrorForRouting(Object error, StackTrace stackTrace) =>
     _TesseraAppState.stashError(error, stackTrace);
 
 /// 应用根组件 — 初始化状态并提供路由配置
-class TesseraApp extends StatefulWidget {
+class TesseraApp extends ConsumerStatefulWidget {
   const TesseraApp({super.key});
 
   @override
-  State<TesseraApp> createState() => _TesseraAppState();
+  ConsumerState<TesseraApp> createState() => _TesseraAppState();
 }
 
-class _TesseraAppState extends State<TesseraApp> {
+class _TesseraAppState extends ConsumerState<TesseraApp> {
   // ---------------------------------------------------------------------------
   // Navigator Key —— 暴露给 main.dart 的错误处理器用于全局导航
   // ---------------------------------------------------------------------------
@@ -69,18 +70,11 @@ class _TesseraAppState extends State<TesseraApp> {
     return payload;
   }
 
-  final SettingsState _settingsState = SettingsState();
-  bool _initialized = false;
-
   @override
   void initState() {
     super.initState();
-    _init();
-  }
-
-  Future<void> _init() async {
-    await _settingsState.load();
-    setState(() => _initialized = true);
+    // 异步加载设置
+    ref.read(settingsProvider.notifier).load();
   }
 
   /// 解析主题模式
@@ -93,15 +87,16 @@ class _TesseraAppState extends State<TesseraApp> {
   }
 
   /// 解析语言环境，返回 null 使用系统默认
-  Locale? _resolveLocale() {
-    final localeStr = _settingsState.locale;
+  Locale? _resolveLocale(String localeStr) {
     if (localeStr == 'system') return null;
     return Locale(localeStr);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_initialized) {
+    final settings = ref.watch(settingsProvider);
+
+    if (!settings.loaded) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         localizationsDelegates: const [
@@ -115,57 +110,51 @@ class _TesseraAppState extends State<TesseraApp> {
       );
     }
 
-    return ListenableBuilder(
-      listenable: _settingsState,
-      builder: (context, _) {
-        return MaterialApp(
-          title:
-              'Tessera', // this should use localization, however, since AppLocalizations is in builder, we can't access it here. Ingore it for now.
-          debugShowCheckedModeBanner: false,
-          locale: _resolveLocale(),
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-          ],
-          supportedLocales: const [Locale('zh'), Locale('en')],
-          navigatorKey: globalNavigatorKey,
-          themeMode: _parseThemeMode(_settingsState.themeMode),
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.deepPurple,
-              brightness: Brightness.light,
+    return MaterialApp(
+      title: 'Tessera',
+      debugShowCheckedModeBanner: false,
+      locale: _resolveLocale(settings.locale),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('zh'), Locale('en')],
+      navigatorKey: globalNavigatorKey,
+      themeMode: _parseThemeMode(settings.themeMode),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          brightness: Brightness.light,
+        ),
+        useMaterial3: true,
+      ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+      ),
+      home: const MainPage(),
+      onGenerateRoute: (settings) {
+        if (settings.name == ErrorPage.routeName) {
+          final payload = consumePendingError();
+          return MaterialPageRoute<void>(
+            builder: (_) => ErrorPage(
+              error: payload?.error ?? '未知错误',
+              stackTrace: payload?.stackTrace ?? StackTrace.empty,
             ),
-            useMaterial3: true,
-          ),
-          darkTheme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.deepPurple,
-              brightness: Brightness.dark,
-            ),
-            useMaterial3: true,
-          ),
-          home: MainPage(settingsState: _settingsState),
-          onGenerateRoute: (settings) {
-            if (settings.name == ErrorPage.routeName) {
-              final payload = consumePendingError();
-              return MaterialPageRoute<void>(
-                builder: (_) => ErrorPage(
-                  error: payload?.error ?? '未知错误',
-                  stackTrace: payload?.stackTrace ?? StackTrace.empty,
-                ),
-              );
-            }
-            return null; // 回退到 routes 静态表
-          },
-          routes: {
-            '/settings': (_) => SettingsPage(settingsState: _settingsState),
-            '/profile': (_) => UserProfilePage(settingsState: _settingsState),
-            '/library': (_) => const LibraryPage(),
-            '/memory': (_) => const MemoryPage(),
-          },
-        );
+          );
+        }
+        return null; // 回退到 routes 静态表
+      },
+      routes: {
+        '/settings': (_) => const SettingsPage(),
+        '/profile': (_) => const UserProfilePage(),
+        '/library': (_) => const LibraryPage(),
+        '/memory': (_) => const MemoryPage(),
       },
     );
   }

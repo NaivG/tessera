@@ -65,6 +65,7 @@ dependencies:
   shared_preferences: ^2.5.5
   # utils
   uuid: ^4.5.1
+  flutter_riverpod: ^3.3.1
   jieba_flutter: ^0.2.0
   url_launcher: ^6.3.2
   share_plus: ^12.0.2 # version 13.0 is not compatible with file_picker

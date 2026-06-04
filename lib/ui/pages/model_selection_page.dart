@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/core.dart';
 import '../../l10n/model_localization.dart';
-import '../../state/settings_state.dart';
+import '../../providers/providers.dart';
 import 'package:tessera/l10n/app_localizations.dart';
 
 /// 模型选择设置页
@@ -13,63 +14,27 @@ import 'package:tessera/l10n/app_localizations.dart';
 /// - 输出模态模型（文生图/文生视频/文生语音）
 /// - LLM 辅助功能（话题检测/记忆整理/内容总结）
 /// - 其他模型（嵌入/排序）
-class ModelSelectionPage extends StatefulWidget {
-  final SettingsState settingsState;
-
-  const ModelSelectionPage({super.key, required this.settingsState});
+class ModelSelectionPage extends ConsumerWidget {
+  const ModelSelectionPage({super.key});
 
   @override
-  State<ModelSelectionPage> createState() => _ModelSelectionPageState();
-}
-
-class _ModelSelectionPageState extends State<ModelSelectionPage> {
-  @override
-  void initState() {
-    super.initState();
-    widget.settingsState.addListener(_onStateChanged);
-  }
-
-  @override
-  void dispose() {
-    widget.settingsState.removeListener(_onStateChanged);
-    super.dispose();
-  }
-
-  void _onStateChanged() {
-    if (!mounted) return;
-    setState(() {});
-  }
-
-  SettingsState get _state => widget.settingsState;
-  ModelSelectionConfig get _config => _state.modelSelectionConfig;
-
-  List<_ModelEntry> get _allModels {
-    final entries = <_ModelEntry>[];
-    final configs = _state.providerConfigs;
-    for (final provider in configs) {
-      for (final model in provider.models) {
-        entries.add(_ModelEntry(provider, model));
-      }
-    }
-    return entries;
-  }
-
-  ModelInfo? get _mainModelInfo => _config.mainModel.getModelInfo(_state);
-
-  bool _mainSupports(ModelTag tag) =>
-      _mainModelInfo?.tags.contains(tag) ?? false;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final state = ref.watch(settingsProvider);
+    final config = state.modelSelectionConfig;
+
+    final allModels = _getAllModels(state);
+
+    ModelInfo? mainModelInfo = config.mainModel.getModelInfo(state);
+    bool mainSupports(ModelTag tag) => mainModelInfo?.tags.contains(tag) ?? false;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.modelSelectionAppBarTitle)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _sectionHeader(l10n.modelSelectionSectionMain),
+          _sectionHeader(context, l10n.modelSelectionSectionMain),
           const SizedBox(height: 4),
           Text(
             l10n.modelSelectionMainSubtitle,
@@ -78,17 +43,25 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
             ),
           ),
           const SizedBox(height: 8),
-          _buildSlotTile(
-            label: _config.mainModel.displayLabel(_state),
+          _buildSlotTile(context,
+            label: config.mainModel.displayLabel(state),
             subtitle: l10n.modelSelectionMainLabel,
-            onTap: () => _pickModel((slot) {
-              if (slot != null) _state.setMainModel(slot);
-            }, filterType: ModelType.text),
+            onTap: () => _pickModel(
+              context,
+              ref,
+              allModels,
+              (slot) {
+                if (slot != null) {
+                  ref.read(settingsProvider.notifier).setMainModel(slot);
+                }
+              },
+              filterType: ModelType.text,
+            ),
           ),
 
           const Divider(height: 32),
 
-          _sectionHeader(l10n.modelSelectionSectionInput),
+          _sectionHeader(context, l10n.modelSelectionSectionInput),
           const SizedBox(height: 4),
           Text(
             '${l10n.modelSelectionInputSubtitle}${l10n.modelSelectionInputHint}',
@@ -99,11 +72,19 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
           const SizedBox(height: 8),
           ...ModelTag.values
               .where((t) => t != ModelTag.text)
-              .map(_buildInputRow),
+              .map((tag) => _buildInputRow(
+                    context,
+                    ref,
+                    state,
+                    config,
+                    allModels,
+                    tag,
+                    mainSupports(tag),
+                  )),
 
           const Divider(height: 32),
 
-          _sectionHeader(l10n.modelSelectionSectionOutput),
+          _sectionHeader(context, l10n.modelSelectionSectionOutput),
           const SizedBox(height: 4),
           Text(
             l10n.modelSelectionOutputSubtitle,
@@ -119,11 +100,18 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
                     t != ModelType.embedding &&
                     t != ModelType.ranking,
               )
-              .map(_buildOutputRow),
+              .map((type) => _buildOutputRow(
+                    context,
+                    ref,
+                    state,
+                    config,
+                    allModels,
+                    type,
+                  )),
 
           const Divider(height: 32),
 
-          _sectionHeader(l10n.modelSelectionSectionLlm),
+          _sectionHeader(context, l10n.modelSelectionSectionLlm),
           const SizedBox(height: 4),
           Text(
             l10n.modelSelectionLlmSubtitle,
@@ -133,18 +121,33 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
           ),
           const SizedBox(height: 8),
           _buildOtherRow(
+            context,
+            ref,
+            state,
+            config,
+            allModels,
             'topic_detection',
             l10n.modelSelectionTopicDetection,
             l10n.modelSelectionTopicDetectionHint,
             canUseMain: true,
           ),
           _buildOtherRow(
+            context,
+            ref,
+            state,
+            config,
+            allModels,
             'memory_organization',
             l10n.modelSelectionMemoryOrganization,
             l10n.modelSelectionMemoryOrganizationHint,
             canUseMain: true,
           ),
           _buildOtherRow(
+            context,
+            ref,
+            state,
+            config,
+            allModels,
             'content_summarization',
             l10n.modelSelectionContentSummarization,
             l10n.modelSelectionContentSummarizationHint,
@@ -153,7 +156,7 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
 
           const Divider(height: 32),
 
-          _sectionHeader(l10n.modelSelectionSectionOther),
+          _sectionHeader(context, l10n.modelSelectionSectionOther),
           const SizedBox(height: 4),
           Text(
             l10n.modelSelectionOtherSubtitle,
@@ -163,11 +166,21 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
           ),
           const SizedBox(height: 8),
           _buildOtherRow(
+            context,
+            ref,
+            state,
+            config,
+            allModels,
             'embedding',
             l10n.modelSelectionSectionEmbedding,
             l10n.modelSelectionEmbeddingHint,
           ),
           _buildOtherRow(
+            context,
+            ref,
+            state,
+            config,
+            allModels,
             'ranking',
             l10n.modelSelectionRankingModel,
             l10n.modelSelectionRankingHint,
@@ -179,17 +192,37 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
     );
   }
 
+  // ── 模型列表 ──
+
+  static List<_ModelEntry> _getAllModels(SettingsData state) {
+    final entries = <_ModelEntry>[];
+    final configs = state.providerConfigs;
+    for (final provider in configs) {
+      for (final model in provider.models) {
+        entries.add(_ModelEntry(provider, model));
+      }
+    }
+    return entries;
+  }
+
   // ── 输入模态行 ──
 
-  Widget _buildInputRow(ModelTag tag) {
+  static Widget _buildInputRow(
+    BuildContext context,
+    WidgetRef ref,
+    SettingsData state,
+    ModelSelectionConfig config,
+    List<_ModelEntry> allModels,
+    ModelTag tag,
+    bool mainOk,
+  ) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final slot = _config.inputModalities[tag];
-    final mainOk = _mainSupports(tag);
+    final slot = config.inputModalities[tag];
 
     final String currentLabel;
     if (slot != null) {
-      currentLabel = slot.displayLabel(_state);
+      currentLabel = slot.displayLabel(state);
     } else if (mainOk) {
       currentLabel = l10n.modelSelectionUseMainModel;
     } else {
@@ -216,7 +249,12 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
                 Expanded(
                   child: InkWell(
                     onTap: () => _pickModel(
-                      (newSlot) => _state.setInputModality(tag, newSlot),
+                      context,
+                      ref,
+                      allModels,
+                      (newSlot) => ref
+                          .read(settingsProvider.notifier)
+                          .setInputModality(tag, newSlot),
                       allowClear: true,
                       clearLabel: mainOk
                           ? l10n.modelSelectionUseMainModel
@@ -264,7 +302,9 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
             if (mainOk && slot != null) ...[
               const SizedBox(height: 4),
               TextButton.icon(
-                onPressed: () => _state.setInputModality(tag, null),
+                onPressed: () => ref
+                    .read(settingsProvider.notifier)
+                    .setInputModality(tag, null),
                 icon: const Icon(Icons.undo, size: 14),
                 label: Text(
                   l10n.modelSelectionUseMainModel,
@@ -283,12 +323,19 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
 
   // ── 输出模态行 ──
 
-  Widget _buildOutputRow(ModelType type) {
+  static Widget _buildOutputRow(
+    BuildContext context,
+    WidgetRef ref,
+    SettingsData state,
+    ModelSelectionConfig config,
+    List<_ModelEntry> allModels,
+    ModelType type,
+  ) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final slot = _config.outputModalities[type];
+    final slot = config.outputModalities[type];
     final currentLabel = slot != null
-        ? slot.displayLabel(_state)
+        ? slot.displayLabel(state)
         : l10n.modelSelectionNotConfigured;
 
     return Card(
@@ -313,7 +360,12 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
             const SizedBox(height: 8),
             InkWell(
               onTap: () => _pickModel(
-                (newSlot) => _state.setOutputModality(type, newSlot),
+                context,
+                ref,
+                allModels,
+                (newSlot) => ref
+                    .read(settingsProvider.notifier)
+                    .setOutputModality(type, newSlot),
                 allowClear: true,
                 filterType: type,
               ),
@@ -358,7 +410,7 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
 
   // ── 其他模型行 ──
 
-  ModelType? _otherKeyToType(String key) {
+  static ModelType? _otherKeyToType(String key) {
     return switch (key) {
       'embedding' => ModelType.embedding,
       'ranking' => ModelType.ranking,
@@ -369,7 +421,12 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
     };
   }
 
-  Widget _buildOtherRow(
+  static Widget _buildOtherRow(
+    BuildContext context,
+    WidgetRef ref,
+    SettingsData state,
+    ModelSelectionConfig config,
+    List<_ModelEntry> allModels,
     String key,
     String label,
     String hint, {
@@ -377,10 +434,10 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
   }) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final slot = _config.otherModels[key];
+    final slot = config.otherModels[key];
     final String currentLabel;
     if (slot != null) {
-      currentLabel = slot.displayLabel(_state);
+      currentLabel = slot.displayLabel(state);
     } else if (canUseMain) {
       currentLabel = l10n.modelSelectionUseMainModel;
     } else {
@@ -415,7 +472,12 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
             const SizedBox(height: 8),
             InkWell(
               onTap: () => _pickModel(
-                (newSlot) => _state.setOtherModel(key, newSlot),
+                context,
+                ref,
+                allModels,
+                (newSlot) => ref
+                    .read(settingsProvider.notifier)
+                    .setOtherModel(key, newSlot),
                 allowClear: true,
                 clearLabel: canUseMain
                     ? l10n.modelSelectionUseMainModel
@@ -458,7 +520,9 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
             if (canUseMain && slot != null) ...[
               const SizedBox(height: 4),
               TextButton.icon(
-                onPressed: () => _state.setOtherModel(key, null),
+                onPressed: () => ref
+                    .read(settingsProvider.notifier)
+                    .setOtherModel(key, null),
                 icon: const Icon(Icons.undo, size: 14),
                 label: Text(
                   l10n.modelSelectionUseMainModel,
@@ -477,7 +541,8 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
 
   // ── 通用槽位行 ──
 
-  Widget _buildSlotTile({
+  static Widget _buildSlotTile(
+    BuildContext context, {
     required String label,
     required String subtitle,
     required VoidCallback onTap,
@@ -500,7 +565,10 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
   /// 用于区分"清除选择"和"取消"的 sentinel 对象
   static final _clearSentinel = ModelSlot(providerConfigId: '', modelUid: '');
 
-  Future<void> _pickModel(
+  static Future<void> _pickModel(
+    BuildContext context,
+    WidgetRef ref,
+    List<_ModelEntry> allModels,
     void Function(ModelSlot? slot) onSelected, {
     bool allowClear = false,
     String clearLabel = '',
@@ -509,17 +577,16 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
   }) async {
     final l10n = AppLocalizations.of(context)!;
     if (clearLabel.isEmpty) clearLabel = l10n.modelSelectionClearSelection;
-    var allModels = _allModels;
+    var filtered = allModels;
     if (filterType != null) {
-      allModels = allModels.where((e) => e.model.type == filterType).toList();
+      filtered = filtered.where((e) => e.model.type == filterType).toList();
     }
     if (filterTag != null) {
-      allModels = allModels
-          .where((e) => e.model.tags.contains(filterTag))
-          .toList();
+      filtered =
+          filtered.where((e) => e.model.tags.contains(filterTag)).toList();
     }
-    if (allModels.isEmpty) {
-      if (mounted) {
+    if (filtered.isEmpty) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.modelSelectionNoModelsFound)),
         );
@@ -537,9 +604,9 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
             width: double.maxFinite,
             child: ListView.builder(
               shrinkWrap: true,
-              itemCount: allModels.length + (allowClear ? 1 : 0),
+              itemCount: filtered.length + (allowClear ? 1 : 0),
               itemBuilder: (ctx, index) {
-                if (allowClear && index == allModels.length) {
+                if (allowClear && index == filtered.length) {
                   return ListTile(
                     leading: Icon(Icons.clear, color: theme.colorScheme.error),
                     title: Text(
@@ -550,7 +617,7 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
                   );
                 }
 
-                final entry = allModels[index];
+                final entry = filtered[index];
                 final isLLM = entry.model.type == ModelType.text;
                 final tagsStr = entry.model.isMultimodal
                     ? ' \u00b7 ${l10n.modelTagsLabel(entry.model)}'
@@ -592,7 +659,6 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
     );
 
     if (result == _clearSentinel) {
-      // 用户点击了"清除选择" → 传递 null 表示未设置
       onSelected(null);
     } else if (result != null) {
       onSelected(result);
@@ -601,7 +667,7 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
 
   // ── 辅助组件 ──
 
-  Widget _sectionHeader(String title) {
+  static Widget _sectionHeader(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 2),
       child: Text(
@@ -613,7 +679,7 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
     );
   }
 
-  Widget _buildTagChip(ThemeData theme, ModelTag tag) {
+  static Widget _buildTagChip(ThemeData theme, ModelTag tag) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
@@ -630,7 +696,7 @@ class _ModelSelectionPageState extends State<ModelSelectionPage> {
     );
   }
 
-  Widget _buildTypeChip(ThemeData theme, ModelType type) {
+  static Widget _buildTypeChip(ThemeData theme, ModelType type) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(

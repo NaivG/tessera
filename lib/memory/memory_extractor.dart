@@ -4,7 +4,7 @@ import '../core/llm_provider.dart';
 import '../models/llm_config.dart';
 import '../models/message.dart';
 import '../models/memory_extraction.dart';
-import '../state/memory_state.dart';
+import '../providers/memory_provider.dart';
 import '../utils/json_extractor.dart';
 
 /// 记忆提取器 — 调用 LLM 从对话轮次中提取结构化记忆
@@ -159,7 +159,7 @@ class MemoryExtractor {
   ///
   /// 返回实际插入的条目数。
   Future<int> flushToMemory({
-    required MemoryState memoryState,
+    required MemoryNotifier memoryNotifier,
     String? conversationId,
     String? sourceMessageId,
   }) async {
@@ -168,7 +168,7 @@ class MemoryExtractor {
     final toInsert = List<MemoryExtraction>.from(_extractionBuffer);
     _extractionBuffer.clear();
 
-    return memoryState.insertExtractions(
+    return memoryNotifier.insertExtractions(
       toInsert,
       conversationId: conversationId,
       sourceMessageId: sourceMessageId,

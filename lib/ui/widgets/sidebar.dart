@@ -81,7 +81,6 @@ class _SidebarState extends State<Sidebar> {
         ],
       ),
     );
-    controller.dispose(); // 手动抛出错误
     if (newTitle != null && newTitle.isNotEmpty && newTitle != conv.title) {
       widget.onRenameConversation(conv.id, newTitle);
     }

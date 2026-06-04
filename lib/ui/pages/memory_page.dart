@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:tessera/l10n/app_localizations.dart';
 
-import '../../memory/memory.dart';
+import '../../models/memory_entry.dart';
+import '../../models/memory_type.dart';
+import '../../providers/memory_provider.dart';
 
 /// 记忆页面 — 展示记忆系统中的所有记忆条目
-///
-/// 以轻微透明卡片展示每条记忆的内容、类型和重要性。
-class MemoryPage extends StatefulWidget {
+class MemoryPage extends ConsumerStatefulWidget {
   const MemoryPage({super.key});
 
   @override
-  State<MemoryPage> createState() => _MemoryPageState();
+  ConsumerState<MemoryPage> createState() => _MemoryPageState();
 }
 
-class _MemoryPageState extends State<MemoryPage> {
-  final MemoryState _memoryState = MemoryState();
+class _MemoryPageState extends ConsumerState<MemoryPage> {
   List<MemoryEntry> _entries = [];
   bool _loading = true;
 
@@ -26,15 +26,16 @@ class _MemoryPageState extends State<MemoryPage> {
   }
 
   Future<void> _init() async {
-    await _memoryState.init();
+    final notifier = ref.read(memoryProvider.notifier);
+    await notifier.init();
     await _load();
   }
 
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final all = await _memoryState.service.getAllEntries();
-      // 按更新时间降序排列
+      final notifier = ref.read(memoryProvider.notifier);
+      final all = await notifier.getAllMemories();
       all.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
       setState(() {
         _entries = all;
@@ -103,7 +104,7 @@ class _MemoryPageState extends State<MemoryPage> {
   }
 }
 
-/// 单条记忆卡片 — 轻微透明风格
+/// 单条记忆卡片
 class _MemoryCard extends StatelessWidget {
   final MemoryEntry entry;
 
@@ -133,7 +134,6 @@ class _MemoryCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 类型标签 + 重要性条
               Row(
                 children: [
                   Container(
@@ -163,13 +163,11 @@ class _MemoryCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 10),
-              // 内容
               Text(
                 entry.content,
                 style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
               ),
               const SizedBox(height: 8),
-              // 时间
               Text(
                 _formatTime(entry.updatedAt, context),
                 style: theme.textTheme.labelSmall?.copyWith(
@@ -216,7 +214,6 @@ class _MemoryCard extends StatelessWidget {
   }
 }
 
-/// 重要性指示条 — 渐变细条
 class _ImportanceBar extends StatelessWidget {
   final double value;
   final Color color;

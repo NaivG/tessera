@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tessera/l10n/app_localizations.dart';
 import 'package:tessera/l10n/app_localizations_en.dart';
 import 'package:tessera/l10n/app_localizations_zh.dart';
@@ -6,7 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/llm_provider_config.dart';
 import '../../models/model_info.dart';
-import '../../state/settings_state.dart';
+import '../../providers/providers.dart';
 import 'model_edit_page.dart';
 import 'model_selection_page.dart';
 
@@ -16,233 +17,214 @@ import 'model_selection_page.dart';
 /// - 添加/删除/选择提供商配置
 /// - 为每个配置编辑名称、API Key、Base URL
 /// - 为每个配置添加/删除模型，选择当前模型
-class SettingsPage extends StatefulWidget {
-  final SettingsState settingsState;
-
-  const SettingsPage({super.key, required this.settingsState});
+class SettingsPage extends ConsumerStatefulWidget {
+  const SettingsPage({super.key});
 
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
-  @override
-  void initState() {
-    super.initState();
-    widget.settingsState.addListener(_onStateChanged);
-  }
-
-  @override
-  void dispose() {
-    widget.settingsState.removeListener(_onStateChanged);
-    super.dispose();
-  }
-
-  void _onStateChanged() {
-    if (!mounted) return;
-    setState(() {});
-  }
-
+class _SettingsPageState extends ConsumerState<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final state = widget.settingsState;
+    final state = ref.watch(settingsProvider);
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
-      body: ListenableBuilder(
-        listenable: state,
-        builder: (context, _) {
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              // --- 语言设置 ---
-              _SectionHeader(l10n.settingsSectionLanguage),
-              const SizedBox(height: 8),
-              _buildLocaleSelector(theme, state, l10n),
-              const Divider(height: 24),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          // --- 语言设置 ---
+          _SectionHeader(l10n.settingsSectionLanguage),
+          const SizedBox(height: 8),
+          _buildLocaleSelector(theme, state, l10n),
+          const Divider(height: 24),
 
-              // --- 用户档案 ---
-              _SectionHeader(l10n.settingsSectionUser),
-              const SizedBox(height: 8),
-              ListTile(
-                leading: Icon(
-                  Icons.person_outline,
-                  color: theme.colorScheme.primary,
-                ),
-                title: Text(l10n.settingsUserProfile),
-                subtitle: Text(
-                  state.userDisplayName.isNotEmpty
-                      ? state.userDisplayName
-                      : l10n.settingsUserProfileSubtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                tileColor: theme.colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.5,
-                ),
-                onTap: () {
-                  Navigator.of(context).pushNamed('/profile');
-                },
+          // --- 用户档案 ---
+          _SectionHeader(l10n.settingsSectionUser),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: Icon(
+              Icons.person_outline,
+              color: theme.colorScheme.primary,
+            ),
+            title: Text(l10n.settingsUserProfile),
+            subtitle: Text(
+              state.userDisplayName.isNotEmpty
+                  ? state.userDisplayName
+                  : l10n.settingsUserProfileSubtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
-              const Divider(height: 24),
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            tileColor: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
+            onTap: () {
+              Navigator.of(context).pushNamed('/profile');
+            },
+          ),
+          const Divider(height: 24),
 
-              // --- 提供商配置列表 ---
-              _SectionHeader(l10n.settingsSectionLlmProviders),
-              const SizedBox(height: 8),
+          // --- 提供商配置列表 ---
+          _SectionHeader(l10n.settingsSectionLlmProviders),
+          const SizedBox(height: 8),
 
-              if (state.providerConfigs.isEmpty)
-                _buildEmptyHint(theme, l10n)
-              else
-                ...state.providerConfigs.map(
-                  (config) => _buildProviderCard(theme, config),
-                ),
+          if (state.providerConfigs.isEmpty)
+            _buildEmptyHint(theme, l10n)
+          else
+            ...state.providerConfigs.map(
+              (config) => _buildProviderCard(theme, config),
+            ),
 
-              const SizedBox(height: 12),
+          const SizedBox(height: 12),
 
-              // 添加提供商按钮
-              OutlinedButton.icon(
-                onPressed: () => _showAddProviderDialog(context),
-                icon: const Icon(Icons.add, size: 18),
-                label: Text(l10n.settingsAddProvider),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+          // 添加提供商按钮
+          OutlinedButton.icon(
+            onPressed: () => _showAddProviderDialog(context),
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(l10n.settingsAddProvider),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
+            ),
+          ),
 
-              const Divider(height: 24),
+          const Divider(height: 24),
 
-              // 模型选择入口
-              _SectionHeader(l10n.settingsSectionModelSelection),
-              const SizedBox(height: 8),
-              ListTile(
-                leading: Icon(Icons.tune, color: theme.colorScheme.primary),
-                title: Text(l10n.settingsModelAssignment),
-                subtitle: Text(l10n.settingsModelAssignmentSubtitle),
-                trailing: const Icon(Icons.chevron_right),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          // 模型选择入口
+          _SectionHeader(l10n.settingsSectionModelSelection),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: Icon(Icons.tune, color: theme.colorScheme.primary),
+            title: Text(l10n.settingsModelAssignment),
+            subtitle: Text(l10n.settingsModelAssignmentSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            tileColor: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const ModelSelectionPage(),
                 ),
-                tileColor: theme.colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.5,
-                ),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => ModelSelectionPage(settingsState: state),
-                    ),
-                  );
-                },
-              ),
+              );
+            },
+          ),
 
-              const Divider(height: 40),
+          const Divider(height: 40),
 
-              // 请求设置
-              _SectionHeader(l10n.settingsSectionRequest),
-              const SizedBox(height: 8),
-              SwitchListTile(
-                title: Text(l10n.settingsStreamEnabled),
-                subtitle: Text(l10n.settingsStreamEnabledSubtitle),
-                value: state.streamEnabled,
-                onChanged: (v) => state.setStreamEnabled(v),
-              ),
-              const Divider(height: 8),
-              SwitchListTile(
-                title: Text(l10n.settingsDeepThinking),
-                subtitle: Text(l10n.settingsDeepThinkingSubtitle),
-                value: state.deepThinkingEnabled,
-                onChanged: (v) => state.setDeepThinkingEnabled(v),
-              ),
+          // 请求设置
+          _SectionHeader(l10n.settingsSectionRequest),
+          const SizedBox(height: 8),
+          SwitchListTile(
+            title: Text(l10n.settingsStreamEnabled),
+            subtitle: Text(l10n.settingsStreamEnabledSubtitle),
+            value: state.streamEnabled,
+            onChanged: (v) =>
+                ref.read(settingsProvider.notifier).setStreamEnabled(v),
+          ),
+          const Divider(height: 8),
+          SwitchListTile(
+            title: Text(l10n.settingsDeepThinking),
+            subtitle: Text(l10n.settingsDeepThinkingSubtitle),
+            value: state.deepThinkingEnabled,
+            onChanged: (v) =>
+                ref.read(settingsProvider.notifier).setDeepThinkingEnabled(v),
+          ),
 
-              const Divider(height: 32),
+          const Divider(height: 32),
 
-              // 语音设置
-              _SectionHeader(l10n.settingsSectionSpeech),
-              const SizedBox(height: 8),
-              SwitchListTile(
-                title: Text(l10n.settingsTtsEnabled),
-                subtitle: Text(l10n.settingsTtsEnabledSubtitle),
-                value: state.ttsEnabled,
-                onChanged: (v) => state.setTtsEnabled(v),
-              ),
-              SwitchListTile(
-                title: Text(l10n.settingsSttEnabled),
-                subtitle: Text(l10n.settingsSttEnabledSubtitle),
-                value: state.sttEnabled,
-                onChanged: (v) => state.setSttEnabled(v),
-              ),
+          // 语音设置
+          _SectionHeader(l10n.settingsSectionSpeech),
+          const SizedBox(height: 8),
+          SwitchListTile(
+            title: Text(l10n.settingsTtsEnabled),
+            subtitle: Text(l10n.settingsTtsEnabledSubtitle),
+            value: state.ttsEnabled,
+            onChanged: (v) =>
+                ref.read(settingsProvider.notifier).setTtsEnabled(v),
+          ),
+          SwitchListTile(
+            title: Text(l10n.settingsSttEnabled),
+            subtitle: Text(l10n.settingsSttEnabledSubtitle),
+            value: state.sttEnabled,
+            onChanged: (v) =>
+                ref.read(settingsProvider.notifier).setSttEnabled(v),
+          ),
 
-              const Divider(height: 32),
+          const Divider(height: 32),
 
-              // 提示词设置
-              _SectionHeader(l10n.settingsSectionPrompt),
-              const SizedBox(height: 8),
-              SwitchListTile(
-                title: Text(l10n.settingsLightweightMode),
-                subtitle: Text(l10n.settingsLightweightModeSubtitle),
-                value: state.lightweightSystemPrompt,
-                onChanged: (v) => state.setLightweightSystemPrompt(v),
-                secondary: Icon(
-                  Icons.compress_outlined,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              _buildCustomPromptTile(theme, state),
+          // 提示词设置
+          _SectionHeader(l10n.settingsSectionPrompt),
+          const SizedBox(height: 8),
+          SwitchListTile(
+            title: Text(l10n.settingsLightweightMode),
+            subtitle: Text(l10n.settingsLightweightModeSubtitle),
+            value: state.lightweightSystemPrompt,
+            onChanged: (v) =>
+                ref.read(settingsProvider.notifier).setLightweightSystemPrompt(v),
+            secondary: Icon(
+              Icons.compress_outlined,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildCustomPromptTile(theme, state),
 
-              const Divider(height: 24),
-              _SectionHeader(l10n.settingsSectionAbout),
-              const SizedBox(height: 8),
-              ListTile(
-                leading: Icon(
-                  Icons.info_outline,
-                  color: theme.colorScheme.primary,
-                ),
-                title: const Text('Tessera'),
-                subtitle: const Text('v1.0.0'),
-                trailing: const Icon(Icons.chevron_right),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                tileColor: theme.colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.5,
-                ),
-                onTap: () => _showAboutDialog(context),
-              ),
-              const SizedBox(height: 12),
-              ListTile(
-                leading: Icon(
-                  Icons.open_in_new,
-                  color: theme.colorScheme.primary,
-                ),
-                title: const Text('GitHub'),
-                subtitle: const Text('Check out the source code'),
-                trailing: const Icon(Icons.chevron_right),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                tileColor: theme.colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.5,
-                ),
-                onTap: () {
-                  final url = Uri.parse('https://github.com/NaivG/tessera');
-                  launchUrl(url, mode: LaunchMode.externalApplication);
-                },
-              ),
-            ],
-          );
-        },
+          const Divider(height: 24),
+          _SectionHeader(l10n.settingsSectionAbout),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: Icon(
+              Icons.info_outline,
+              color: theme.colorScheme.primary,
+            ),
+            title: const Text('Tessera'),
+            subtitle: const Text('v1.0.0'),
+            trailing: const Icon(Icons.chevron_right),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            tileColor: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
+            onTap: () => _showAboutDialog(context),
+          ),
+          const SizedBox(height: 12),
+          ListTile(
+            leading: Icon(
+              Icons.open_in_new,
+              color: theme.colorScheme.primary,
+            ),
+            title: const Text('GitHub'),
+            subtitle: const Text('Check out the source code'),
+            trailing: const Icon(Icons.chevron_right),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            tileColor: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
+            onTap: () {
+              final url = Uri.parse('https://github.com/NaivG/tessera');
+              launchUrl(url, mode: LaunchMode.externalApplication);
+            },
+          ),
+        ],
       ),
     );
   }
@@ -251,7 +233,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildLocaleSelector(
     ThemeData theme,
-    SettingsState state,
+    SettingsData state,
     AppLocalizations l10n,
   ) {
     final currentLocale = state.locale;
@@ -283,13 +265,12 @@ class _SettingsPageState extends State<SettingsPage> {
         alpha: 0.5,
       ),
       onTap: () =>
-          _showLocaleDialog(theme, state, l10n, enL10n, zhL10n, currentLocale),
+          _showLocaleDialog(theme, l10n, enL10n, zhL10n, currentLocale),
     );
   }
 
   void _showLocaleDialog(
     ThemeData theme,
-    SettingsState state,
     AppLocalizations l10n,
     AppLocalizations enL10n,
     AppLocalizations zhL10n,
@@ -302,7 +283,7 @@ class _SettingsPageState extends State<SettingsPage> {
           groupValue: currentLocale,
           onChanged: (v) {
             if (v != null && v != currentLocale) {
-              state.setLocale(v);
+              ref.read(settingsProvider.notifier).setLocale(v);
               Navigator.pop(ctx);
             }
           },
@@ -356,7 +337,6 @@ class _SettingsPageState extends State<SettingsPage> {
   // ==================== 提供商卡片 ====================
 
   Widget _buildProviderCard(ThemeData theme, LlmProviderConfig config) {
-    final state = widget.settingsState;
     final l10n = AppLocalizations.of(context)!;
     final providerId = config.id;
     final needsApiKey = LlmProviderConfig.formatNeedsApiKey(config.format);
@@ -447,8 +427,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       _modelChipLabel(modelInfo),
                       style: const TextStyle(fontSize: 12),
                     ),
-                    onDeleted: () =>
-                        state.removeModel(providerId, modelInfo.uid),
+                    onDeleted: () => ref
+                        .read(settingsProvider.notifier)
+                        .removeModel(providerId, modelInfo.uid),
                     visualDensity: VisualDensity.compact,
                   );
                 }).toList(),
@@ -464,7 +445,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     builder: (_) => ModelEditPage(
                       providerId: providerId,
                       config: config,
-                      settingsState: state,
                     ),
                   ),
                 );
@@ -572,7 +552,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   /// 添加提供商
   Future<void> _showAddProviderDialog(BuildContext context) async {
-    final state = widget.settingsState;
     final l10n = AppLocalizations.of(context)!;
     final nameCtrl = TextEditingController();
     final apiKeyCtrl = TextEditingController();
@@ -686,13 +665,8 @@ class _SettingsPageState extends State<SettingsPage> {
       },
     );
 
-    // the widget might unmount later, so we don't dispose them here
-    // nameCtrl.dispose();
-    // apiKeyCtrl.dispose();
-    // baseUrlCtrl.dispose();
-
     if (result != null) {
-      await state.addProviderConfig(
+      await ref.read(settingsProvider.notifier).addProviderConfig(
         format: result['format']!,
         name: result['name']!,
         apiKey: result['apiKey']!,
@@ -707,7 +681,6 @@ class _SettingsPageState extends State<SettingsPage> {
     String providerId,
     LlmProviderConfig config,
   ) async {
-    final state = widget.settingsState;
     final l10n = AppLocalizations.of(context)!;
     final nameCtrl = TextEditingController(text: config.name);
     final apiKeyCtrl = TextEditingController(text: config.apiKey);
@@ -788,7 +761,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
 
     if (result != null) {
-      await state.updateProviderConfig(
+      await ref.read(settingsProvider.notifier).updateProviderConfig(
         providerId,
         name: result['name'],
         apiKey: result['apiKey'],
@@ -827,13 +800,13 @@ class _SettingsPageState extends State<SettingsPage> {
     );
 
     if (confirmed == true) {
-      await widget.settingsState.removeProviderConfig(providerId);
+      await ref.read(settingsProvider.notifier).removeProviderConfig(providerId);
     }
   }
 
   // ==================== 自定义提示词 ====================
 
-  Widget _buildCustomPromptTile(ThemeData theme, SettingsState state) {
+  Widget _buildCustomPromptTile(ThemeData theme, SettingsData state) {
     final l10n = AppLocalizations.of(context)!;
     final prompt = state.userCustomPrompt;
     final hasContent = prompt.trim().isNotEmpty;
@@ -862,7 +835,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _showEditCustomPromptDialog(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
-    final state = widget.settingsState;
+    final state = ref.read(settingsProvider);
     final textCtrl = TextEditingController(text: state.userCustomPrompt);
 
     final result = await showDialog<String>(
@@ -911,7 +884,9 @@ class _SettingsPageState extends State<SettingsPage> {
     );
 
     if (result != null) {
-      await state.setUserCustomPrompt(result.trim());
+      await ref
+          .read(settingsProvider.notifier)
+          .setUserCustomPrompt(result.trim());
     }
   }
 

@@ -1,32 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:tessera/l10n/app_localizations.dart';
 import '../../core/core.dart';
-import '../../state/chat_state.dart';
+import '../../providers/chat_provider.dart';
 import 'chat_bubble.dart';
 import 'message_input.dart';
 import 'processing_block.dart';
 
 /// 聊天内容视图 — 消息列表 + 输入栏
-///
-/// 从 ChatPage 中提取的核心 UI，不含 Scaffold/AppBar，
-/// 以便在 MainPage 的响应式布局中复用。
-class ChatContentView extends StatefulWidget {
-  final ChatState chatState;
+class ChatContentView extends ConsumerStatefulWidget {
   final void Function(SendPayload payload) onSend;
-
-  /// 修改消息回调（user 消息右键菜单）
   final void Function(Message msg)? onModify;
-
-  /// 重新生成回调（assistant 消息右键菜单）
   final void Function()? onRegenerate;
-
-  /// 分享回调
   final void Function(Message msg)? onShare;
 
   const ChatContentView({
     super.key,
-    required this.chatState,
     required this.onSend,
     this.onModify,
     this.onRegenerate,
@@ -34,10 +24,10 @@ class ChatContentView extends StatefulWidget {
   });
 
   @override
-  State<ChatContentView> createState() => _ChatContentViewState();
+  ConsumerState<ChatContentView> createState() => _ChatContentViewState();
 }
 
-class _ChatContentViewState extends State<ChatContentView> {
+class _ChatContentViewState extends ConsumerState<ChatContentView> {
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -49,81 +39,74 @@ class _ChatContentViewState extends State<ChatContentView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final data = ref.watch(chatProvider);
+    final notifier = ref.read(chatProvider.notifier);
 
-    return ListenableBuilder(
-      listenable: widget.chatState,
-      builder: (context, _) {
-        // 有新消息时滚动到底部
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_scrollController.hasClients) {
-            _scrollController.animateTo(
-              _scrollController.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOut,
-            );
-          }
-        });
+    // 有新消息时滚动到底部
+    if (data.messages.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
 
-        return Column(
-          children: [
-            // 消息列表
-            Expanded(
-              child: widget.chatState.displayMessages.isEmpty
-                  ? _buildWelcomeView(theme)
-                  : ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      itemCount: widget.chatState.displayMessages.length,
-                      itemBuilder: (context, index) {
-                        final msg = widget.chatState.displayMessages[index];
-                        return ChatBubble(
-                          key: ValueKey(msg.id),
-                          message: msg,
-                          contentStream: msg.status == MessageStatus.streaming
-                              ? widget.chatState.getContentStream(msg.id)
-                              : null,
-                          thinkingStream: msg.status == MessageStatus.streaming
-                              ? widget.chatState.getThinkingStream(msg.id)
-                              : null,
-                          onModify: msg.role == MessageRole.user
-                              ? () => widget.onModify?.call(msg)
-                              : null,
-                          onRegenerate: msg.role == MessageRole.assistant
-                              ? widget.onRegenerate
-                              : null,
-                          onShare: () => widget.onShare?.call(msg),
-                        );
-                      },
-                    ),
-            ),
-            // 预处理指示器 — 附件分析中
-            if (widget.chatState.isPreprocessing)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
+    return Column(
+      children: [
+        Expanded(
+          child: data.displayMessages.isEmpty
+              ? _buildWelcomeView(theme)
+              : ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  itemCount: data.displayMessages.length,
+                  itemBuilder: (context, index) {
+                    final msg = data.displayMessages[index];
+                    return ChatBubble(
+                      key: ValueKey(msg.id),
+                      message: msg,
+                      contentStream: msg.status == MessageStatus.streaming
+                          ? notifier.getContentStream(msg.id)
+                          : null,
+                      thinkingStream: msg.status == MessageStatus.streaming
+                          ? notifier.getThinkingStream(msg.id)
+                          : null,
+                      onModify: msg.role == MessageRole.user
+                          ? () => widget.onModify?.call(msg)
+                          : null,
+                      onRegenerate: msg.role == MessageRole.assistant
+                          ? widget.onRegenerate
+                          : null,
+                      onShare: () => widget.onShare?.call(msg),
+                    );
+                  },
                 ),
-                child: ProcessingBlock(
-                  icon: Icons.analytics,
-                  inProgressTitle: widget.chatState.preprocessingTitle,
-                  completedTitle: '',
-                  isProcessing: true,
-                  content: widget.chatState.preprocessingText,
-                  contentStream: widget.chatState.preprocessingStream,
-                  collapsible: false,
-                  initiallyExpanded: true,
-                ),
-              ),
-            // 输入栏
-            MessageInput(
-              enabled:
-                  !widget.chatState.isStreaming &&
-                  !widget.chatState.isPreprocessing,
-              onSend: widget.onSend,
+        ),
+        // 预处理指示器
+        if (data.isPreprocessing)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            child: ProcessingBlock(
+              icon: Icons.analytics,
+              inProgressTitle: data.preprocessingTitle,
+              completedTitle: '',
+              isProcessing: true,
+              content: data.preprocessingText,
+              contentStream: notifier.preprocessingStream,
+              collapsible: false,
+              initiallyExpanded: true,
             ),
-          ],
-        );
-      },
+          ),
+        // 输入栏
+        MessageInput(
+          enabled: !data.isStreaming && !data.isPreprocessing,
+          onSend: widget.onSend,
+        ),
+      ],
     );
   }
 

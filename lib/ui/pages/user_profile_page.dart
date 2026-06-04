@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:tessera/l10n/app_localizations.dart';
 
-import '../../state/settings_state.dart';
+import '../../providers/providers.dart';
 
 /// 用户档案页面 — 编辑用户基础信息
 ///
 /// 信息将注入系统提示的 Block 2 (User Profile & Long‑Term Memory)，
 /// 用于 AI 个性化回复。
-class UserProfilePage extends StatefulWidget {
-  final SettingsState settingsState;
-
-  const UserProfilePage({super.key, required this.settingsState});
+class UserProfilePage extends ConsumerStatefulWidget {
+  const UserProfilePage({super.key});
 
   @override
-  State<UserProfilePage> createState() => _UserProfilePageState();
+  ConsumerState<UserProfilePage> createState() => _UserProfilePageState();
 }
 
-class _UserProfilePageState extends State<UserProfilePage> {
+class _UserProfilePageState extends ConsumerState<UserProfilePage> {
   late final TextEditingController _displayNameCtrl;
   late final TextEditingController _aliasCtrl;
   late final TextEditingController _roleCtrl;
@@ -30,7 +29,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   @override
   void initState() {
     super.initState();
-    final state = widget.settingsState;
+    final state = ref.read(settingsProvider);
     _displayNameCtrl = TextEditingController(text: state.userDisplayName);
     _aliasCtrl = TextEditingController(text: state.userAlias);
     _roleCtrl = TextEditingController(text: state.userRole);
@@ -73,7 +72,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      await widget.settingsState.setUserProfile(
+      await ref.read(settingsProvider.notifier).setUserProfile(
         displayName: _displayNameCtrl.text.trim(),
         alias: _aliasCtrl.text.trim(),
         role: _roleCtrl.text.trim(),
@@ -120,7 +119,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final state = widget.settingsState;
+    final state = ref.watch(settingsProvider);
     final hasAnyContent =
         state.userDisplayName.isNotEmpty ||
         state.userAlias.isNotEmpty ||
