@@ -102,6 +102,8 @@ Tessera 拥有一个受生物记忆启发的长期记忆系统，随你的对话
 
 > 记忆不只是被存储——它有生命。被提取、检索、压缩、遗忘。和你一样。
 
+记忆管线中所有辅助 LLM 调用（提取、合并、摘要、话题生成）均使用**严格 JSON prompt** 配合多策略 **`JsonExtractor`** 容错解析器。prompt 要求输出纯 JSON，解析器可容忍 markdown 代码块、多余文本和任意空白——无论模型输出风格如何，系统都能稳健提取结构化信息。
+
 ### 🎤 语音交互
 
 - **语音输入**：自然说话，实时转录为文字（Speech-to-Text）
@@ -195,6 +197,24 @@ abstract class LlmProvider {
      │        │ │        │ │ 成模型  │ │ 模型      │
      └────────┘ └────────┘ └────────┘ └──────────┘
 ```
+
+### LLM 结构化输出
+
+辅助 LLM 调用——包括记忆提取、主题生成、内容摘要以及压缩合并——均要求模型提供结构化输出。LLM 的响应本质上是不一致的：有些模型会将 JSON 包裹在 Markdown 代码块中，附带解释性文本，或添加额外的空白。
+
+Tessera 通过两层方法来处理这一问题：
+
+1. **提示词规范** —— 每个辅助提示词都明确要求纯 JSON 输出（例如 `仅返回一个 JSON 对象 —— 无 Markdown、无解释、无其他文本：{“summary”: “...”}`）
+2. **稳健解析** — `lib/utils/json_extractor.dart` 提供了 `JsonExtractor`，这是一个支持多种策略的备用解析器：
+
+| 策略 | 处理内容 |
+|----------|----------------|
+| 直接 `jsonDecode` | 干净的 JSON 响应 |
+| Markdown JSON 代码块 | 包裹在 ` ```json ... ``` ` 中的响应 |
+| 任何 Markdown 代码块 | 包裹在 ` ``` ... ``` ` 中的响应 |
+| 分隔符扫描（`{`/`}` 或 `[`/`]`） | 包围 JSON 有效负载的文本 |
+
+便捷方法 — `tryExtract()`、`tryExtractMap()`、`tryExtractList()`、`tryExtractField()` — 提供了无需冗余代码的类型安全访问。如果所有策略均未成功，该方法将返回 `null`，调用方将回退到 `trim()` 处理。
 
 ### 提示缓存
 
@@ -310,7 +330,8 @@ tessera/
 │   │   ├── app_localizations.dart
 │   │   └── model_localization.dart
 │   └── utils/
-│       └── logger.dart
+│       ├── logger.dart
+│       └── json_extractor.dart              # LLM JSON 输出提取（多策略容错）
 ├── assets/
 │   ├── system_prompt.txt              # 三段式系统提示模板
 │   └── dict*.txt / idf_dict.txt       # 结巴分词词典

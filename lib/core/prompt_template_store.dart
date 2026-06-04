@@ -137,7 +137,12 @@ class PromptTemplateStore {
 
 {{user_input}}
 
-Summarize the user's input into a conversation topic of 15 characters or fewer. Use the language of the input as the output language. DO NOT include punctuation or any other content.''',
+Summarize the user's input into a conversation topic of 15 characters or fewer. Use the language of the input as the output language.
+
+Return ONLY a JSON object — no markdown, no explanation, no other text:
+```json
+{"topic": "the topic string"}
+```''',
       requiredVariables: ['user_input'],
     );
   }

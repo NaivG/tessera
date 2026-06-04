@@ -6,6 +6,7 @@ import '../core/core.dart';
 import '../memory/memory.dart';
 import '../llm/provider_factory.dart';
 import '../services/conversation_service.dart';
+import '../utils/json_extractor.dart';
 import 'settings_state.dart';
 
 /// 聊天状态 — 管理当前对话的消息流和发送逻辑
@@ -819,7 +820,8 @@ class ChatState extends ChangeNotifier {
         config: topicConfig,
         history: [Message.user(prompt)],
       );
-      final topic = response.content.trim();
+      final topic = JsonExtractor.tryExtractField(response.content, 'topic') ??
+          response.content.trim();
       if (topic.isEmpty) return;
       final sanitized = topic.length > 25 ? topic.substring(0, 25) : topic;
       if (_conversation != null) {

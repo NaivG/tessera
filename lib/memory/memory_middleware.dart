@@ -8,6 +8,7 @@ import '../models/message.dart';
 import '../models/memory_type.dart';
 import '../models/memory_entry.dart';
 import '../state/memory_state.dart';
+import '../utils/json_extractor.dart';
 
 /// 对话记忆管理器 — 延迟 Summary 模型
 class ConversationalMemoryManager {
@@ -33,7 +34,9 @@ class ConversationalMemoryManager {
 1. 保留关键决策、重要信息、核心讨论点
 2. 省略闲聊和过渡性内容
 3. 保持时间顺序
-4. 只返回摘要文本，不要添加额外说明
+
+返回 ONLY 一个 JSON 对象 — 不要 markdown、不要解释、不要其他文字：
+{"summary": "摘要文本"}
 
 需要摘要的对话：
 ''';
@@ -185,11 +188,10 @@ class ConversationalMemoryManager {
       final response = await provider.chat(
         config: config,
         history: history,
-        systemPrompt: '你是一个精确的对话摘要助手。只返回摘要文本。',
+        systemPrompt: '你是一个精确的对话摘要助手。只返回 JSON 对象，不返回 markdown、不返回解释、不返回其他内容。',
       );
-      return response.content.trim().isNotEmpty
-          ? response.content.trim()
-          : null;
+      return JsonExtractor.tryExtractField(response.content, 'summary') ??
+          (response.content.trim().isNotEmpty ? response.content.trim() : null);
     } catch (e) {
       debugPrint('[ConversationalMemory] 摘要生成失败: $e');
       return null;
@@ -211,6 +213,8 @@ class ConversationalMemoryManager {
             '2. 达成的关键决策和结论\n'
             '3. 未解决的问题或待办事项\n'
             '4. 用户表达的重要信息\n\n'
+            '返回 ONLY 一个 JSON 对象 — 不要 markdown、不要解释、不要其他文字：\n'
+            '{"summary": "摘要文本"}\n\n'
             '对话内容：\n\n$text',
         status: MessageStatus.completed,
         timestamp: DateTime.now(),
@@ -221,11 +225,10 @@ class ConversationalMemoryManager {
       final response = await provider.chat(
         config: config,
         history: history,
-        systemPrompt: '你是一个精确的对话摘要助手。只返回摘要文本。',
+        systemPrompt: '你是一个精确的对话摘要助手。只返回 JSON 对象，不返回 markdown、不返回解释、不返回其他内容。',
       );
-      return response.content.trim().isNotEmpty
-          ? response.content.trim()
-          : null;
+      return JsonExtractor.tryExtractField(response.content, 'summary') ??
+          (response.content.trim().isNotEmpty ? response.content.trim() : null);
     } catch (e) {
       debugPrint('[ConversationalMemory] 最终摘要生成失败: $e');
       return null;

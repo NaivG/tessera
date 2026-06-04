@@ -8,6 +8,7 @@ import '../models/memory_entry.dart';
 import '../models/memory_relation.dart';
 import '../models/memory_type.dart';
 import '../services/memory_service.dart';
+import '../utils/json_extractor.dart';
 import 'simhash.dart';
 
 /// 记忆压缩器 — 聚类合并相似记忆
@@ -24,7 +25,9 @@ class MemoryCompressor {
 1. 保留所有关键信息，不遗漏任何事实
 2. 语言简洁精炼，去除冗余表述
 3. 如果原始记忆较多，提炼最核心的内容
-4. 只返回合并后的精炼文本，不要添加任何额外说明
+
+返回 ONLY 一个 JSON 对象 — 不要 markdown、不要解释、不要其他文字：
+{"merged_content": "合并后的精炼文本"}
 
 原始记忆：
 ''';
@@ -203,11 +206,10 @@ class MemoryCompressor {
       final response = await provider.chat(
         config: config,
         history: history,
-        systemPrompt: '你是一个信息精炼助手。只返回合并后的精炼文本。',
+        systemPrompt: '你是一个信息精炼助手。只返回 JSON 对象，不返回 markdown、不返回解释、不返回其他内容。',
       );
-      return response.content.trim().isNotEmpty
-          ? response.content.trim()
-          : null;
+      return JsonExtractor.tryExtractField(response.content, 'merged_content') ??
+          (response.content.trim().isNotEmpty ? response.content.trim() : null);
     } catch (e) {
       debugPrint('[MemoryCompressor] LLM 合并失败: $e');
       return null;
@@ -221,7 +223,10 @@ class MemoryCompressor {
     List<MemoryEntry> entries,
   ) async {
     final sb = StringBuffer();
-    sb.writeln('请将以下对话阶段摘要合并为一段连贯的摘要：');
+    sb.writeln('请将以下对话阶段摘要合并为一段连贯的摘要。');
+    sb.writeln('返回 ONLY 一个 JSON 对象 — 不要 markdown、不要解释、不要其他文字：');
+    sb.writeln('{"merged_summary": "合并后的摘要文本"}');
+    sb.writeln();
     for (final e in entries) {
       sb.writeln('- [摘要] ${e.content}');
     }
@@ -240,11 +245,10 @@ class MemoryCompressor {
       final response = await provider.chat(
         config: config,
         history: history,
-        systemPrompt: '你是一个信息精炼助手。请合并以下摘要为一段精炼连贯的对话摘要。只返回摘要文本。',
+        systemPrompt: '你是一个信息精炼助手。只返回 JSON 对象，不返回 markdown、不返回解释、不返回其他内容。',
       );
-      return response.content.trim().isNotEmpty
-          ? response.content.trim()
-          : null;
+      return JsonExtractor.tryExtractField(response.content, 'merged_summary') ??
+          (response.content.trim().isNotEmpty ? response.content.trim() : null);
     } catch (e) {
       debugPrint('[MemoryCompressor] 摘要合并失败: $e');
       return null;

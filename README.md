@@ -97,6 +97,8 @@ Tessera features a sophisticated, biologically inspired memory system that evolv
 
 > Memory is not just stored — it's lived. Retrieved. Compressed. Forgotten. Just like you.
 
+All auxilary LLM calls in the memory pipeline (extraction, merge, summary, topic generation) use **strict JSON prompts** with a multi-strategy **`JsonExtractor`** fallback parser. The prompt asks for pure JSON; the parser tolerates markdown code blocks, extra text, and arbitrary whitespace — so the system stays robust regardless of model quirks.
+
 ### 🎤 Voice Interaction
 - **Speech-to-Text**: Speak naturally, see it transcribed in real time
 - **Text-to-Speech**: Listen to AI responses read aloud (including Chinese)
@@ -186,6 +188,24 @@ The main text model handles conversation; specialized models handle multimodal t
      │Model   │ │Model   │ │Gen     │ │Gen Model │
      └────────┘ └────────┘ └────────┘ └──────────┘
 ```
+
+### Reliable LLM Structured Output
+
+Auxiliary LLM calls — memory extraction, topic generation, content summarization, and compression merging — all require structured output from the model. LLM responses are inherently inconsistent: some models wrap JSON in markdown code blocks, append explanatory text, or add extra whitespace.
+
+Tessera handles this with a two-layer approach:
+
+1. **Prompt discipline** — Every auxiliary prompt explicitly requests pure JSON output (e.g. `Return ONLY a JSON object — no markdown, no explanation, no other text: {"summary": "..."}`)
+2. **Robust parsing** — `lib/utils/json_extractor.dart` provides `JsonExtractor`, a multi-strategy fallback parser:
+
+| Strategy | What it handles |
+|----------|----------------|
+| Direct `jsonDecode` | Clean JSON responses |
+| Markdown json code block | Responses wrapped in ` ```json ... ``` ` |
+| Any markdown code block | Responses wrapped in ` ``` ... ``` ` |
+| Delimiter scanning (`{`/`}` or `[`/`]`) | Junk text surrounding JSON payload |
+
+Convenience methods — `tryExtract()`, `tryExtractMap()`, `tryExtractList()`, `tryExtractField()` — provide type-safe access without boilerplate. If none of the strategies succeed, the method returns `null` and the caller falls back to a best-effort `trim()`.
 
 ### Prompt Caching
 
@@ -301,7 +321,8 @@ tessera/
 │   │   ├── app_localizations.dart
 │   │   └── model_localization.dart
 │   └── utils/
-│       └── logger.dart
+│       ├── logger.dart
+│       └── json_extractor.dart              # LLM JSON output extraction (multi-strategy)
 ├── assets/
 │   ├── system_prompt.txt              # 3-block system prompt template
 │   └── dict*.txt / idf_dict.txt       # jieba dictionaries

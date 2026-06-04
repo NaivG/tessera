@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 
 import '../core/llm_provider.dart';
@@ -7,6 +5,7 @@ import '../models/llm_config.dart';
 import '../models/message.dart';
 import '../models/memory_extraction.dart';
 import '../state/memory_state.dart';
+import '../utils/json_extractor.dart';
 
 /// 记忆提取器 — 调用 LLM 从对话轮次中提取结构化记忆
 ///
@@ -35,14 +34,11 @@ class MemoryExtractor {
 3. 只提取有实质内容的信息，忽略闲聊和过渡性内容
 4. 不要重复提取已明确的内容
 
-请以 JSON 数组格式返回：
-```json
-[
-  {"type": "user", "content": "用户是 Python 开发者", "importance": 0.8},
-  {"type": "knowledge", "content": "Dart 3.11 支持扩展类型", "importance": 0.6},
-  {"type": "event", "content": "2026-05-31 用户完成了 XX 功能", "importance": 0.4}
-]
-```
+返回 ONLY 一个 JSON 数组 — 不要 markdown 代码块、不要解释、不要其他任何文字。
+如果没有值得记忆的内容，返回空数组 []。
+
+格式：
+[{"type": "user", "content": "用户是 Python 开发者", "importance": 0.8}]
 
 以下是最近的对话轮次：
 
@@ -129,15 +125,14 @@ class MemoryExtractor {
         ],
         systemPrompt:
             systemPrompt ??
-            '你是一个精确的记忆提取助手。只返回 JSON 数组，不返回其他内容。'
+            '你是一个精确的记忆提取助手。只返回 JSON 数组，不返回 markdown 代码块、不返回解释、不返回其他任何内容。'
                 '如果没有值得记忆的内容，返回空数组 []。',
         tools: null,
       );
 
-      final jsonStr = _extractJsonArray(response.content);
-      if (jsonStr == null || jsonStr.isEmpty) return [];
+      final list = JsonExtractor.tryExtractList(response.content);
+      if (list == null || list.isEmpty) return [];
 
-      final list = jsonDecode(jsonStr);
       final extractions = MemoryExtraction.listFromJson(list);
 
       debugPrint('[MemoryExtractor] 提取完成，获得 ${extractions.length} 条候选记忆');
@@ -185,33 +180,5 @@ class MemoryExtractor {
     _buffer.clear();
     _extractionBuffer.clear();
     _roundCount = 0;
-  }
-
-  /// 从 LLM 回复中提取 JSON 数组字符串
-  static String? _extractJsonArray(String content) {
-    // 尝试直接解析
-    content = content.trim();
-    if (content.startsWith('[') && content.endsWith(']')) {
-      return content;
-    }
-
-    // 尝试从 markdown code block 中提取
-    final codeBlockRe = RegExp(
-      r'```(?:json)?\s*\n?(\[.*?\])\s*\n?```',
-      dotAll: true,
-    );
-    final match = codeBlockRe.firstMatch(content);
-    if (match != null) {
-      return match.group(1)?.trim();
-    }
-
-    // 尝试找到第一个 [ 和最后一个 ]
-    final startIdx = content.indexOf('[');
-    final endIdx = content.lastIndexOf(']');
-    if (startIdx >= 0 && endIdx > startIdx) {
-      return content.substring(startIdx, endIdx + 1);
-    }
-
-    return null;
   }
 }
