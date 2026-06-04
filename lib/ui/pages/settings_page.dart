@@ -298,63 +298,57 @@ class _SettingsPageState extends State<SettingsPage> {
     showDialog<String>(
       context: context,
       builder: (ctx) {
-        return SimpleDialog(
-          title: Text(l10n.settingsSectionLanguage),
-          children: [
-            _buildLocaleOption(
-              ctx,
-              theme,
-              'system',
-              l10n.settingsLanguageSystem,
-              null,
-              currentLocale,
-              state,
-            ),
-            _buildLocaleOption(
-              ctx,
-              theme,
-              'zh',
-              zhL10n.localeDescription,
-              zhL10n.createdBy,
-              currentLocale,
-              state,
-            ),
-            _buildLocaleOption(
-              ctx,
-              theme,
-              'en',
-              enL10n.localeDescription,
-              enL10n.createdBy,
-              currentLocale,
-              state,
-            ),
-          ],
+        return RadioGroup<String>(
+          groupValue: currentLocale,
+          onChanged: (v) {
+            if (v != null && v != currentLocale) {
+              state.setLocale(v);
+              Navigator.pop(ctx);
+            }
+          },
+          child: SimpleDialog(
+            title: Text(l10n.settingsSectionLanguage),
+            children: [
+              _buildLocaleOption(
+                theme,
+                'system',
+                l10n.settingsLanguageSystem,
+                null,
+                currentLocale,
+              ),
+              _buildLocaleOption(
+                theme,
+                'zh',
+                zhL10n.localeDescription,
+                zhL10n.createdBy,
+                currentLocale,
+              ),
+              _buildLocaleOption(
+                theme,
+                'en',
+                enL10n.localeDescription,
+                enL10n.createdBy,
+                currentLocale,
+              ),
+            ],
+          ),
         );
       },
     );
   }
 
   Widget _buildLocaleOption(
-    BuildContext ctx,
     ThemeData theme,
     String value,
     String title,
     String? subtitle,
     String currentLocale,
-    SettingsState state,
   ) {
     final isSelected = currentLocale == value;
     return RadioListTile<String>(
       title: Text(title),
       subtitle: subtitle != null && subtitle.isNotEmpty ? Text(subtitle) : null,
       value: value,
-      groupValue: currentLocale,
-      onChanged: (v) {
-        if (v != null && v != currentLocale) {
-          state.setLocale(v);
-          Navigator.pop(ctx);
-        }
-      },
       selected: isSelected,
     );
   }
