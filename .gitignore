@@ -33,6 +33,12 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# python
+__pycache__
+.pyc
+plugins/*/
+*.plugin
+
 # Symbolication related
 app.*.symbols
 
@@ -45,3 +51,5 @@ app.*.map.json
 /android/app/release
 
 ai_clients_dart/
+jieba_flutter/
+LuaDardoPlus/

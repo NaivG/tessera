@@ -25,11 +25,9 @@
 
 <p>
   <a href="#功能特性">功能特性</a> •
-  <a href="#截图">截图</a> •
+  <a href="docs/zh/README.md">文档</a> •
   <a href="#快速开始">快速开始</a> •
-  <a href="#架构设计">架构设计</a> •
-  <a href="#技术栈">技术栈</a> •
-  <a href="#项目结构">项目结构</a> •
+  <a href="#截图">截图</a> •
   <a href="#许可证">许可证</a>
 </p>
 
@@ -42,92 +40,24 @@
 
 ---
 
-**Tessera**（τέσσερα，希腊语意为"四"——四角合一的一块拼片）是一个用 Flutter 构建的跨平台 AI 聊天客户端。它将多个大语言模型提供商汇聚在一个界面下，将多模态任务——视觉识别、音频处理、图像生成、语音合成——无缝路由到对应模型，你无需离开对话窗口。
-
-Tessera 内置了一个实验性的类似人脑的长期记忆系统：提取、检索、压缩、遗忘。它超越了简单的聊天机器人界面，打造真正个性化的 AI 助手。
+**Tessera**（τέσσερα，希腊语意为"四"——四角合一的一块拼片）是一个用 Flutter 构建的跨平台 AI 聊天客户端。它将多个大语言模型提供商汇聚在一个界面下，将多模态任务——视觉识别、音频处理、图像生成、语音合成——无缝路由到对应模型，你无需离开对话窗口。内置的实验性长期记忆系统会提取、检索、压缩、遗忘对话中的信息，超越简单的聊天机器人界面。
 
 ---
 
 ## 功能特性
 
-### 🤖 多提供商 LLM 接入
+- **🤖 多提供商 LLM 接入** — OpenAI、Anthropic、Google AI、Ollama，每个提供商拥有独立的 API Key、Base URL 与模型配置。
+- **🔄 流式对话** — 逐 token 实时响应，完整 Markdown 渲染与代码语法高亮。
+- **🧠 能力转译系统** — 通过 function-calling 自动将视觉、音频、图像生成、TTS 任务路由到专用子模型。
+- **💾 智能提示缓存** — 三段式系统提示 + SHA256 增量缓存，只重传变更的段落。
+- **🧠 长期记忆** — 基于 SimHash 的语义检索、DBSCAN 聚类 + LLM 压缩、指数衰减遗忘、滚动式对话摘要。
+- **🧩 可扩展的插件系统** — 沙箱化 Lua 5.3 运行时，写几行脚本就能注册工具与技能，无需重新编译。
+- **🎤 语音交互** — 语音输入（STT）与语音输出（TTS）。
+- **📚 对话管理** — SQLite 持久化存储，支持创建、重命名、删除对话，附带媒体库。
+- **🎨 用户体验** — Material 3 设计、亮/暗主题、桌面端窗口管理、流式 Markdown 与代码高亮。
+- **🌐 国际化** — 完整中英文本地化，基于 Flutter l10n，易于扩展。
 
-在统一界面上无缝切换各 AI 提供商：
-
-| 提供商 | 支持的模型 |
-|--------|-----------|
-| **OpenAI** | GPT-5.5, GPT-4o |
-| **Anthropic** | Claude 4.7 Opus, Claude 4.6 Sonnet, Claude 4.5 Haiku |
-| **Google AI** | Gemini 3 Pro, Gemini 3 Flash |
-| **Ollama** | Llama, Mistral, Qwen, DeepSeek — 任意本地运行的模型 |
-
-每个提供商拥有独立的 **API Key**、**Base URL** 和**模型配置**，你可以添加任意多个**兼容**的提供商实例。
-
-### 🔄 流式对话
-
-逐 token 实时显示 AI 回复，完整支持 Markdown 渲染和代码语法高亮。对话过程中随时取消、继续或切换话题，不丢失上下文。
-
-### 🧠 能力转译系统
-
-当主对话模型无法处理某种模态时，Tessera 的 Capability Adapter 自动路由到专用模型：
-
-| 能力 | 说明 |
-|------|------|
-| **视觉识别** | 将图片/视频发送给视觉模型分析，返回文字描述 |
-| **音频处理** | 将音频转发给音频处理模型分析 |
-| **图像生成** | 调用文生图模型生成图片 |
-| **语音合成** | 调用文生语音模型生成语音回复 |
-
-AI 自动判断何时需要调用这些子能力，整个过程对你透明，结果无缝流回主对话。
-
-### 💾 智能提示缓存
-
-三段式系统提示模板，基于 SHA256 哈希的增量缓存：
-
-1. **Agent Rules** —— 静态安全规则，高优先级服务端缓存
-2. **User Profile** —— 用户信息与长期记忆，客户端缓存
-3. **User-Defined Prompt** —— 用户自定义指令，客户端缓存
-
-仅变更的模块会重新发送给 LLM 提供商，显著降低 token 消耗和请求延迟。
-
-### 🧠 长期记忆系统
-
-Tessera 拥有一个受生物记忆启发的长期记忆系统，随你的对话不断进化：
-
-- **MemoryExtractor（记忆提取器）** —— 定期调用 LLM，从对话轮次中提取结构化事实（用户偏好、知识、事件）
-- **MemoryRetriever（记忆检索器）** —— 使用 SimHash（128 位）分桶索引 + 汉明距离评分，实现快速语义记忆搜索
-- **MemoryCompressor（记忆压缩器）** —— 通过简化 DBSCAN 聚类相似记忆，用 LLM 摘要合并；自动清理低重要性、过时事件
-- **MemoryForgetter（记忆遗忘器）** —— 应用指数时间衰减和访问衰减计算遗忘评分；未被使用的记忆会自然淡出
-- **ConversationalMemoryManager（对话记忆管理器）** —— 每 N 轮对话生成滚动摘要，保持上下文完整且不无限膨胀
-
-> 记忆不只是被存储——它有生命。被提取、检索、压缩、遗忘。和你一样。
-
-记忆管线中所有辅助 LLM 调用（提取、合并、摘要、话题生成）均使用**严格 JSON prompt** 配合多策略 **`JsonExtractor`** 容错解析器。prompt 要求输出纯 JSON，解析器可容忍 markdown 代码块、多余文本和任意空白——无论模型输出风格如何，系统都能稳健提取结构化信息。
-
-### 🎤 语音交互
-
-- **语音输入**：自然说话，实时转录为文字（Speech-to-Text）
-- **语音输出**：让 AI 回复朗读出来，支持中文（Text-to-Speech）
-
-### 📚 对话管理
-
-- **SQLite** 本地持久化存储 —— 对话永不丢失
-- 创建、重命名、删除对话
-- **媒体库**：管理图片、视频、音频文件，可在对话中直接引用
-
-### 🎨 用户体验
-
-- **Material 3** 设计语言
-- 亮色 / 暗色 / 跟随系统 三档主题
-- 桌面端窗口可拖拽调整大小：最小 400×600，默认 480×720，启动居中
-- 媒体附件预览（图片、视频、音频）
-- 流式 Markdown 渲染与代码高亮
-- 全局异常捕获，专设错误页面
-
-### 🌐 国际化
-
-- 已内置英文和中文完整本地化
-- 基于 Flutter l10n 系统，易于扩展更多语言
+深入架构、技术栈与项目结构请参见 [**文档**](docs/zh/README.md)。
 
 ---
 
@@ -141,20 +71,15 @@ Tessera 拥有一个受生物记忆启发的长期记忆系统，随你的对话
 ### 安装与运行
 
 ```bash
-# 克隆项目
 git clone https://github.com/NaivG/tessera.git
 cd tessera
-
-# 安装依赖
 flutter pub get
-
-# 运行（自动检测当前平台）
 flutter run
 ```
 
 桌面端启动后自动配置窗口：最小 400×600，默认 480×720，居中显示。
 
-### 配置 API Key
+### 配置 API 与模型
 
 1. 启动应用后进入 **设置** 页面
 2. 添加一个 LLM 提供商（OpenAI / Anthropic / Google / Ollama）
@@ -165,183 +90,14 @@ flutter run
 
 ---
 
-## 架构设计
+## 文档
 
-### 提供商抽象
+Tessera 各大子系统的深入参考文档位于 [**docs/zh/**](docs/zh/README.md)：
 
-所有 LLM 提供商实现统一的 `LlmProvider` 接口：
-
-```dart
-abstract class LlmProvider {
-  Future<List<ModelInfo>> listAvailableModels({String? apiKey, String? baseUrl});
-  Future<bool> validateConfig(LlmConfig config);
-  Future<Message> chat({required LlmConfig config, required List<Message> history, ...});
-  Stream<StreamChunk> chatStream({required LlmConfig config, required List<Message> history, ...});
-}
-```
-
-业务逻辑无需感知具体 SDK，通过 `ProviderFactory.get(providerId)` 即可获取实例。
-
-### 能力转译
-
-主文本模型处理对话，专用模型处理多模态任务。`CapabilityAdapter` 读取 `ModelSelectionConfig` 定义的模型矩阵，将工具注册到 `ToolRegistry` 中。AI 按需调用这些工具，执行结果以文字形式返回主模型。
-
-```
-┌──────────────────────────────────────────────────────────┐
-│                    主对话模型                              │
-│   （例如 GPT-5.5、Claude 4.7、Gemini 3 Pro）               │
-└──────────┬──────────┬──────────┬──────────┬──────────────┘
-           │          │          │          │
-     ┌─────▼──┐ ┌────▼───┐ ┌───▼────┐ ┌───▼──────┐
-     │视觉模型 │ │ 音频模型 │ │ 图像生  │ │ 语音合成  │
-     │        │ │        │ │ 成模型  │ │ 模型      │
-     └────────┘ └────────┘ └────────┘ └──────────┘
-```
-
-### LLM 结构化输出
-
-辅助 LLM 调用——包括记忆提取、主题生成、内容摘要以及压缩合并——均要求模型提供结构化输出。LLM 的响应本质上是不一致的：有些模型会将 JSON 包裹在 Markdown 代码块中，附带解释性文本，或添加额外的空白。
-
-Tessera 通过两层方法来处理这一问题：
-
-1. **提示词规范** —— 每个辅助提示词都明确要求纯 JSON 输出（例如 `仅返回一个 JSON 对象 —— 无 Markdown、无解释、无其他文本：{“summary”: “...”}`）
-2. **稳健解析** — `lib/utils/json_extractor.dart` 提供了 `JsonExtractor`，这是一个支持多种策略的备用解析器：
-
-| 策略 | 处理内容 |
-|----------|----------------|
-| 直接 `jsonDecode` | 干净的 JSON 响应 |
-| Markdown JSON 代码块 | 包裹在 ` ```json ... ``` ` 中的响应 |
-| 任何 Markdown 代码块 | 包裹在 ` ``` ... ``` ` 中的响应 |
-| 分隔符扫描（`{`/`}` 或 `[`/`]`） | 包围 JSON 有效负载的文本 |
-
-便捷方法 — `tryExtract()`、`tryExtractMap()`、`tryExtractList()`、`tryExtractField()` — 提供了无需冗余代码的类型安全访问。如果所有策略均未成功，该方法将返回 `null`，调用方将回退到 `trim()` 处理。
-
-### 提示缓存
-
-`CacheManager` 将系统提示词分解为独立的 `PromptSection`，每个段落通过 SHA256 哈希追踪变更。未变更的段落复用上次请求的缓存标记，减少重复 token 发送。
-
-### 模型选择矩阵
-
-`ModelSelectionConfig` 定义了灵活的槽位矩阵：
-
-- **主模型** —— 主要的对话 LLM
-- **输入模态** —— 视觉、音频（可逐模态指定专用模型）
-- **输出类型** —— 图像生成、语音合成
-- **其他模型** —— 嵌入、重排序等
-
-每个槽位是一个 `ModelSlot`，通过稳定的 UUID 引用指向特定提供商配置和模型实例——增删和排序不会导致引用失效。
-
-### 记忆系统流水线
-
-```
-对话轮次
-    ↓ （累积 N 轮）
-MemoryExtractor（记忆提取器）
-    ↓ （LLM 提取事实）
-结构化记忆（user / knowledge / event 三类）
-    ↓
-MemoryRetriever（记忆检索器）← SimHash 索引 ← SQLite
-    ↓ （查询时检索）
-MemoryContext 注入到系统提示词
-    ↑
-MemoryCompressor（记忆压缩器：聚类 + LLM 合并）
-MemoryForgetter（记忆遗忘器：时间衰减评分）
-```
-
----
-
-## 技术栈
-
-| 类别 | 技术 |
-|------|------|
-| 框架 | Flutter 3.11+ / Dart |
-| 状态管理 | Riverpod（ref.watch / ref.read） |
-| 持久化 | sqflite（对话）+ shared_preferences（设置） |
-| LLM SDK | openai_dart / anthropic_sdk_dart / googleai_dart / ollama_dart |
-| 语音 | speech_to_text / flutter_tts |
-| UI | Material 3 / flutter_streaming_text_markdown / flutter_context_menu |
-| 媒体 | image_picker / file_picker / video_player / gal |
-| 平台 | window_manager（桌面端）/ flutter_local_notifications |
-| 记忆检索 | SimHash（128 位）+ jieba（结巴分词） |
-| 国际化 | Flutter l10n（intl） |
-
----
-
-## 项目结构
-
-```
-tessera/
-├── lib/
-│   ├── main.dart                      # 入口，窗口初始化，全局错误处理
-│   ├── app.dart                       # MaterialApp、路由、主题、国际化
-│   ├── core/                          # 核心抽象
-│   │   ├── llm_provider.dart          # 统一 LLM 提供商接口
-│   │   ├── capability_adapter.dart    # 能力转译路由
-│   │   ├── tool_registry.dart         # 工具注册与执行
-│   │   ├── system_prompt_builder.dart # 三段式系统提示词组装
-│   │   └── prompt_template_store.dart # 提示模板存储
-│   ├── llm/                           # LLM SDK 封装
-│   │   ├── openai_provider.dart
-│   │   ├── anthropic_provider.dart
-│   │   ├── google_provider.dart
-│   │   ├── ollama_provider.dart
-│   │   └── provider_factory.dart
-│   ├── models/                        # 数据模型
-│   │   ├── message.dart / conversation.dart / tool.dart
-│   │   ├── llm_config.dart / model_info.dart
-│   │   ├── model_selection_config.dart / stream_chunk.dart
-│   │   ├── media_attachment.dart / prompt_template.dart
-│   │   ├── memory_entry.dart / memory_type.dart / memory_relation.dart / memory_extraction.dart
-│   │   └── llm_provider_config.dart
-│   ├── services/                      # 业务服务
-│   │   ├── conversation_service.dart  # SQLite 对话持久化
-│   │   ├── memory_service.dart        # 记忆持久化
-│   │   ├── speech_service.dart        # 语音识别/合成
-│   │   ├── media_library.dart         # 媒体文件管理
-│   │   └── settings_service.dart      # 设置持久化
-│   ├── providers/                     # 状态管理（Riverpod）
-│   │   ├── chat_provider.dart         # 对话流状态
-│   │   ├── settings_provider.dart     # 设置状态
-│   │   ├── memory_provider.dart       # 记忆状态
-│   │   ├── conversation_service_provider.dart # 对话服务
-│   │   ├── memory_service_provider.dart       # 记忆服务
-│   │   ├── settings_service_provider.dart      # 设置服务
-│   │   └── providers.dart             # Barrel 导出
-│   ├── cache/                         # 提示缓存系统
-│   │   ├── cache_manager.dart
-│   │   ├── cache_store.dart
-│   │   └── prompt_section.dart
-│   ├── memory/                        # 长期记忆系统
-│   │   ├── memory_extractor.dart      # 基于 LLM 的事实提取
-│   │   ├── memory_retriever.dart      # SimHash 语义搜索
-│   │   ├── memory_compressor.dart     # 聚类与合并
-│   │   ├── memory_forgetter.dart      # 时间衰减遗忘
-│   │   ├── memory_middleware.dart     # 对话摘要管理
-│   │   └── simhash.dart              # 128 位 SimHash 引擎（结巴分词）
-│   ├── ui/
-│   │   ├── pages/                     # 页面
-│   │   │   ├── main_page.dart / chat_page.dart
-│   │   │   ├── settings_page.dart / user_profile_page.dart
-│   │   │   ├── library_page.dart / memory_page.dart
-│   │   │   ├── model_selection_page.dart / model_edit_page.dart
-│   │   │   └── error_page.dart
-│   │   └── widgets/                   # 可复用组件
-│   │       ├── chat_bubble.dart / chat_content_view.dart
-│   │       ├── message_input.dart / processing_block.dart
-│   │       └── sidebar.dart
-│   ├── l10n/                          # 国际化
-│   │   ├── app_en.arb / app_zh.arb
-│   │   ├── app_localizations.dart
-│   │   └── model_localization.dart
-│   └── utils/
-│       ├── logger.dart
-│       └── json_extractor.dart              # LLM JSON 输出提取（多策略容错）
-├── assets/
-│   ├── system_prompt.txt              # 三段式系统提示模板
-│   └── dict*.txt / idf_dict.txt       # 结巴分词词典
-├── android/ ios/ macos/ windows/ linux/ web/
-└── test/
-```
+- [**插件系统**](docs/zh/plugin-system.md) —— 沙箱化 Lua 运行时、manifest、`tessera` 桥接 API、生命周期、`.plugin` 分发格式、运行时补丁、编写指南
+- [**记忆系统**](docs/zh/memory-system.md) —— 长期记忆流水线：SimHash 索引、抽取、检索打分、压缩（DBSCAN + LLM 合并）、指数衰减遗忘
+- [**LLM 提供商抽象**](docs/zh/llm-providers.md) —— 跨 OpenAI / Anthropic / Ollama / Google 的统一 `LlmProvider` 接口、流式协议、结构化输出
+- [**能力转译**](docs/zh/capability-adapter.md) —— 多模态路由：视觉 / 音频 / 文生图 / TTS 子模型如何以 function-call 工具形式暴露给纯文本主模型
 
 ---
 
