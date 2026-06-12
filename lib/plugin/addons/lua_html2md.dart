@@ -11,7 +11,7 @@
 // =============================================================================
 
 import 'package:html2md/html2md.dart' as html2md;
-import 'package:lua_dardo_plus/lua.dart';
+import 'package:luax/lua.dart';
 
 void installHtml2mdAddon(LuaState ls) {
   ls.newLib(<String, DartFunction>{

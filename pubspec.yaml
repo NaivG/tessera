@@ -64,8 +64,8 @@ dependencies:
   sqflite_common_ffi_web: ^1.1.1 # for Experimental Web
   shared_preferences: ^2.5.5
   # plugins
-  lua_dardo_plus: # lua vm for plugins
-    git: https://github.com/NaivG/LuaDardo.git
+  luax: # lua vm for plugins
+    git: https://github.com/NaivG/luax.git
   archive: ^4.0.9
   # addons
   html2md: ^1.3.2

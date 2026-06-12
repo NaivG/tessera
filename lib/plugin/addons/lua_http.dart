@@ -34,7 +34,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:lua_dardo_plus/lua.dart';
+import 'package:luax/lua.dart';
 
 import 'lua_value_codec.dart';
 

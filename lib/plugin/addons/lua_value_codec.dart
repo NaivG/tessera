@@ -13,7 +13,7 @@
 //        空 table → Map<String, dynamic>{} (符合 JSON 对象语义)
 // =============================================================================
 
-import 'package:lua_dardo_plus/lua.dart';
+import 'package:luax/lua.dart';
 
 class LuaValueCodec {
   LuaValueCodec._();

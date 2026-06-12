@@ -10,7 +10,7 @@
 // =============================================================================
 
 import 'package:flutter/foundation.dart';
-import 'package:lua_dardo_plus/lua.dart';
+import 'package:luax/lua.dart';
 
 import 'lua_base64.dart';
 import 'lua_html2md.dart';

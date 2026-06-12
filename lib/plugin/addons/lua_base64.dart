@@ -10,7 +10,7 @@
 
 import 'dart:convert';
 
-import 'package:lua_dardo_plus/lua.dart';
+import 'package:luax/lua.dart';
 
 void installBase64Addon(LuaState ls) {
   ls.newLib(<String, DartFunction>{
