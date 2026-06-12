@@ -4,7 +4,7 @@ Tessera's Lua plugin system.
 
 ## Overview
 
-Tessera's plugin system is a sandboxed **Lua 5.3** runtime — powered by the vendored [`lua_dardo_plus`](https://pub.dev/packages/lua_dardo_plus) (`lua_dardo` fork) — that lets you extend the app at runtime in two ways:
+Tessera's plugin system is a sandboxed **Lua 5.3** runtime — powered by the [`lua_dardo_plus`](https://pub.dev/packages/lua_dardo_plus) Dart package, sourced from the [`NaivG/LuaDardo`](https://github.com/NaivG/LuaDardo) Git fork (see [Lua Runtime](#lua-runtime) for details) — that lets you extend the app at runtime in two ways:
 
 - **TOOL** — a function the main chat model can invoke via function-calling. Results are returned as text and merged back into the conversation as a `ToolResult`.
 - **SKILL** — a short markdown description appended to the system prompt so the model knows *when* to use your TOOLs.
@@ -17,7 +17,7 @@ Each plugin is a folder containing a `plugin.json` manifest and a Lua entry scri
 | Lua sandbox + bridge | [`lib/plugin/lua_plugin_host.dart`](../../lib/plugin/lua_plugin_host.dart) |
 | Filesystem install/uninstall | [`lib/plugin/plugin_manager.dart`](../../lib/plugin/plugin_manager.dart) |
 | Lifecycle / tool dispatch | [`lib/plugin/plugin_registry.dart`](../../lib/plugin/plugin_registry.dart) |
-| Lua runtime patches | [`lib/plugin/patchs/`](../../lib/plugin/patchs/) |
+| Lua runtime (fork) | [`LuaDardo`](https://github.com/NaivG/LuaDardo) (sourced via `pubspec.yaml`) |
 | UI surface | [`lib/ui/pages/plugin_page.dart`](../../lib/ui/pages/plugin_page.dart) |
 
 ## Plugin Manifest (`plugin.json`)
@@ -97,7 +97,7 @@ registry.registerTo(toolRegistry); // Expose TOOLs to the LLM
 Internally:
 
 1. **`scanAll()`** calls `PluginManager.scanBundled()` (reads `assets/plugins/plugins_index.json` as an allowlist) and `PluginManager.scanInstalled()` (lists `getApplicationDocumentsDirectory()/plugins/`).
-2. **`enable(id)`** creates a `LuaPluginHost`, runs the per-plugin Lua startup sequence (see [Runtime Patches](#runtime-patches)), loads the entry-point script, and caches the host keyed by `pluginId`.
+2. **`enable(id)`** creates a `LuaPluginHost`, runs the per-plugin Lua startup sequence (see [Lua Runtime](#lua-runtime)), loads the entry-point script, and caches the host keyed by `pluginId`.
 3. **`registerTo(toolRegistry)`** iterates each host's `toolDefinitions` and wires `callTool` as the dispatcher; `unregisterFrom` cleans up. Per-plugin toggles, uninstall, and ZIP install all go through the same `PluginRegistry`.
 
 ## Discovery & Installation
@@ -133,27 +133,12 @@ python plugins/pack_plugin.py pack plugins/my_plugin --skip-lua-check
 
 The **Plugins** page ([`lib/ui/pages/plugin_page.dart`](../../lib/ui/pages/plugin_page.dart)) accepts a `.plugin` ZIP via [`file_picker`](https://pub.dev/packages/file_picker), shows a confirmation dialog with name / version / author / description, then extracts and enables it. The page also lists bundled plugins with one-tap install.
 
-## Runtime Patches
+## Lua Runtime
 
-The vendored `lua_dardo_plus` fork still has rough edges. Rather than fork-and-modify, Tessera applies **runtime monkey-patches** from [`lib/plugin/patchs/`](../../lib/plugin/patchs/) *after* `openLibs()` and *before* the `tessera` bridge is installed:
-
-```
-newState → openLibs() → patchAll(state) → _setupBridge()
-```
-
-This keeps the upstream dependency clean and upgrade-safe — when the upstream is fixed, the corresponding patch can be deleted in one file.
-
-| File | Entry | What it fixes |
-|---|---|---|
-| `lua_os_date.dart` | `patchOsDate` | `os.date` epoch misuse + missing strftime literal handling |
-
-### Adding a new patch
-
-1. Create `lib/plugin/patchs/<lib>_<symptom>_patch.dart` and export a `patchXxx(LuaState ls)` top-level function.
-2. `import` it in [`lib/plugin/patchs/patch.dart`](../../lib/plugin/patchs/patch.dart) and call it from `patchAll()` in dependency order.
-3. The caller (`lua_plugin_host.dart`) needs **no changes** — `patchAll()` is the single integration point.
-
-See [`lib/plugin/patchs/README.md`](../../lib/plugin/patchs/README.md) for the full convention (Chinese-language original).
+Plugins run on a sandboxed **Lua 5.3** VM provided by the
+[`lua_dardo_plus`](https://pub.dev/packages/lua_dardo_plus) Dart package, sourced from the
+[`NaivG/LuaDardo`](https://github.com/NaivG/LuaDardo) Git repository (declared in
+`pubspec.yaml`).
 
 ## Authoring a Plugin
 
@@ -172,7 +157,7 @@ See [`lib/plugin/patchs/README.md`](../../lib/plugin/patchs/README.md) for the f
 
 ### Writing `main.lua`
 
-Call `tessera.register_skill({...})` and one or more `tessera.register_tool({...})` at top level. The handler receives a Lua table of arguments and must return a string. Beyond the bridge, plugins can use the full patched `os`, `string`, `math`, and `table` Lua standard libraries.
+Call `tessera.register_skill({...})` and one or more `tessera.register_tool({...})` at top level. The handler receives a Lua table of arguments and must return a string. Beyond the bridge, plugins can use the full `os`, `string`, `math`, and `table` Lua standard libraries.
 
 ## Built-in Examples
 
@@ -207,6 +192,6 @@ tessera.register_tool({
 - [`lib/plugin/plugin.dart`](../../lib/plugin/plugin.dart) — public barrel, the only import most callers need
 - [`lib/ui/pages/plugin_page.dart`](../../lib/ui/pages/plugin_page.dart) — install / enable / uninstall UI
 - [`plugins/pack_plugin.py`](../../plugins/pack_plugin.py) — official packager
-- [`lib/plugin/patchs/README.md`](../../lib/plugin/patchs/README.md) — Lua runtime patch convention
+- [`LuaDardo`](https://github.com/NaivG/LuaDardo) — Lua runtime fork source, maintained by the project owner
 - [`lib/models/tool.dart`](../../lib/models/tool.dart) — `ToolDefinition` / `ToolCall` / `ToolResult` types
 - [`lib/core/tool_registry.dart`](../../lib/core/tool_registry.dart) — global tool registry that the plugin host registers into

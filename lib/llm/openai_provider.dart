@@ -93,12 +93,18 @@ class OpenAiProvider extends LlmProvider {
     final choice = response.choices.first;
 
     return Message(
-      id: response.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id: response.id ?? Message.generateId(),
       role: MessageRole.assistant,
       content: choice.message.content ?? '',
       toolCalls: _mapToolCalls(choice.message.toolCalls),
       timestamp: DateTime.now(),
       status: MessageStatus.completed,
+      usage: response.usage != null
+          ? TokenUsage(
+              promptTokens: response.usage!.promptTokens,
+              completionTokens: response.usage!.completionTokens,
+            )
+          : null,
     );
   }
 
@@ -117,7 +123,22 @@ class OpenAiProvider extends LlmProvider {
     // 累积工具调用信息
     final toolCallAccumulator = <int, _PartialToolCall>{};
 
+    // <think> 标签解析状态：部分模型（如通过 OpenRouter 访问的 DeepSeek R1）
+    // 会在 content 中嵌入 <think>...</think> 而非使用 reasoningContent 字段
+    final thinkTagPrefix = '<think>';
+    final thinkTagSuffix = '</think>';
+    bool inThinkBlock = false;
+    String thinkBuffer = '';
+
+    // 记录最后一个事件附带的 token 用量
+    openai.Usage? lastUsage;
+
     await for (final event in stream) {
+      // 捕获流结束事件中的 usage（需 stream_options.include_usage=true）
+      if (event.usage != null) {
+        lastUsage = event.usage;
+      }
+
       final choices = event.choices;
       if (choices == null || choices.isEmpty) continue;
       final delta = choices.first.delta;
@@ -135,7 +156,47 @@ class OpenAiProvider extends LlmProvider {
       // 文本增量
       final content = delta.content;
       if (content != null && content.isNotEmpty) {
-        yield StreamChunk.content(content);
+        if (inThinkBlock) {
+          // 已在 <think> 块内，检查是否遇到 </think>
+          final suffixIdx = content.indexOf(thinkTagSuffix);
+          if (suffixIdx >= 0) {
+            thinkBuffer += content.substring(0, suffixIdx);
+            if (thinkBuffer.isNotEmpty) {
+              yield StreamChunk.thinking(thinkBuffer);
+            }
+            thinkBuffer = '';
+            inThinkBlock = false;
+            final afterSuffix = content.substring(suffixIdx + thinkTagSuffix.length);
+            if (afterSuffix.isNotEmpty) {
+              yield StreamChunk.content(afterSuffix);
+            }
+          } else {
+            thinkBuffer += content;
+            yield StreamChunk.thinking(content);
+          }
+        } else if (content.startsWith(thinkTagPrefix)) {
+          // 新开启 <think> 块
+          inThinkBlock = true;
+          final afterPrefix = content.substring(thinkTagPrefix.length);
+          final suffixIdx = afterPrefix.indexOf(thinkTagSuffix);
+          if (suffixIdx >= 0) {
+            // 同一 chunk 内完成 <think>...</think>
+            inThinkBlock = false;
+            final thinkText = afterPrefix.substring(0, suffixIdx);
+            if (thinkText.isNotEmpty) {
+              yield StreamChunk.thinking(thinkText);
+            }
+            final afterSuffix = afterPrefix.substring(suffixIdx + thinkTagSuffix.length);
+            if (afterSuffix.isNotEmpty) {
+              yield StreamChunk.content(afterSuffix);
+            }
+          } else if (afterPrefix.isNotEmpty) {
+            thinkBuffer = afterPrefix;
+            yield StreamChunk.thinking(afterPrefix);
+          }
+        } else {
+          yield StreamChunk.content(content);
+        }
       }
 
       // 工具调用增量
@@ -183,7 +244,15 @@ class OpenAiProvider extends LlmProvider {
       }
     }
 
-    yield StreamChunk.done();
+    yield StreamChunk.done(
+      usage: lastUsage != null
+          ? TokenUsage(
+              promptTokens: lastUsage.promptTokens,
+              completionTokens: lastUsage.completionTokens,
+              totalTokens: lastUsage.totalTokens,
+            )
+          : null,
+    );
   }
 
   // --- 内部辅助 ---
@@ -227,6 +296,10 @@ class OpenAiProvider extends LlmProvider {
       openRouterReasoning: config.deepThinking
           ? openai.OpenRouterReasoning(enabled: true)
           : null,
+      // 让 OpenAI 在最后一个流式块附带 token 用量
+      streamOptions: const openai.StreamOptions(includeUsage: true),
+      // 对 OpenRouter 兼容：其请求体使用 usage 字段而非 stream_options
+      openRouterUsage: const openai.OpenRouterUsageConfig(include: true),
     );
   }
 

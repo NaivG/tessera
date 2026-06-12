@@ -713,4 +713,121 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toolboxLabel => 'Library';
+
+  @override
+  String get pluginAppBarTitle => 'Plugins';
+
+  @override
+  String get pluginEmpty => 'No plugins found';
+
+  @override
+  String get pluginLoadError => 'Failed to load plugins';
+
+  @override
+  String get pluginRetry => 'Retry';
+
+  @override
+  String get pluginInstall => 'Install';
+
+  @override
+  String get pluginUninstall => 'Uninstall';
+
+  @override
+  String get pluginInstalled => 'Installed';
+
+  @override
+  String get pluginBundled => 'Bundled';
+
+  @override
+  String pluginInstallSuccess(String name) =>
+      'Plugin "$name" installed successfully';
+
+  @override
+  String pluginInstallFailed(String error) => 'Install failed: $error';
+
+  @override
+  String pluginUninstallSuccess(String name) =>
+      'Plugin "$name" uninstalled';
+
+  @override
+  String pluginUninstallFailed(String error) => 'Uninstall failed: $error';
+
+  @override
+  String pluginUninstallConfirm(String name) =>
+      'Are you sure you want to uninstall "$name"?\nThis will delete the plugin files.';
+
+  @override
+  String get pluginUninstallDialogTitle => 'Uninstall Plugin';
+
+  @override
+  String pluginEnableFailed(String name) =>
+      'Failed to enable plugin "$name"';
+
+  @override
+  String pluginByAuthor(String author) => 'by $author';
+
+  @override
+  String get pluginShortcut => 'Plugins';
+
+  @override
+  String get pluginSectionInstalled => 'Installed';
+
+  @override
+  String get pluginSectionBundled => 'Bundled Sources';
+
+  @override
+  String get pluginSectionInstallFromFile => 'Install from File';
+
+  @override
+  String get pluginInstallFromFileAction => 'Select .plugin File';
+
+  @override
+  String get pluginInstallFromZip => 'Install from ZIP';
+
+  @override
+  String get pluginInstallConfirmTitle => 'Install Plugin';
+
+  @override
+  String pluginInvalidZip(String error) => 'Invalid plugin package: $error';
+
+  @override
+  String get statsAppBarTitle => 'Usage Statistics';
+
+  @override
+  String get statsOverall => 'Overall';
+
+  @override
+  String get statsTotalTokens => 'Total Tokens';
+
+  @override
+  String get statsPromptTokens => 'Prompt';
+
+  @override
+  String get statsCompletionTokens => 'Completion';
+
+  @override
+  String get statsCacheHitRate => 'Cache Hit Rate';
+
+  @override
+  String get statsRequests => 'Requests';
+
+  @override
+  String get statsReset => 'Reset';
+
+  @override
+  String get statsResetConfirmTitle => 'Confirm Reset';
+
+  @override
+  String get statsResetConfirm =>
+      'Are you sure you want to reset all usage statistics? This action cannot be undone.';
+
+  @override
+  String get statsEmpty => 'No usage data yet';
+
+  @override
+  String get statsEmptySubtitle =>
+      'Usage data will appear here after you start chatting with AI models';
+
+  @override
+  String get statsShortcut => 'Stats';
 }

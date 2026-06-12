@@ -10,6 +10,8 @@ import 'ui/pages/main_page.dart';
 import 'ui/pages/memory_page.dart';
 import 'ui/pages/settings_page.dart';
 import 'ui/pages/user_profile_page.dart';
+import 'ui/pages/plugin_page.dart';
+import 'ui/pages/stats_page.dart';
 
 // -----------------------------------------------------------------------------
 // 全局错误暂存 —— 由 main.dart 中的错误处理器写入，路由生成时消费
@@ -155,6 +157,8 @@ class _TesseraAppState extends ConsumerState<TesseraApp> {
         '/profile': (_) => const UserProfilePage(),
         '/library': (_) => const LibraryPage(),
         '/memory': (_) => const MemoryPage(),
+        '/plugins': (_) => const PluginPage(),
+        '/stats': (_) => const StatsPage(),
       },
     );
   }

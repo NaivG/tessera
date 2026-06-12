@@ -4,7 +4,7 @@
 
 ## 概述
 
-Tessera 的插件系统是一个沙箱化的 **Lua 5.3** 运行时（由 vendored 的 [`lua_dardo_plus`](https://pub.dev/packages/lua_dardo_plus) 分支提供支持），让你可以在运行时通过两种方式扩展应用：
+Tessera 的插件系统是一个沙箱化的 **Lua 5.3** 运行时,由 [`lua_dardo_plus`](https://pub.dev/packages/lua_dardo_plus) Dart 包提供,源码来自 [`NaivG/LuaDardo`](https://github.com/NaivG/LuaDardo) Git fork(详见 [Lua 运行时](#lua-运行时)),让你可以在运行时通过两种方式扩展应用:
 
 - **TOOL（工具）** —— 主对话模型可以通过 function-calling 调用的函数，结果以文本形式返回，并合并回对话中（包装为 `ToolResult`）。
 - **SKILL（技能）** —— 一段简短的 Markdown 描述，会被追加到系统提示中，让模型知道**何时**该使用你注册的 TOOL。
@@ -17,7 +17,7 @@ Tessera 的插件系统是一个沙箱化的 **Lua 5.3** 运行时（由 vendore
 | Lua 沙箱 + 桥接 | [`lib/plugin/lua_plugin_host.dart`](../../lib/plugin/lua_plugin_host.dart) |
 | 文件系统安装 / 卸载 | [`lib/plugin/plugin_manager.dart`](../../lib/plugin/plugin_manager.dart) |
 | 生命周期 / 工具分发 | [`lib/plugin/plugin_registry.dart`](../../lib/plugin/plugin_registry.dart) |
-| Lua 运行时补丁 | [`lib/plugin/patchs/`](../../lib/plugin/patchs/) |
+| Lua 运行时(fork) | [`LuaDardo`](https://github.com/NaivG/LuaDardo)(通过 `pubspec.yaml` 引入) |
 | UI 页面 | [`lib/ui/pages/plugin_page.dart`](../../lib/ui/pages/plugin_page.dart) |
 
 ## 插件 Manifest（`plugin.json`）
@@ -97,7 +97,7 @@ registry.registerTo(toolRegistry); // 把 TOOL 暴露给 LLM
 内部步骤：
 
 1. **`scanAll()`** 调用 `PluginManager.scanBundled()`（读取 [`assets/plugins/plugins_index.json`](../../assets/plugins/plugins_index.json) 这个白名单）和 `PluginManager.scanInstalled()`（枚举 `getApplicationDocumentsDirectory()/plugins/` 目录）。
-2. **`enable(id)`** 为指定插件创建 `LuaPluginHost`，运行该插件的 Lua 启动序列（参见[运行时补丁](#运行时补丁)），加载入口脚本，并以 `pluginId` 为 key 缓存宿主。
+2. **`enable(id)`** 为指定插件创建 `LuaPluginHost`，运行该插件的 Lua 启动序列（参见[Lua 运行时](#lua-运行时)），加载入口脚本，并以 `pluginId` 为 key 缓存宿主。
 3. **`registerTo(toolRegistry)`** 遍历每个宿主的 `toolDefinitions`，把 `callTool` 绑为分发器；`unregisterFrom` 负责清理。单插件的开关、卸载、ZIP 安装都走同一个 `PluginRegistry`。
 
 ## 发现与安装
@@ -133,27 +133,9 @@ python plugins/pack_plugin.py pack plugins/my_plugin --skip-lua-check
 
 **插件**页面（[`lib/ui/pages/plugin_page.dart`](../../lib/ui/pages/plugin_page.dart)）通过 [`file_picker`](https://pub.dev/packages/file_picker) 接受 `.plugin` ZIP，弹出确认对话框展示名称 / 版本 / 作者 / 描述，确认后解压并启用。该页面同时列出所有 Bundled 插件，支持一键安装。
 
-## 运行时补丁
+## Lua 运行时
 
-Vendored 的 `lua_dardo_plus` 分支仍有一些边缘情况。Tessera 选择**运行时 monkey-patch**（[`lib/plugin/patchs/`](../../lib/plugin/patchs/)）的方案，**不**修改上游源码：在 `openLibs()` 之后、`tessera` 桥接安装之前应用补丁：
-
-```
-newState → openLibs() → patchAll(state) → _setupBridge()
-```
-
-这样可以保持上游依赖干净、升级安全 —— 一旦上游修了对应 bug，只需删掉一个 patch 文件即可。
-
-| 文件 | 入口 | 修复目标 |
-|---|---|---|
-| `lua_os_date.dart` | `patchOsDate` | `os.date` 的 epoch 误用 + 缺失的 strftime 字面量处理 |
-
-### 新增一个补丁
-
-1. 新建 `lib/plugin/patchs/<lib>_<symptom>_patch.dart`，导出一个顶层函数 `patchXxx(LuaState ls)`。
-2. 在 [`lib/plugin/patchs/patch.dart`](../../lib/plugin/patchs/patch.dart) 中 `import` 它，并在 `patchAll()` 里按依赖顺序调用。
-3. 调用方（`lua_plugin_host.dart`）**无需任何修改** —— `patchAll()` 是唯一的集成点。
-
-完整约定见 [`lib/plugin/patchs/README.md`](../../lib/plugin/patchs/README.md)（原文为中文）。
+插件跑在沙箱化的 **Lua 5.3** 虚拟机上,由 [`lua_dardo_plus`](https://pub.dev/packages/lua_dardo_plus) 包提供,源码来自 [`NaivG/LuaDardo`](https://github.com/NaivG/LuaDardo) Git 仓库(在 `pubspec.yaml` 中声明)。
 
 ## 插件编写指南
 
@@ -172,7 +154,7 @@ newState → openLibs() → patchAll(state) → _setupBridge()
 
 ### 编写 `main.lua`
 
-在顶层调用 `tessera.register_skill({...})` 与一个或多个 `tessera.register_tool({...})`。handler 接收一个 Lua 表作为参数，必须返回字符串。除了桥接 API 外，插件还可以使用经过 patch 的 Lua 标准库：`os`、`string`、`math`、`table`。
+在顶层调用 `tessera.register_skill({...})` 与一个或多个 `tessera.register_tool({...})`。handler 接收一个 Lua 表作为参数，必须返回字符串。除了桥接 API 外，插件还可以使用完整的 Lua 标准库:`os`、`string`、`math`、`table` 等。
 
 ## 内置示例
 
@@ -207,6 +189,6 @@ tessera.register_tool({
 - [`lib/plugin/plugin.dart`](../../lib/plugin/plugin.dart) —— 公共 barrel，大多数调用方只需 import 一次
 - [`lib/ui/pages/plugin_page.dart`](../../lib/ui/pages/plugin_page.dart) —— 安装 / 启用 / 卸载 UI
 - [`plugins/pack_plugin.py`](../../plugins/pack_plugin.py) —— 官方打包工具
-- [`lib/plugin/patchs/README.md`](../../lib/plugin/patchs/README.md) —— Lua 运行时补丁规范
+- [`LuaDardo`](https://github.com/NaivG/LuaDardo) —— Lua 运行时 fork 源码,由项目作者本人维护
 - [`lib/models/tool.dart`](../../lib/models/tool.dart) —— `ToolDefinition` / `ToolCall` / `ToolResult` 类型定义
 - [`lib/core/tool_registry.dart`](../../lib/core/tool_registry.dart) —— 插件宿主注册 TOOL 时写入的全局工具表

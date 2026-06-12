@@ -98,12 +98,18 @@ class GoogleProvider extends LlmProvider {
     final toolCalls = _extractToolCalls(response);
 
     return Message(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: Message.generateId(),
       role: MessageRole.assistant,
       content: text,
       toolCalls: toolCalls,
       timestamp: DateTime.now(),
       status: MessageStatus.completed,
+      usage: response.usageMetadata != null
+          ? TokenUsage(
+              promptTokens: response.usageMetadata!.promptTokenCount,
+              completionTokens: response.usageMetadata!.candidatesTokenCount,
+            )
+          : null,
     );
   }
 
@@ -140,7 +146,15 @@ class GoogleProvider extends LlmProvider {
     // 用于累积工具调用
     final toolCallParts = <String, _GeminiToolCallAcc>{};
 
+    // 记录最后一个响应块附带的 token 用量
+    google.UsageMetadata? lastUsage;
+
     await for (final response in stream) {
+      // 捕获流结束块中的 usageMetadata（Gemini 会在最后一块附带）
+      if (response.usageMetadata != null) {
+        lastUsage = response.usageMetadata;
+      }
+
       if (response.candidates == null || response.candidates!.isEmpty) continue;
       final candidate = response.candidates!.first;
       if (candidate.content == null) continue;
@@ -201,16 +215,51 @@ class GoogleProvider extends LlmProvider {
       );
     }
 
-    yield StreamChunk.done();
+    yield StreamChunk.done(
+      usage: lastUsage != null
+          ? TokenUsage(
+              promptTokens: lastUsage.promptTokenCount,
+              completionTokens: lastUsage.candidatesTokenCount,
+              totalTokens: lastUsage.totalTokenCount,
+            )
+          : null,
+    );
   }
 
   // --- 内部辅助 ---
 
   List<google.Content> _buildContents(List<Message> history) {
+    // Gemini 的 functionResponse 需要函数名（不是 call id），但 Message
+    // 模型只存了 toolCallId。这里从历史中所有 assistant 消息的 toolCalls
+    // 预先构建 id → name 映射，供 tool 结果消息查找。
+    final toolNameByCallId = <String, String>{};
+    for (final msg in history) {
+      if (msg.toolCalls != null) {
+        for (final tc in msg.toolCalls!) {
+          toolNameByCallId[tc.id] = tc.name;
+        }
+      }
+    }
+
     final contents = <google.Content>[];
 
     for (final msg in history) {
       final parts = <google.Part>[];
+
+      if (msg.role == MessageRole.tool) {
+        // 工具结果 → functionResponse part。Gemini 没有独立 tool role，
+        // 工具结果以 user role + functionResponse 的形式返回。
+        final name = toolNameByCallId[msg.toolCallId] ?? '';
+        parts.add(
+          google.Part.functionResponse(
+            name,
+            {'result': msg.content},
+            id: msg.toolCallId,
+          ),
+        );
+        contents.add(google.Content(role: 'user', parts: parts));
+        continue;
+      }
 
       if (msg.content.isNotEmpty) {
         parts.add(google.Part.text(msg.content));

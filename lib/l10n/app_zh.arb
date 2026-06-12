@@ -291,5 +291,68 @@
   "modelTagsOmni": "全模态",
   "modelTagsTextOnly": "纯文本",
 
-  "toolboxLabel": "资料库"
+  "toolboxLabel": "资料库",
+
+  "pluginAppBarTitle": "插件管理",
+  "pluginSectionInstalled": "已安装",
+  "pluginSectionBundled": "捆绑插件源",
+  "pluginSectionInstallFromFile": "从文件安装",
+  "pluginInstallFromFileAction": "选择 .plugin 文件",
+  "pluginEmpty": "暂无插件",
+  "pluginLoadError": "加载插件失败",
+  "pluginRetry": "重试",
+  "pluginInstall": "安装",
+  "pluginUninstall": "卸载",
+  "pluginInstalled": "已安装",
+  "pluginBundled": "捆版",
+  "pluginInstallSuccess": "插件「{name}」安装成功",
+  "@pluginInstallSuccess": {
+    "placeholders": { "name": {} }
+  },
+  "pluginInstallFailed": "安装失败: {error}",
+  "@pluginInstallFailed": {
+    "placeholders": { "error": {} }
+  },
+  "pluginUninstallSuccess": "插件「{name}」已卸载",
+  "@pluginUninstallSuccess": {
+    "placeholders": { "name": {} }
+  },
+  "pluginUninstallFailed": "卸载失败: {error}",
+  "@pluginUninstallFailed": {
+    "placeholders": { "error": {} }
+  },
+  "pluginUninstallConfirm": "确定要卸载「{name}」吗？\n此操作将删除插件文件。",
+  "@pluginUninstallConfirm": {
+    "placeholders": { "name": {} }
+  },
+  "pluginUninstallDialogTitle": "卸载插件",
+  "pluginEnableFailed": "启用插件「{name}」失败",
+  "@pluginEnableFailed": {
+    "placeholders": { "name": {} }
+  },
+  "pluginByAuthor": "来自 {author}",
+  "@pluginByAuthor": {
+    "placeholders": { "author": {} }
+  },
+  "pluginInstallFromZip": "从 ZIP 安装",
+  "pluginInstallConfirmTitle": "安装插件",
+  "pluginInvalidZip": "无效的插件包: {error}",
+  "@pluginInvalidZip": {
+    "placeholders": { "error": {} }
+  },
+  "pluginShortcut": "插件",
+
+  "statsAppBarTitle": "使用统计",
+  "statsOverall": "总计",
+  "statsTotalTokens": "总 Token 数",
+  "statsPromptTokens": "提示",
+  "statsCompletionTokens": "补全",
+  "statsCacheHitRate": "缓存命中率",
+  "statsRequests": "请求次数",
+  "statsReset": "重置",
+  "statsResetConfirmTitle": "确认重置",
+  "statsResetConfirm": "确定要重置所有使用统计吗？此操作不可撤销。",
+  "statsEmpty": "暂无统计数据",
+  "statsEmptySubtitle": "开始与 AI 模型对话后，使用数据将显示在此处",
+  "statsShortcut": "统计"
 }

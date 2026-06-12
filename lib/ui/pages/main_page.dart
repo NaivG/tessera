@@ -27,8 +27,6 @@ class _MainPageState extends ConsumerState<MainPage>
   final ConversationService _convService = ConversationService();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  List<Conversation> _conversations = [];
-  Set<String> _conversationIds = {};
   bool _loading = true;
 
   // 横屏模式侧边栏动画
@@ -69,15 +67,9 @@ class _MainPageState extends ConsumerState<MainPage>
   Future<void> _loadConversations() async {
     setState(() => _loading = true);
     try {
-      final list = await _convService.listConversations();
-      setState(() {
-        _conversations = list;
-        _conversationIds = list.map((c) => c.id).toSet();
-        _loading = false;
-      });
-    } catch (_) {
-      setState(() => _loading = false);
-    }
+      await ref.read(conversationListProvider.notifier).refresh();
+    } catch (_) {}
+    setState(() => _loading = false);
   }
 
   String? get _activeConversationId {
@@ -106,11 +98,10 @@ class _MainPageState extends ConsumerState<MainPage>
 
   Future<void> _deleteConversation(String id) async {
     await _convService.deleteConversation(id);
-    _conversationIds.remove(id);
+    ref.read(conversationListProvider.notifier).remove(id);
     if (_activeConversationId == id) {
       ref.read(chatProvider.notifier).clear();
     }
-    _loadConversations();
   }
 
   Future<void> _renameConversation(String id, String newTitle) async {
@@ -120,7 +111,7 @@ class _MainPageState extends ConsumerState<MainPage>
     if (conv?.id == id) {
       conv!.title = newTitle;
     }
-    _loadConversations();
+    ref.read(conversationListProvider.notifier).updateTitle(id, newTitle);
   }
 
   void _openSettings() {
@@ -277,7 +268,7 @@ class _MainPageState extends ConsumerState<MainPage>
       drawer: Drawer(
         width: _sidebarWidth,
         child: Sidebar(
-          conversations: _conversations,
+          conversations: ref.watch(conversationListProvider),
           isPermanent: false,
           onNewConversation: _newConversation,
           onSelectConversation: _selectConversation,
@@ -308,7 +299,7 @@ class _MainPageState extends ConsumerState<MainPage>
               );
             },
             child: Sidebar(
-              conversations: _conversations,
+              conversations: ref.watch(conversationListProvider),
               isPermanent: true,
               onNewConversation: _newConversation,
               onSelectConversation: _selectConversation,

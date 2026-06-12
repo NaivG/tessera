@@ -107,6 +107,10 @@ class AnthropicProvider extends LlmProvider {
       toolCalls: toolCalls,
       timestamp: DateTime.now(),
       status: MessageStatus.completed,
+      usage: TokenUsage(
+        promptTokens: response.usage.inputTokens,
+        completionTokens: response.usage.outputTokens,
+      ),
     );
   }
 
@@ -125,8 +129,18 @@ class AnthropicProvider extends LlmProvider {
     // 按 content block index 追踪 tool_use 块的增量 JSON 输入
     final Map<int, _PendingToolUse> pendingToolUses = {};
 
+    // 从 MessageStartEvent 捕获 inputTokens（MessageDeltaEvent 仅含 outputTokens）
+    int? startInputTokens;
+
     await for (final event in stream) {
-      if (event is anthropic.ContentBlockStartEvent) {
+      if (event is anthropic.MessageStartEvent) {
+        // 记录初始 usage 中的 inputTokens，供流结束时合并到 StreamChunk.done
+        startInputTokens = event.message.usage.inputTokens;
+        debugPrint(
+          '[Anthropic] chatStream MessageStart: '
+          'inputTokens=$startInputTokens',
+        );
+      } else if (event is anthropic.ContentBlockStartEvent) {
         final block = event.contentBlock;
         if (block is anthropic.ToolUseBlock) {
           // 流式模式下 ToolUseBlock.input 恒为 {}，实际参数通过 InputJsonDelta 增量传输
@@ -185,7 +199,7 @@ class AnthropicProvider extends LlmProvider {
 
         yield StreamChunk.done(
           usage: TokenUsage(
-            promptTokens: event.usage.inputTokens,
+            promptTokens: event.usage.inputTokens ?? startInputTokens,
             completionTokens: event.usage.outputTokens,
           ),
         );
@@ -194,7 +208,8 @@ class AnthropicProvider extends LlmProvider {
         yield StreamChunk.error(event.message);
         return;
       }
-      // MessageStartEvent, MessageStopEvent, PingEvent: 忽略
+      // MessageStopEvent, PingEvent: 忽略
+      // MessageStartEvent: 已在上方处理（捕获 inputTokens）
     }
   }
 
@@ -277,6 +292,19 @@ class AnthropicProvider extends LlmProvider {
     switch (msg.role) {
       case MessageRole.assistant:
         return anthropic.InputMessage.assistantBlocks(blocks);
+      case MessageRole.tool:
+        // Anthropic 没有独立的 tool role — 工具结果必须放在 user 消息中
+        // 以 tool_result content block 的形式返回，并关联 tool_use_id。
+        if (msg.toolCallId != null) {
+          return anthropic.InputMessage.userBlocks([
+            anthropic.InputContentBlock.toolResultText(
+              toolUseId: msg.toolCallId!,
+              text: msg.content,
+            ),
+          ]);
+        }
+        // 缺少 toolCallId 时回退为普通文本（不应该发生，仅作防御）
+        return anthropic.InputMessage.userBlocks(blocks);
       case MessageRole.user:
       default:
         return anthropic.InputMessage.userBlocks(blocks);

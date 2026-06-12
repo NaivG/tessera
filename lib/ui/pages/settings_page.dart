@@ -186,6 +186,52 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           _buildCustomPromptTile(theme, state),
 
           const Divider(height: 24),
+
+          // 插件管理
+          _SectionHeader(l10n.pluginAppBarTitle),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: Icon(
+              Icons.extension_outlined,
+              color: theme.colorScheme.primary,
+            ),
+            title: Text(l10n.pluginAppBarTitle),
+            trailing: const Icon(Icons.chevron_right),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            tileColor: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
+            onTap: () {
+              Navigator.of(context).pushNamed('/plugins');
+            },
+          ),
+
+          const Divider(height: 24),
+
+          // --- 使用统计 ---
+          _SectionHeader(l10n.statsAppBarTitle),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: Icon(
+              Icons.bar_chart_outlined,
+              color: theme.colorScheme.primary,
+            ),
+            title: Text(l10n.statsShortcut),
+            trailing: const Icon(Icons.chevron_right),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            tileColor: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
+            onTap: () {
+              Navigator.of(context).pushNamed('/stats');
+            },
+          ),
+
+          const Divider(height: 24),
           _SectionHeader(l10n.settingsSectionAbout),
           const SizedBox(height: 8),
           ListTile(

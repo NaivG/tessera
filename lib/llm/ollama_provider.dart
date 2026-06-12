@@ -123,12 +123,16 @@ class OllamaProvider extends LlmProvider {
     final response = await client.chat.create(request: request);
 
     return Message(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: Message.generateId(),
       role: MessageRole.assistant,
       content: response.message?.content ?? '',
       toolCalls: _mapToolCalls(response.message?.toolCalls),
       timestamp: DateTime.now(),
       status: MessageStatus.completed,
+      usage: TokenUsage(
+        promptTokens: response.promptEvalCount,
+        completionTokens: response.evalCount,
+      ),
     );
   }
 
@@ -293,6 +297,10 @@ class OllamaProvider extends LlmProvider {
           );
           break;
         case MessageRole.tool:
+          // ollama_dart 的 ChatMessage.tool 仅接受 content 字符串，
+          // 不暴露 toolCallId。Ollama 协议本身在 tool 消息上不要求 id，
+          // 关联性由消息顺序隐式保证 — 上一个 assistant 消息的 toolCalls
+          // 按声明顺序与之后的 tool 消息一一对应。
           messages.add(ollama.ChatMessage.tool(msg.content));
           break;
         case MessageRole.system:

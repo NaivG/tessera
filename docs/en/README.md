@@ -53,7 +53,7 @@ Only the blocks that actually changed are re-sent to the LLM provider, significa
 | Media | image_picker / file_picker / video_player / gal |
 | Platform | window_manager (desktop) / flutter_local_notifications |
 | Memory Search | SimHash (128-bit) + jieba (Chinese segmentation) |
-| Plugin Runtime | LuaDardoPlus (Lua 5.3) + archive (`.plugin` zips) + path_provider |
+| Plugin Runtime | [`lua_dardo_plus`](https://pub.dev/packages/lua_dardo_plus) from `NaivG/LuaDardo` fork (Lua 5.3) + archive (`.plugin` zips) + path_provider |
 | Localization | Flutter l10n (intl) |
 
 ---
@@ -114,8 +114,7 @@ tessera/
 │   │   ├── plugin_metadata.dart       # Manifest schema (plugin.json)
 │   │   ├── lua_plugin_host.dart       # Per-plugin LuaState + tessera bridge
 │   │   ├── plugin_manager.dart        # Bundled + installed discovery
-│   │   ├── plugin_registry.dart       # Lifecycle, enable/disable, tool registration
-│   │   └── patchs/                    # Runtime patches for LuaDardoPlus
+│   │   └── plugin_registry.dart       # Lifecycle, enable/disable, tool registration
 │   ├── ui/
 │   │   ├── pages/                     # Pages
 │   │   │   ├── main_page.dart / chat_page.dart
@@ -150,7 +149,7 @@ tessera/
 
 ## Contents
 
-- [**Plugin System**](plugin-system.md) — sandboxed Lua runtime, `plugin.json` manifest, the `tessera` bridge API, lifecycle, `.plugin` distribution, runtime patches, authoring guide, and built-in examples.
+- [**Plugin System**](plugin-system.md) — sandboxed Lua runtime, `plugin.json` manifest, the `tessera` bridge API, lifecycle, `.plugin` distribution, the maintained `NaivG/LuaDardo` fork, authoring guide, and built-in examples.
 - [**Memory System**](memory-system.md) — long-term memory pipeline: SimHash indexing, extraction, retrieval scoring, compression (DBSCAN + LLM merge), exponential-decay forgetting, and the `memory.db` persistence layer.
 - [**LLM Provider Abstraction**](llm-providers.md) — the unified `LlmProvider` interface across OpenAI / Anthropic / Ollama / Google, the `Stream<StreamChunk>` streaming protocol, `LlmProviderConfig`, and the `JsonExtractor` 4-strategy parser for structured output.
 - [**Capability Adapter**](capability-adapter.md) — multimodal routing: how a vision / audio / image-gen / TTS sub-model is exposed to a text-only main model as a function-call tool, and the slot-based `ModelSelectionConfig`.

@@ -107,7 +107,7 @@ class ConversationService {
           'status': msg.status.name,
           'error_message': msg.errorMessage,
           'timestamp': msg.timestamp.toIso8601String(),
-        });
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
     });
     debugPrint(

@@ -1387,6 +1387,121 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Library'**
   String get toolboxLabel;
+
+  // ---------------------------------------------------------------------------
+  // Plugin page
+  // ---------------------------------------------------------------------------
+
+  /// No description provided for @pluginAppBarTitle.
+  String get pluginAppBarTitle;
+
+  /// No description provided for @pluginEmpty.
+  String get pluginEmpty;
+
+  /// No description provided for @pluginLoadError.
+  String get pluginLoadError;
+
+  /// No description provided for @pluginRetry.
+  String get pluginRetry;
+
+  /// No description provided for @pluginInstall.
+  String get pluginInstall;
+
+  /// No description provided for @pluginUninstall.
+  String get pluginUninstall;
+
+  /// No description provided for @pluginInstalled.
+  String get pluginInstalled;
+
+  /// No description provided for @pluginBundled.
+  String get pluginBundled;
+
+  /// No description provided for @pluginInstallSuccess.
+  String pluginInstallSuccess(String name);
+
+  /// No description provided for @pluginInstallFailed.
+  String pluginInstallFailed(String error);
+
+  /// No description provided for @pluginUninstallSuccess.
+  String pluginUninstallSuccess(String name);
+
+  /// No description provided for @pluginUninstallFailed.
+  String pluginUninstallFailed(String error);
+
+  /// No description provided for @pluginUninstallConfirm.
+  String pluginUninstallConfirm(String name);
+
+  /// No description provided for @pluginUninstallDialogTitle.
+  String get pluginUninstallDialogTitle;
+
+  /// No description provided for @pluginEnableFailed.
+  String pluginEnableFailed(String name);
+
+  /// No description provided for @pluginByAuthor.
+  String pluginByAuthor(String author);
+
+  /// No description provided for @pluginShortcut.
+  String get pluginShortcut;
+
+  /// No description provided for @pluginSectionInstalled.
+  String get pluginSectionInstalled;
+
+  /// No description provided for @pluginSectionBundled.
+  String get pluginSectionBundled;
+
+  /// No description provided for @pluginSectionInstallFromFile.
+  String get pluginSectionInstallFromFile;
+
+  /// No description provided for @pluginInstallFromFileAction.
+  String get pluginInstallFromFileAction;
+
+  /// No description provided for @pluginInstallFromZip.
+  String get pluginInstallFromZip;
+
+  /// No description provided for @pluginInstallConfirmTitle.
+  String get pluginInstallConfirmTitle;
+
+  /// No description provided for @pluginInvalidZip.
+  String pluginInvalidZip(String error);
+
+  /// No description provided for @statsAppBarTitle.
+  String get statsAppBarTitle;
+
+  /// No description provided for @statsOverall.
+  String get statsOverall;
+
+  /// No description provided for @statsTotalTokens.
+  String get statsTotalTokens;
+
+  /// No description provided for @statsPromptTokens.
+  String get statsPromptTokens;
+
+  /// No description provided for @statsCompletionTokens.
+  String get statsCompletionTokens;
+
+  /// No description provided for @statsCacheHitRate.
+  String get statsCacheHitRate;
+
+  /// No description provided for @statsRequests.
+  String get statsRequests;
+
+  /// No description provided for @statsReset.
+  String get statsReset;
+
+  /// No description provided for @statsResetConfirmTitle.
+  String get statsResetConfirmTitle;
+
+  /// No description provided for @statsResetConfirm.
+  String get statsResetConfirm;
+
+  /// No description provided for @statsEmpty.
+  String get statsEmpty;
+
+  /// No description provided for @statsEmptySubtitle.
+  String get statsEmptySubtitle;
+
+  /// No description provided for @statsShortcut.
+  String get statsShortcut;
 }
 
 class _AppLocalizationsDelegate

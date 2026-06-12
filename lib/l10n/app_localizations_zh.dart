@@ -685,4 +685,119 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get toolboxLabel => '资料库';
+
+  @override
+  String get pluginAppBarTitle => '插件管理';
+
+  @override
+  String get pluginEmpty => '暂无插件';
+
+  @override
+  String get pluginLoadError => '加载插件失败';
+
+  @override
+  String get pluginRetry => '重试';
+
+  @override
+  String get pluginInstall => '安装';
+
+  @override
+  String get pluginUninstall => '卸载';
+
+  @override
+  String get pluginInstalled => '已安装';
+
+  @override
+  String get pluginBundled => '捆版';
+
+  @override
+  String pluginInstallSuccess(String name) =>
+      '插件「$name」安装成功';
+
+  @override
+  String pluginInstallFailed(String error) => '安装失败: $error';
+
+  @override
+  String pluginUninstallSuccess(String name) =>
+      '插件「$name」已卸载';
+
+  @override
+  String pluginUninstallFailed(String error) => '卸载失败: $error';
+
+  @override
+  String pluginUninstallConfirm(String name) =>
+      '确定要卸载「$name」吗？\n此操作将删除插件文件。';
+
+  @override
+  String get pluginUninstallDialogTitle => '卸载插件';
+
+  @override
+  String pluginEnableFailed(String name) =>
+      '启用插件「$name」失败';
+
+  @override
+  String pluginByAuthor(String author) => '来自 $author';
+
+  @override
+  String get pluginShortcut => '插件';
+
+  @override
+  String get pluginSectionInstalled => '已安装';
+
+  @override
+  String get pluginSectionBundled => '捆绑插件源';
+
+  @override
+  String get pluginSectionInstallFromFile => '从文件安装';
+
+  @override
+  String get pluginInstallFromFileAction => '选择 .plugin 文件';
+
+  @override
+  String get pluginInstallFromZip => '从 ZIP 安装';
+
+  @override
+  String get pluginInstallConfirmTitle => '安装插件';
+
+  @override
+  String pluginInvalidZip(String error) => '无效的插件包: $error';
+
+  @override
+  String get statsAppBarTitle => '使用统计';
+
+  @override
+  String get statsOverall => '总计';
+
+  @override
+  String get statsTotalTokens => '总 Token 数';
+
+  @override
+  String get statsPromptTokens => '提示';
+
+  @override
+  String get statsCompletionTokens => '补全';
+
+  @override
+  String get statsCacheHitRate => '缓存命中率';
+
+  @override
+  String get statsRequests => '请求次数';
+
+  @override
+  String get statsReset => '重置';
+
+  @override
+  String get statsResetConfirmTitle => '确认重置';
+
+  @override
+  String get statsResetConfirm => '确定要重置所有使用统计吗？此操作不可撤销。';
+
+  @override
+  String get statsEmpty => '暂无统计数据';
+
+  @override
+  String get statsEmptySubtitle => '开始与 AI 模型对话后，使用数据将显示在此处';
+
+  @override
+  String get statsShortcut => '统计';
 }

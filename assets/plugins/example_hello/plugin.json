@@ -1,0 +1,9 @@
+{
+  "id": "com.tessera.example_hello",
+  "name": "Hello Plugin",
+  "version": "1.0.0",
+  "author": "Tessera",
+  "description": "一个示例插件，展示如何注册 SKILL 和 TOOL",
+  "entryPoint": "main.lua",
+  "homepage": ""
+}

@@ -6,9 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/core.dart';
 import '../llm/provider_factory.dart';
 import '../memory/memory.dart';
+import '../plugin/plugin.dart';
 import '../services/conversation_service.dart';
 import '../utils/json_extractor.dart';
+import 'conversation_list_provider.dart';
 import 'settings_provider.dart';
+import 'stats_provider.dart';
 
 // =============================================================================
 // ChatData
@@ -87,6 +90,10 @@ class ChatNotifier extends Notifier<ChatData> {
   StreamSubscription<StreamChunk>? _streamSubscription;
   final Map<String, StreamController<String>> _activeStreams = {};
   final Map<String, StreamController<String>> _activeThinkingStreams = {};
+
+  /// 已完成的流 ID 集合，防止 _finishStreaming 被 done chunk + onDone 双重触发
+  final Set<String> _completedStreams = {};
+
   final StreamController<String> _preprocessingStreamController =
       StreamController<String>.broadcast();
 
@@ -97,12 +104,20 @@ class ChatNotifier extends Notifier<ChatData> {
   @override
   ChatData build() {
     ref.onDispose(_onDispose);
+
+    // 监听设置变化，自动同步到 ChatNotifier，
+    // 确保模型选择、提示词注入、用户档案等设置修改后即时生效
+    ref.listen(settingsProvider, (prev, next) {
+      configureCapabilities(next);
+    });
+
     return const ChatData();
   }
 
   void _onDispose() {
     _streamSubscription?.cancel();
     _closeAllStreams();
+    _completedStreams.clear();
     _preprocessingStreamController.close();
   }
 
@@ -130,6 +145,7 @@ class ChatNotifier extends Notifier<ChatData> {
     );
     _toolRegistry.clear();
     _adapter!.registerTools(_toolRegistry);
+    PluginRegistry().registerTo(_toolRegistry);
   }
 
   Future<void> init() async {
@@ -142,6 +158,12 @@ class ChatNotifier extends Notifier<ChatData> {
       _convMemManager = ConversationalMemoryManager(memoryNotifier: _memory);
       _memoryInitialized = true;
     }
+
+    // 加载并启用所有捆版插件
+    await PluginRegistry().enableAll();
+    // configureCapabilities 同步先跑、registerTo 时 _activeHosts 仍为空，
+    // 现在插件已就绪，把插件工具注入到本 ChatNotifier 的 _toolRegistry
+    PluginRegistry().registerTo(_toolRegistry);
 
     _initialized = true;
     debugPrint('[ChatNotifier] 初始化完成，记忆系统就绪');
@@ -169,10 +191,15 @@ class ChatNotifier extends Notifier<ChatData> {
       facts: _settingsData?.userFacts,
       customPrompt: _settingsData?.userCustomPrompt,
     );
+    // 追加插件技能块
+    final pluginSkills = PluginRegistry().buildSkillBlocks();
+    final withPluginBlock = pluginSkills.isNotEmpty ? '$base\n\n$pluginSkills' : base;
+
     if (state.memoryContextText.isNotEmpty) {
-      return '$base\n\n${state.memoryContextText}';
+      final memBlock = '$withPluginBlock\n\n${state.memoryContextText}';
+      return memBlock;
     }
-    return base;
+    return withPluginBlock;
   }
 
   // ── 对话管理 ──
@@ -184,8 +211,9 @@ class ChatNotifier extends Notifier<ChatData> {
   }) {
     debugPrint('[ChatNotifier] 创建新对话：$title');
     _streamSubscription?.cancel();
+    _completedStreams.clear();
     final conv = Conversation(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: Message.generateId(),
       title: title,
       config: config,
       systemPrompt: systemPrompt,
@@ -200,10 +228,13 @@ class ChatNotifier extends Notifier<ChatData> {
       error: null,
       memoryContextText: '',
     );
+    // 同步到对话列表 provider，确保侧边栏即时更新
+    ref.read(conversationListProvider.notifier).upsert(conv);
   }
 
   Future<void> loadConversation(String id) async {
     _streamSubscription?.cancel();
+    _completedStreams.clear();
     final conv = await _convService.getConversation(id);
     if (conv != null) {
       await _ensurePromptBuilder();
@@ -298,7 +329,7 @@ class ChatNotifier extends Notifier<ChatData> {
     }
 
     final userMsg = Message(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: Message.generateId(),
       role: MessageRole.user,
       content: adaptedContent,
       mediaAttachments: attachments,
@@ -312,7 +343,7 @@ class ChatNotifier extends Notifier<ChatData> {
       ),
     );
 
-    final assistantId = DateTime.now().microsecondsSinceEpoch.toString();
+    final assistantId = Message.generateId();
     final streamingMsg = Message.streamingAssistant(id: assistantId);
     _updateConversation(
       (conv) => conv.copyWith(
@@ -331,7 +362,9 @@ class ChatNotifier extends Notifier<ChatData> {
   // ── 流式发送 ──
 
   List<ToolDefinition> get _currentTools {
-    return _adapter?.buildTools() ?? [];
+    final adapterTools = _adapter?.buildTools() ?? const <ToolDefinition>[];
+    final pluginTools = PluginRegistry().allEnabledToolDefinitions;
+    return [...adapterTools, ...pluginTools];
   }
 
   Future<void> _sendStreaming(String assistantId) async {
@@ -358,6 +391,7 @@ class ChatNotifier extends Notifier<ChatData> {
       String accumulatedContent = '';
       String accumulatedThinking = '';
       final accumulatedToolCalls = <ToolCall>[];
+      TokenUsage? finalUsage;
 
       _streamSubscription = stream.listen(
         (chunk) {
@@ -399,12 +433,16 @@ class ChatNotifier extends Notifier<ChatData> {
               break;
 
             case StreamChunkType.done:
+              finalUsage = chunk.usage;
+              // 不再用 unawaited —— _finishStreaming 的异步性由内部的
+              // _completedStreams 守卫 + saveConversation 锁共同保证
               unawaited(
                 _finishStreaming(
                   assistantId,
                   accumulatedContent,
                   accumulatedToolCalls,
                   accumulatedThinking.isNotEmpty ? accumulatedThinking : null,
+                  finalUsage,
                 ),
               );
               break;
@@ -424,6 +462,7 @@ class ChatNotifier extends Notifier<ChatData> {
               accumulatedContent,
               accumulatedToolCalls,
               accumulatedThinking.isNotEmpty ? accumulatedThinking : null,
+              finalUsage,
             ),
           );
         },
@@ -450,6 +489,25 @@ class ChatNotifier extends Notifier<ChatData> {
       );
 
       final toolCalls = response.toolCalls ?? [];
+
+      // 记录请求次数与 token 用量 — 必须在 tool call 提前返回之前执行
+      debugPrint(
+        '[ChatNotifier] _sendNonStreaming recordUsage: '
+        'provider=${conv.config.providerId}, '
+        'usage=${response.usage}, '
+        'promptTokens=${response.usage?.promptTokens}, '
+        'completionTokens=${response.usage?.completionTokens}',
+      );
+      unawaited(
+        ref.read(statsProvider.notifier).recordUsage(
+          providerId: conv.config.providerId,
+          providerName: conv.config.providerName.isNotEmpty
+              ? conv.config.providerName
+              : conv.config.providerId,
+          promptTokens: response.usage?.promptTokens ?? 0,
+          completionTokens: response.usage?.completionTokens ?? 0,
+        ),
+      );
 
       _updateConversation((c) => c.copyWith(
         messages: c.messages.map((m) {
@@ -530,7 +588,7 @@ class ChatNotifier extends Notifier<ChatData> {
       for (final result in results) {
         newMessages.add(
           Message(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: Message.generateId(),
             role: MessageRole.tool,
             content: result.content,
             toolCallId: result.toolCallId,
@@ -542,7 +600,7 @@ class ChatNotifier extends Notifier<ChatData> {
       return conv.copyWith(messages: newMessages);
     });
 
-    final newAssistantId = DateTime.now().microsecondsSinceEpoch.toString();
+    final newAssistantId = Message.generateId();
     _updateConversation(
       (conv) => conv.copyWith(
         messages: [...conv.messages, Message.streamingAssistant(id: newAssistantId)],
@@ -565,7 +623,11 @@ class ChatNotifier extends Notifier<ChatData> {
     String content,
     List<ToolCall> toolCalls, [
     String? thinking,
+    TokenUsage? usage,
   ]) async {
+    // 防止 done chunk + onDone 双重触发
+    if (!_completedStreams.add(assistantId)) return;
+
     final conv = state.conversation;
     if (conv == null) return;
 
@@ -595,6 +657,24 @@ class ChatNotifier extends Notifier<ChatData> {
 
     _activeStreams.remove(assistantId)?.close();
     _activeThinkingStreams.remove(assistantId)?.close();
+
+    // 记录请求次数与 token 用量 — 必须在 tool call 提前返回之前执行
+    debugPrint(
+      '[ChatNotifier] _finishStreaming recordUsage: '
+      'provider=${conv.config.providerId}, '
+      'promptTokens=${usage?.promptTokens}, '
+      'completionTokens=${usage?.completionTokens}',
+    );
+    unawaited(
+      ref.read(statsProvider.notifier).recordUsage(
+        providerId: conv.config.providerId,
+        providerName: conv.config.providerName.isNotEmpty
+            ? conv.config.providerName
+            : conv.config.providerId,
+        promptTokens: usage?.promptTokens ?? 0,
+        completionTokens: usage?.completionTokens ?? 0,
+      ),
+    );
 
     if (toolCalls.isNotEmpty) {
       await _handleToolCallsAndContinue(
@@ -871,6 +951,49 @@ class ChatNotifier extends Notifier<ChatData> {
 
   Future<void> _commitCache() async {
     final collection = _buildCacheCollection();
+
+    // 统计缓存命中/未命中
+    final cached = _cacheManager.cached;
+    int hitCount = 0;
+    int missCount = 0;
+    for (final section in collection.sections) {
+      final existing = cached.sections.where(
+        (s) => s.id == section.id,
+      );
+      if (existing.isNotEmpty &&
+          !existing.first.isExpired &&
+          existing.first.content == section.content) {
+        hitCount++;
+      } else {
+        missCount++;
+      }
+    }
+    if (hitCount + missCount > 0) {
+      final cfg = state.conversation?.config;
+      if (cfg != null) {
+        final providerId = cfg.providerId;
+        final providerName = cfg.providerName.isNotEmpty
+            ? cfg.providerName
+            : cfg.providerId;
+        if (hitCount > 0) {
+          unawaited(
+            ref.read(statsProvider.notifier).recordCacheHit(
+              providerId: providerId,
+              providerName: providerName,
+            ),
+          );
+        }
+        if (missCount > 0) {
+          unawaited(
+            ref.read(statsProvider.notifier).recordCacheMiss(
+              providerId: providerId,
+              providerName: providerName,
+            ),
+          );
+        }
+      }
+    }
+
     _cacheManager.commitCollection(collection);
     await _cacheManager.persistCacheable(collection);
   }
@@ -880,6 +1003,7 @@ class ChatNotifier extends Notifier<ChatData> {
   void clear() {
     _streamSubscription?.cancel();
     _closeAllStreams();
+    _completedStreams.clear();
     _convMemManager.reset();
     _memoryExtractor.clear();
     _memory.clearCache();
@@ -922,6 +1046,11 @@ class ChatNotifier extends Notifier<ChatData> {
       _updateConversation((conv) {
         conv.title = sanitized;
         _convService.renameConversation(conv.id, sanitized);
+        // 同步标题到侧边栏列表
+        ref.read(conversationListProvider.notifier).updateTitle(
+          conv.id,
+          sanitized,
+        );
         return conv;
       });
     } catch (_) {}

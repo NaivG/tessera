@@ -1,4 +1,5 @@
 import 'media_attachment.dart';
+import 'stream_chunk.dart';
 
 /// 消息角色
 enum MessageRole { system, user, assistant, tool }
@@ -20,6 +21,17 @@ enum MessageStatus {
 
 /// 单条对话消息
 class Message {
+  /// 原子性 ID 计数器，确保同一微秒内生成的 ID 也不重复
+  static int _idCounter = 0;
+
+  /// 生成全局唯一的消息/对话 ID
+  /// 格式：微秒级时间戳 + 进程内自增计数器，保证唯一性
+  static String generateId() {
+    final ts = DateTime.now().microsecondsSinceEpoch;
+    final seq = _idCounter++;
+    return '$ts$seq';
+  }
+
   final String id;
   final MessageRole role;
   final String content;
@@ -32,6 +44,11 @@ class Message {
   ///
   /// Key 为 `ToolCall.id`，value 为工具返回的文本内容。
   final Map<String, String>? toolResults;
+
+  /// 本次 LLM 调用的 token 用量（运行时字段，不持久化）。
+  ///
+  /// 由各 provider 在返回前从 SDK 响应中提取，传入统计系统。
+  final TokenUsage? usage;
 
   final MessageStatus status;
   final String? errorMessage;
@@ -46,6 +63,7 @@ class Message {
     this.toolCallId,
     this.mediaAttachments,
     this.toolResults,
+    this.usage,
     this.status = MessageStatus.completed,
     this.errorMessage,
     required this.timestamp,
@@ -64,7 +82,7 @@ class Message {
   /// 创建一个已完成的用户消息
   factory Message.user(String content) {
     return Message(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: generateId(),
       role: MessageRole.user,
       content: content,
       status: MessageStatus.completed,
@@ -84,6 +102,7 @@ class Message {
     MessageStatus? status,
     String? errorMessage,
     Map<String, String>? toolResults,
+    TokenUsage? usage,
     DateTime? timestamp,
     bool clearToolCalls = false,
     bool clearThinking = false,
@@ -100,6 +119,7 @@ class Message {
           ? null
           : (mediaAttachments ?? this.mediaAttachments),
       toolResults: toolResults ?? this.toolResults,
+      usage: usage ?? this.usage,
       status: status ?? this.status,
       errorMessage: errorMessage ?? this.errorMessage,
       timestamp: timestamp ?? this.timestamp,

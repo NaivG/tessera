@@ -290,5 +290,68 @@
   "modelTagsOmni": "Omni-modal",
   "modelTagsTextOnly": "Text-only",
 
-  "toolboxLabel": "Library"
+  "toolboxLabel": "Library",
+
+  "pluginAppBarTitle": "Plugins",
+  "pluginSectionInstalled": "Installed",
+  "pluginSectionBundled": "Bundled Sources",
+  "pluginSectionInstallFromFile": "Install from File",
+  "pluginInstallFromFileAction": "Select .plugin File",
+  "pluginEmpty": "No plugins found",
+  "pluginLoadError": "Failed to load plugins",
+  "pluginRetry": "Retry",
+  "pluginInstall": "Install",
+  "pluginUninstall": "Uninstall",
+  "pluginInstalled": "Installed",
+  "pluginBundled": "Bundled",
+  "pluginInstallSuccess": "Plugin \"{name}\" installed successfully",
+  "@pluginInstallSuccess": {
+    "placeholders": { "name": {} }
+  },
+  "pluginInstallFailed": "Install failed: {error}",
+  "@pluginInstallFailed": {
+    "placeholders": { "error": {} }
+  },
+  "pluginUninstallSuccess": "Plugin \"{name}\" uninstalled",
+  "@pluginUninstallSuccess": {
+    "placeholders": { "name": {} }
+  },
+  "pluginUninstallFailed": "Uninstall failed: {error}",
+  "@pluginUninstallFailed": {
+    "placeholders": { "error": {} }
+  },
+  "pluginUninstallConfirm": "Are you sure you want to uninstall \"{name}\"?\nThis will delete the plugin files.",
+  "@pluginUninstallConfirm": {
+    "placeholders": { "name": {} }
+  },
+  "pluginUninstallDialogTitle": "Uninstall Plugin",
+  "pluginEnableFailed": "Failed to enable plugin \"{name}\"",
+  "@pluginEnableFailed": {
+    "placeholders": { "name": {} }
+  },
+  "pluginByAuthor": "by {author}",
+  "@pluginByAuthor": {
+    "placeholders": { "author": {} }
+  },
+  "pluginInstallFromZip": "Install from ZIP",
+  "pluginInstallConfirmTitle": "Install Plugin",
+  "pluginInvalidZip": "Invalid plugin package: {error}",
+  "@pluginInvalidZip": {
+    "placeholders": { "error": {} }
+  },
+  "pluginShortcut": "Plugins",
+
+  "statsAppBarTitle": "Usage Statistics",
+  "statsOverall": "Overall",
+  "statsTotalTokens": "Total Tokens",
+  "statsPromptTokens": "Prompt",
+  "statsCompletionTokens": "Completion",
+  "statsCacheHitRate": "Cache Hit Rate",
+  "statsRequests": "Requests",
+  "statsReset": "Reset",
+  "statsResetConfirmTitle": "Confirm Reset",
+  "statsResetConfirm": "Are you sure you want to reset all usage statistics? This action cannot be undone.",
+  "statsEmpty": "No usage data yet",
+  "statsEmptySubtitle": "Usage data will appear here after you start chatting with AI models",
+  "statsShortcut": "Stats"
 }

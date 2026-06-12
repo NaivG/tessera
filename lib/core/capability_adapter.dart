@@ -189,7 +189,7 @@ class CapabilityAdapter {
         config: llmConfig,
         history: [
           Message(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: Message.generateId(),
             role: MessageRole.user,
             content: prompt,
             mediaAttachments: [attachment],
@@ -288,7 +288,7 @@ class CapabilityAdapter {
         config: llmConfig,
         history: [
           Message(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: Message.generateId(),
             role: MessageRole.user,
             content: prompt,
             mediaAttachments: [attachment],
@@ -595,7 +595,7 @@ class CapabilityAdapter {
         config: llmConfig,
         history: [
           Message(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: Message.generateId(),
             role: MessageRole.user,
             content: prompt,
             mediaAttachments: filePath != null ? [attachment.copyWith()] : null,

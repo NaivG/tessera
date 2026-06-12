@@ -29,6 +29,10 @@ class TokenUsage {
     this.completionTokens,
     this.totalTokens,
   });
+
+  @override
+  String toString() =>
+      'TokenUsage(prompt: $promptTokens, completion: $completionTokens, total: $totalTokens)';
 }
 
 /// 流式响应中的一个数据块

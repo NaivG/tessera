@@ -53,7 +53,7 @@ Tessera 通过两层方法处理这一问题：
 | 媒体 | image_picker / file_picker / video_player / gal |
 | 平台 | window_manager（桌面端）/ flutter_local_notifications |
 | 记忆检索 | SimHash（128 位）+ jieba（结巴分词） |
-| 插件运行时 | LuaDardoPlus（Lua 5.3）+ archive（`.plugin` zip）+ path_provider |
+| 插件运行时 | 来自 `NaivG/LuaDardo` fork 的 [`lua_dardo_plus`](https://pub.dev/packages/lua_dardo_plus)（Lua 5.3）+ archive（`.plugin` zip）+ path_provider |
 | 国际化 | Flutter l10n（intl） |
 
 ---
@@ -114,8 +114,7 @@ tessera/
 │   │   ├── plugin_metadata.dart       # Manifest schema（plugin.json）
 │   │   ├── lua_plugin_host.dart       # 单插件 LuaState + tessera 桥接
 │   │   ├── plugin_manager.dart        # 捆绑 + 已安装的发现
-│   │   ├── plugin_registry.dart       # 生命周期、启用/禁用、TOOL 注册
-│   │   └── patchs/                    # 对 LuaDardoPlus 的运行时补丁
+│   │   └── plugin_registry.dart       # 生命周期、启用/禁用、TOOL 注册
 │   ├── ui/
 │   │   ├── pages/                     # 页面
 │   │   │   ├── main_page.dart / chat_page.dart
@@ -150,7 +149,7 @@ tessera/
 
 ## 目录
 
-- [**插件系统**](plugin-system.md) —— 沙箱化 Lua 运行时、`plugin.json` manifest、`tessera` 桥接 API、生命周期、`.plugin` 分发格式、运行时补丁、编写指南、内置示例
+- [**插件系统**](plugin-system.md) —— 沙箱化 Lua 运行时、`plugin.json` manifest、`tessera` 桥接 API、生命周期、`.plugin` 分发格式、本项目作者维护的 `NaivG/LuaDardo` fork、编写指南、内置示例
 - [**记忆系统**](memory-system.md) —— 长期记忆流水线：SimHash 索引、抽取、检索打分、压缩（DBSCAN + LLM 合并）、指数衰减遗忘、`memory.db` 持久化层
 - [**LLM 提供商抽象**](llm-providers.md) —— 跨 OpenAI / Anthropic / Ollama / Google 的统一 `LlmProvider` 接口、`Stream<StreamChunk>` 流式协议、`LlmProviderConfig`、`JsonExtractor` 4 步结构化输出解析
 - [**能力转译**](capability-adapter.md) —— 多模态路由：视觉 / 音频 / 文生图 / TTS 子模型如何以 function-call 工具形式暴露给纯文本主模型，以及基于 slot 的 `ModelSelectionConfig`
