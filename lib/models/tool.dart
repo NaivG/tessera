@@ -9,10 +9,18 @@ class ToolDefinition {
   /// JSON Schema 参数定义
   final Map<String, dynamic> parameters;
 
+  /// 自由分类标签（如 "web", "code", "file"）
+  final Set<String> tags;
+
+  /// 分层能力声明（如 "web.search", "code.execute"）
+  final Set<String> capabilities;
+
   const ToolDefinition({
     required this.name,
     required this.description,
     this.parameters = const <String, dynamic>{},
+    this.tags = const {},
+    this.capabilities = const {},
   });
 
   /// 转为 OpenAI / Anthropic 兼容的工具 schema

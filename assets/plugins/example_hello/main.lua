@@ -12,7 +12,9 @@ tessera.log("Hello Plugin 正在加载...")
 tessera.register_skill({
   name = "问候技能",
   description = "我有一个 greeting 工具，可以用不同语言向用户打招呼；"
-    .. "还有一个 fetch_ip 工具，可以查询当前出口 IP。"
+    .. "还有一个 fetch_ip 工具，可以查询当前出口 IP。",
+  tags = { "demo", "utility" },
+  capabilities = { "demo.greet", "demo.ip" },
 })
 
 -- ---------------------------------------------------------------------------
@@ -21,6 +23,8 @@ tessera.register_skill({
 tessera.register_tool({
   name = "greeting",
   description = "用指定语言向用户打招呼",
+  tags = { "demo" },
+  capabilities = { "demo.greet" },
   parameters = {
     name = {
       type = "string",
@@ -61,6 +65,8 @@ tessera.register_tool({
 tessera.register_tool({
   name = "fetch_ip",
   description = "查询当前出口 IP 地址 (演示 http + json addon)",
+  tags = { "demo", "network" },
+  capabilities = { "demo.ip", "web.fetch" },
   parameters = {},
   handler = function(_)
     -- 简单 GET,10 秒超时
@@ -88,6 +94,8 @@ tessera.register_tool({
 tessera.register_tool({
   name = "echo_token",
   description = "演示 base64 编码,把传入的 token 编码后返回 (无网络)",
+  tags = { "demo" },
+  capabilities = { "demo.encode" },
   parameters = {
     text = {
       type = "string",

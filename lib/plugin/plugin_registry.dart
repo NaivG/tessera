@@ -346,6 +346,10 @@ class PluginRegistry {
   // ---------------------------------------------------------------------------
 
   /// 构建所有启用插件注册的技能文本块。
+  ///
+  /// **已废弃**：请使用 `DiscoverManager.buildCompactCatalog(allSkills)` 替代，
+  /// 该方法生成紧凑的技能目录并配合 `discover` meta-tool 统一发现。
+  @Deprecated('Use DiscoverManager.buildCompactCatalog(allSkills) instead')
   String buildSkillBlocks() {
     final buf = StringBuffer();
     for (final host in _activeHosts.values) {

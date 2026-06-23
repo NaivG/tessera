@@ -161,6 +161,15 @@ class ChatNotifier extends Notifier<ChatData> {
   /// 子 Agent 流句柄，按 sessionId 索引，供 stopStreaming 统一取消。
   final Map<String, SubAgentStreamHandle> _subAgentHandles = {};
 
+  /// 统一发现管理器
+  final DiscoverManager _discoverManager = DiscoverManager();
+
+  /// 运行时工具调用参数校验器
+  final ToolCallValidator _toolCallValidator = ToolCallValidator();
+
+  /// LLM 通过 discover 工具发现后、下一轮 API 调用时注入完整 schema 的工具名集合。
+  final Set<String> _discoveredInSession = {};
+
   /// 临时记录 `sendMessage` 流程中正在操作的 convId,供 `_sendNormal` /
   /// `_sendPlanMode` 等模式分发方法使用。`sendMessage` 进入时设置,
   /// 退出前清空。
@@ -252,6 +261,9 @@ class ChatNotifier extends Notifier<ChatData> {
       providerFactory: (id) => ProviderFactory.get(id),
     );
     _toolRegistry.clear();
+    _discoveredInSession.clear();
+    // 首先注册 discover meta-tool（始终可用）
+    _toolRegistry.register(discoverTool, _handleDiscover);
     _adapter!.registerTools(_toolRegistry);
     PluginRegistry().registerTo(_toolRegistry);
   }
@@ -270,7 +282,11 @@ class ChatNotifier extends Notifier<ChatData> {
     // 加载并启用所有捆版插件
     await PluginRegistry().enableAll();
     // configureCapabilities 同步先跑、registerTo 时 _activeHosts 仍为空，
-    // 现在插件已就绪，把插件工具注入到本 ChatNotifier 的 _toolRegistry
+    // 现在插件已就绪，把插件工具注入到本 ChatNotifier 的 _toolRegistry。
+    // 注意：discover meta-tool 已在 configureCapabilities 中注册，这里补注册确保不丢失。
+    if (!_toolRegistry.has('discover')) {
+      _toolRegistry.register(discoverTool, _handleDiscover);
+    }
     PluginRegistry().registerTo(_toolRegistry);
 
     _initialized = true;
@@ -301,11 +317,16 @@ class ChatNotifier extends Notifier<ChatData> {
         customPrompt: _settingsData?.userCustomPrompt,
       );
     }
-    // 追加插件技能块
-    final pluginSkills = PluginRegistry().buildSkillBlocks();
-    final withPluginBlock = pluginSkills.isNotEmpty ? '$base\n\n$pluginSkills' : base;
 
-    String result = withPluginBlock;
+    // 追加紧凑技能目录 + discover 使用说明
+    final skills = PluginRegistry().allSkills;
+    final catalog = _discoverManager.buildCompactCatalog(skills);
+    if (catalog.isNotEmpty) {
+      base = '$base\n\n$catalog';
+    }
+    base = '$base\n\n${_discoverManager.buildDiscoverGuidance()}';
+
+    String result = base;
     if (state.memoryContextText.isNotEmpty) {
       result = '$result\n\n${state.memoryContextText}';
     }
@@ -356,6 +377,10 @@ Wrap the plan JSON in a ```json code block.''';
   }) {
     debugPrint('[ChatNotifier] 创建新对话：$title, mode=${mode.name}');
     // 不取消运行中的对话 — `sendMessage` 的守卫会保证调用此方法时无运行。
+
+    // 新对话：重置发现状态
+    _discoveredInSession.clear();
+
     final conv = Conversation(
       id: Message.generateId(),
       title: title,
@@ -1269,9 +1294,25 @@ Wrap the plan JSON in a ```json code block.''';
   // ── 流式发送 ──
 
   List<ToolDefinition> get _currentTools {
+    // 始终包含 discover meta-tool
+    final tools = <ToolDefinition>[discoverTool];
+
+    // 注入 LLM 已通过 discover 发现、但尚未注入 schema 的工具
+    for (final name in _discoveredInSession) {
+      final def = _toolRegistry.get(name);
+      if (def != null) {
+        tools.add(def);
+      }
+    }
+
     final adapterTools = _adapter?.buildTools() ?? const <ToolDefinition>[];
     final pluginTools = PluginRegistry().allEnabledToolDefinitions;
-    return [...adapterTools, ...pluginTools];
+    tools.addAll(adapterTools);
+    tools.addAll(pluginTools);
+
+    // 去重（按 name）
+    final seen = <String>{};
+    return tools.where((t) => seen.add(t.name)).toList();
   }
 
   Future<void> _sendStreaming(String convId, String assistantId) async {
@@ -1476,6 +1517,40 @@ Wrap the plan JSON in a ```json code block.''';
 
   // ── Tool 调用 ──
 
+  /// `discover` meta-tool handler：统一发现 skills 和 tools
+  Future<ToolResult> _handleDiscover(ToolCall call) async {
+    try {
+      final query = call.arguments['query'] as String?;
+      final capability = call.arguments['capability'] as String?;
+      final tag = call.arguments['tag'] as String?;
+      final kind = call.arguments['kind'] as String? ?? 'all';
+
+      final result = _discoverManager.discover(
+        skills: PluginRegistry().allSkills,
+        toolRegistry: _toolRegistry,
+        query: query,
+        capability: capability,
+        tag: tag,
+        kind: kind,
+      );
+
+      // 将发现的工具名加入 _discoveredInSession，
+      // 下一轮 API 调用时 _currentTools 会包含这些工具的完整 schema
+      _discoveredInSession.addAll(result.discoveredToolNames);
+
+      return ToolResult(
+        toolCallId: call.id,
+        content: result.toDisplayString(),
+      );
+    } catch (e) {
+      return ToolResult(
+        toolCallId: call.id,
+        content: 'discover tool error: $e',
+        isError: true,
+      );
+    }
+  }
+
   Future<bool> _handleToolCallsAndContinue(
     String convId,
     String assistantId,
@@ -1485,9 +1560,23 @@ Wrap the plan JSON in a ```json code block.''';
     if (toolCalls.isEmpty) return false;
     debugPrint('[ChatNotifier] _handleToolCallsAndContinue: count=${toolCalls.length}');
 
-    final results = await _toolRegistry.executeAll(toolCalls);
+    // Phase 1: 运行时参数校验（validateAll 同时处理未注册工具 + schema 不匹配）
+    final batchResult = _toolCallValidator.validateAll(toolCalls, _toolRegistry);
+
+    // Phase 2: 执行通过校验的调用
+    final execResults = <ToolResult>[];
+    if (batchResult.validCalls.isNotEmpty) {
+      execResults.addAll(await _toolRegistry.executeAll(batchResult.validCalls));
+    }
+
+    // Phase 3: 合并错误结果 + 执行结果
+    final allResults = [
+      ...batchResult.errors,
+      ...execResults,
+    ];
+
     final toolResults = <String, String>{};
-    for (final result in results) {
+    for (final result in allResults) {
       toolResults[result.toolCallId] = result.content;
     }
 
@@ -1500,7 +1589,7 @@ Wrap the plan JSON in a ```json code block.''';
 
     _updateConversationById(convId, (conv) {
       final newMessages = [...conv.messages];
-      for (final result in results) {
+      for (final result in allResults) {
         newMessages.add(
           Message(
             id: Message.generateId(),

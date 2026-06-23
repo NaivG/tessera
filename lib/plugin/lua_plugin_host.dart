@@ -11,16 +11,26 @@ import 'plugin_metadata.dart';
 // PluginSkill — 插件注入的技能描述（插入到 System Prompt 中）
 // =============================================================================
 
-/// 一个插件注册的技能片段，最终会拼入 LLM 的 System Prompt。
+/// 一个插件注册的技能模板，最终会拼入 LLM 的 System Prompt。
+///
+/// Skill 不再持有 tool 引用，取而代之的是通用模板 + tags/capabilities 声明。
 class PluginSkill {
   final String pluginId;
   final String name;
   final String description;
 
+  /// 自由分类（如 "research", "web"）
+  final Set<String> tags;
+
+  /// 面向的能力（如 "web.search", "research.deep"）
+  final Set<String> capabilities;
+
   const PluginSkill({
     required this.pluginId,
     required this.name,
     required this.description,
+    this.tags = const {},
+    this.capabilities = const {},
   });
 }
 
@@ -34,12 +44,16 @@ class _PluginToolEntry {
   final String description;
   final Map<String, dynamic> parameters;
   final int luaRef;
+  final Set<String> tags;
+  final Set<String> capabilities;
 
   const _PluginToolEntry({
     required this.name,
     required this.description,
     required this.parameters,
     required this.luaRef,
+    this.tags = const {},
+    this.capabilities = const {},
   });
 }
 
@@ -153,6 +167,8 @@ class LuaPluginHost {
       name: entry.name,
       description: entry.description,
       parameters: entry.parameters,
+      tags: entry.tags,
+      capabilities: entry.capabilities,
     );
   }
 
@@ -215,7 +231,11 @@ class LuaPluginHost {
     final buf = StringBuffer();
     buf.writeln('### Plugin Skills from "${metadata?.name ?? pluginId}"');
     for (final skill in _skills) {
-      buf.writeln('- **${skill.name}**: ${skill.description}');
+      final tags = skill.tags.isNotEmpty ? '[${skill.tags.join(", ")}] ' : '';
+      final caps = skill.capabilities.isNotEmpty
+          ? ' (${skill.capabilities.join(", ")})'
+          : '';
+      buf.writeln('- $tags**${skill.name}**$caps: $skill.description');
     }
     return buf.toString();
   }
@@ -252,6 +272,12 @@ class LuaPluginHost {
     }
     ls.pop(1);
 
+    // 读取 tags（可选）
+    final tags = _readStringList(ls, 1, 'tags');
+
+    // 读取 capabilities（可选）
+    final capabilities = _readStringList(ls, 1, 'capabilities');
+
     // 读取 handler function
     ls.getField(1, 'handler');
     if (!ls.isFunction(-1)) {
@@ -267,6 +293,8 @@ class LuaPluginHost {
       description: description,
       parameters: parameters,
       luaRef: ref,
+      tags: tags,
+      capabilities: capabilities,
     );
 
     debugPrint('[Plugin:$pluginId] registered tool "$name"');
@@ -287,10 +315,15 @@ class LuaPluginHost {
 
     if (name == null || name.isEmpty) return 0;
 
+    final tags = _readStringList(ls, 1, 'tags');
+    final capabilities = _readStringList(ls, 1, 'capabilities');
+
     _skills.add(PluginSkill(
       pluginId: pluginId,
       name: name,
       description: description ?? '',
+      tags: tags,
+      capabilities: capabilities,
     ));
 
     debugPrint('[Plugin:$pluginId] registered skill "$name"');
@@ -311,6 +344,29 @@ class LuaPluginHost {
     }
     debugPrint('[Plugin:$pluginId] ${parts.join('\t')}');
     return 0;
+  }
+
+  /// 从栈上的 Lua table 中读取一个字符串数组字段。
+  ///
+  /// [stackIndex] — 表在栈中的位置
+  /// [fieldName]  — 要读取的字段名
+  ///
+  /// 如果字段不存在或不是 Lua 数组，返回空 `Set`。
+  Set<String> _readStringList(LuaState ls, int stackIndex, String fieldName) {
+    ls.getField(stackIndex, fieldName);
+    final result = <String>{};
+    if (ls.isTable(-1)) {
+      // 用 next 遍历数组元素 (1-indexed)
+      ls.pushNil();
+      while (ls.next(-2)) {
+        // key 在 -2, value 在 -1
+        final v = ls.toStr(-1);
+        if (v != null) result.add(v);
+        ls.pop(1); // pop value, keep key for next iteration
+      }
+    }
+    ls.pop(1); // pop the field value (table or nil)
+    return result;
   }
 
   // ---------------------------------------------------------------------------
