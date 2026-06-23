@@ -275,6 +275,7 @@ class ChatNotifier extends Notifier<ChatData> {
     if (_initialized) return;
     await _cacheManager.init();
     _promptBuilder = await SystemPromptBuilder.load();
+    await _promptBuilder!.loadFableCore();
 
     if (!_memoryInitialized) {
       await _memory.init();
@@ -309,19 +310,29 @@ class ChatNotifier extends Notifier<ChatData> {
 
   String _buildSystemPromptString({ConversationMode? mode}) {
     if (_promptBuilder == null) return '';
+    final settings = _settingsData;
     String base;
-    if (_settingsData?.lightweightSystemPrompt == true) {
+    if (settings?.fableMode == true) {
+      base = _promptBuilder!.buildFableSystemPromptString(
+        displayName: settings?.userDisplayName,
+        alias: settings?.userAlias,
+        role: settings?.userRole,
+        preferences: settings?.userPreferences,
+        facts: settings?.userFacts,
+        customPrompt: settings?.userCustomPrompt,
+      );
+    } else if (settings?.lightweightSystemPrompt == true) {
       base = _promptBuilder!.buildLightweightSystemPromptString(
-        customPrompt: _settingsData?.userCustomPrompt,
+        customPrompt: settings?.userCustomPrompt,
       );
     } else {
       base = _promptBuilder!.buildSystemPromptString(
-        displayName: _settingsData?.userDisplayName,
-        alias: _settingsData?.userAlias,
-        role: _settingsData?.userRole,
-        preferences: _settingsData?.userPreferences,
-        facts: _settingsData?.userFacts,
-        customPrompt: _settingsData?.userCustomPrompt,
+        displayName: settings?.userDisplayName,
+        alias: settings?.userAlias,
+        role: settings?.userRole,
+        preferences: settings?.userPreferences,
+        facts: settings?.userFacts,
+        customPrompt: settings?.userCustomPrompt,
       );
     }
 
@@ -1982,21 +1993,34 @@ Wrap the plan JSON in a ```json code block.''';
 
   PromptSectionCollection _buildCacheCollection() {
     final sections = <PromptSection>[];
+    final isFable = _settingsData?.fableMode == true;
     final isLightweight = _settingsData?.lightweightSystemPrompt == true;
 
     if (_promptBuilder != null) {
-      final spSections = isLightweight
-          ? _promptBuilder!.buildLightweightSystemPrompt(
-              customPrompt: _settingsData?.userCustomPrompt,
-            )
-          : _promptBuilder!.buildSystemPrompt(
-              displayName: _settingsData?.userDisplayName,
-              alias: _settingsData?.userAlias,
-              role: _settingsData?.userRole,
-              preferences: _settingsData?.userPreferences,
-              facts: _settingsData?.userFacts,
-              customPrompt: _settingsData?.userCustomPrompt,
-            );
+      final PromptSectionCollection spSections;
+      if (isFable) {
+        spSections = _promptBuilder!.buildFableSystemPrompt(
+          displayName: _settingsData?.userDisplayName,
+          alias: _settingsData?.userAlias,
+          role: _settingsData?.userRole,
+          preferences: _settingsData?.userPreferences,
+          facts: _settingsData?.userFacts,
+          customPrompt: _settingsData?.userCustomPrompt,
+        );
+      } else if (isLightweight) {
+        spSections = _promptBuilder!.buildLightweightSystemPrompt(
+          customPrompt: _settingsData?.userCustomPrompt,
+        );
+      } else {
+        spSections = _promptBuilder!.buildSystemPrompt(
+          displayName: _settingsData?.userDisplayName,
+          alias: _settingsData?.userAlias,
+          role: _settingsData?.userRole,
+          preferences: _settingsData?.userPreferences,
+          facts: _settingsData?.userFacts,
+          customPrompt: _settingsData?.userCustomPrompt,
+        );
+      }
       for (final section in spSections.sections) {
         final existingSection = _cacheManager.cached.sections.where(
           (s) => s.id == section.id,

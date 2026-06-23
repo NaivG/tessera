@@ -116,6 +116,7 @@ flutter:
 
   assets:
     - assets/system_prompt.txt
+    - assets/prompt_fable.txt
     - assets/dict.big.txt
     - assets/dict.txt
     - assets/idf_dict.txt

@@ -244,82 +244,79 @@ class _MessageInputState extends State<MessageInput> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
+    return Padding(
       padding: EdgeInsets.only(
-        left: 12,
-        right: 8,
-        top: 8,
-        bottom: MediaQuery.of(context).padding.bottom + 8,
-      ),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        border: Border(
-          top: BorderSide(color: theme.colorScheme.outlineVariant),
-        ),
+        bottom: MediaQuery.of(context).padding.bottom,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 附件预览条
-          if (_attachments.isNotEmpty) _buildAttachmentBar(theme),
-          // 主输入行
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              // 文本输入框
-              Expanded(
-                child: TextField(
-                  controller: _controller,
-                  focusNode: _focusNode,
-                  enabled: widget.enabled,
-                  minLines: 1,
-                  maxLines: 5,
-                  textInputAction: TextInputAction.newline,
-                  decoration: InputDecoration(
-                    hintText: '输入消息...',
-                    filled: true,
-                    fillColor: theme.colorScheme.surfaceContainerHighest,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide.none,
+          // 附件预览条 — 在统一框上方独立显示
+          if (_attachments.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+              child: _buildAttachmentBar(theme),
+            ),
+          // 主输入框 — 统一圆角框(文本 + 三个按钮合成一个完整框)
+          Container(
+            margin: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: theme.colorScheme.outlineVariant),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // 文本输入框 — 在统一框内透明,边界由外层圆角框负责
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    focusNode: _focusNode,
+                    enabled: widget.enabled,
+                    minLines: 1,
+                    maxLines: 5,
+                    textInputAction: TextInputAction.newline,
+                    decoration: InputDecoration(
+                      hintText: '输入消息...',
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                      isDense: true,
                     ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    isDense: true,
+                    onSubmitted: (_) => _handleSend(),
                   ),
-                  onSubmitted: (_) => _handleSend(),
                 ),
-              ),
-              const SizedBox(width: 4),
-              // 语音按钮
-              if (_sttAvailable)
+                // 语音按钮
+                if (_sttAvailable)
+                  IconButton(
+                    icon: Icon(
+                      _isListening ? Icons.mic : Icons.mic_none,
+                      size: 20,
+                    ),
+                    color: _isListening ? theme.colorScheme.error : null,
+                    tooltip: _isListening ? '停止录音' : '语音输入',
+                    onPressed: _toggleListening,
+                  ),
+                // 附件按钮
                 IconButton(
+                  icon: const Icon(Icons.add, size: 20),
+                  tooltip: '添加附件',
+                  onPressed: _showAttachmentMenu,
+                ),
+                // 发送按钮 — 保持 IconButton.filled 填充圆形作为右端视觉锚点
+                IconButton.filled(
+                  onPressed: _canSend && widget.enabled ? _handleSend : null,
                   icon: Icon(
-                    _isListening ? Icons.mic : Icons.mic_none,
+                    widget.enabled ? Icons.send : Icons.hourglass_top,
                     size: 20,
                   ),
-                  color: _isListening ? theme.colorScheme.error : null,
-                  tooltip: _isListening ? '停止录音' : '语音输入',
-                  onPressed: _toggleListening,
                 ),
-              // 附件按钮
-              IconButton(
-                icon: const Icon(Icons.add, size: 20),
-                tooltip: '添加附件',
-                onPressed: _showAttachmentMenu,
-              ),
-              // 发送按钮
-              IconButton.filled(
-                onPressed: _canSend && widget.enabled ? _handleSend : null,
-                icon: Icon(
-                  widget.enabled ? Icons.send : Icons.hourglass_top,
-                  size: 20,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -327,9 +324,8 @@ class _MessageInputState extends State<MessageInput> {
   }
 
   Widget _buildAttachmentBar(ThemeData theme) {
-    return Container(
+    return SizedBox(
       height: 68,
-      margin: const EdgeInsets.only(bottom: 8, left: 4, right: 4),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _attachments.length,

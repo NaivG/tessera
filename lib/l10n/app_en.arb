@@ -80,6 +80,8 @@
   "settingsSectionPrompt": "Prompts",
   "settingsLightweightMode": "Lightweight Mode",
   "settingsLightweightModeSubtitle": "Greatly reduces system prompts — only keeps core constraints, skips memory loading.",
+  "settingsFableMode": "Fable Mode (Experimental)",
+  "settingsFableModeSubtitle": "Uses the Claude Fable 5 flavor prompt. This will consume more tokens and cannot be enabled together with Lightweight Mode.",
   "settingsCustomPrompt": "Custom Prompt",
 
   "settingsEdit": "Edit",

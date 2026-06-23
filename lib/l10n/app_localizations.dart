@@ -491,6 +491,18 @@ abstract class AppLocalizations {
   /// **'Greatly reduces system prompts — only keeps core constraints, skips memory loading.'**
   String get settingsLightweightModeSubtitle;
 
+  /// No description provided for @settingsFableMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Fable Mode (Experimental)'**
+  String get settingsFableMode;
+
+  /// No description provided for @settingsFableModeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses the Claude Fable 5 flavor prompt. This will consume more tokens and cannot be enabled together with Lightweight Mode.'**
+  String get settingsFableModeSubtitle;
+
   /// No description provided for @settingsCustomPrompt.
   ///
   /// In en, this message translates to:

@@ -268,6 +268,98 @@ You are Tessera, a helpful assistant designed by NaivG.
     return collection.sections.map((s) => s.content).join('\n\n');
   }
 
+  // ── Fable 模式 ──
+
+  /// Fable 模式下「Block 1 — 角色人设」的核心文本。
+  ///
+  /// 整段从 `assets/prompt_fable.txt` 加载（Markdown 散文格式，
+  /// 无占位符，因此无需解析），并通过 [loadFableCore] 懒加载缓存。
+  static String? _fableCorePrompt;
+
+  /// 资产加载失败时的回退提示，保证开关不会让对话直接瘫痪。
+  static const String _fableFallbackCorePrompt = '''
+You are Tessera, a helpful assistant designed by NaivG.
+''';
+
+  /// 懒加载 `assets/prompt_fable.txt`。
+  ///
+  /// - 多次调用安全：仅在首次未命中时执行读取。
+  /// - 加载失败（如资产缺失或 IO 异常）时退化为 [\_fableFallbackCorePrompt]，
+  ///   并通过 [debugPrint] 输出错误，便于排查而不阻塞 UI。
+  Future<void> loadFableCore() async {
+    if (_fableCorePrompt != null) return;
+    try {
+      _fableCorePrompt =
+          await rootBundle.loadString('assets/prompt_fable.txt');
+    } catch (e, st) {
+      debugPrint('[SystemPromptBuilder] fable asset load failed: $e\n$st');
+      _fableCorePrompt = _fableFallbackCorePrompt;
+    }
+  }
+
+  /// 构建 Fable 模式的 [PromptSectionCollection]
+  ///
+  /// 段位结构：
+  /// 1. `system.fable.core` — Fable 整段人设（高优先级，可服务端缓存）
+  /// 2. `system.block2.user_profile` — 复用现有用户档案段
+  /// 3. `system.block3.user_defined` — 复用现有用户自定义提示段
+  ///
+  /// 与 [buildLightweightSystemPrompt] 不同，Fable 模式保留完整的
+  /// 用户档案与自定义提示注入，并允许长时记忆加载。
+  PromptSectionCollection buildFableSystemPrompt({
+    String? displayName,
+    String? alias,
+    String? role,
+    String? preferences,
+    String? facts,
+    String? longTermMemorySummary,
+    String? customPrompt,
+  }) {
+    final core = _fableCorePrompt ?? _fableFallbackCorePrompt;
+    final sections = <PromptSection>[
+      PromptSection.create(
+        id: 'system.fable.core',
+        type: PromptSectionType.prompt,
+        content: core,
+        cacheHint: PromptCacheHint.highPriority,
+      ),
+      buildUserProfileSection(
+        displayName: displayName,
+        alias: alias,
+        role: role,
+        preferences: preferences,
+        facts: facts,
+        longTermMemorySummary: longTermMemorySummary,
+      ),
+      buildUserDefinedSection(customPrompt: customPrompt),
+    ];
+    debugPrint(
+      '[SystemPromptBuilder] fable prompt built: ${sections.fold(0, (sum, s) => sum + s.content.length)} chars',
+    );
+    return PromptSectionCollection(sections);
+  }
+
+  /// 构建 Fable 模式的系统提示词字符串
+  String buildFableSystemPromptString({
+    String? displayName,
+    String? alias,
+    String? role,
+    String? preferences,
+    String? facts,
+    String? longTermMemorySummary,
+    String? customPrompt,
+  }) {
+    return buildFableSystemPrompt(
+      displayName: displayName,
+      alias: alias,
+      role: role,
+      preferences: preferences,
+      facts: facts,
+      longTermMemorySummary: longTermMemorySummary,
+      customPrompt: customPrompt,
+    ).sections.map((s) => s.content).join('\n\n');
+  }
+
   // ── 调试 ──
 
   @override

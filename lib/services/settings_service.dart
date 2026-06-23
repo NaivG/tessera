@@ -19,6 +19,7 @@ class SettingsService {
   static const _keyModelSelectionConfig = 'model_selection_config';
   static const _keyUserCustomPrompt = 'user_custom_prompt';
   static const _keyLightweightSystemPrompt = 'lightweight_system_prompt';
+  static const _keyFableMode = 'fable_mode';
   static const _keyLocale = 'locale';
 
   Future<SharedPreferences> get _store async {
@@ -115,6 +116,14 @@ class SettingsService {
 
   Future<void> setLightweightSystemPrompt(bool v) async =>
       (await _store).setBool(_keyLightweightSystemPrompt, v);
+
+  // --- Fable 模式 ---
+
+  Future<bool> isFableMode() async =>
+      (await _store).getBool(_keyFableMode) ?? false;
+
+  Future<void> setFableMode(bool v) async =>
+      (await _store).setBool(_keyFableMode, v);
 
   // --- 用户自定义 Prompt ---
 

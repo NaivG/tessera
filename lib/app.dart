@@ -135,6 +135,13 @@ class _TesseraAppState extends ConsumerState<TesseraApp> {
           brightness: Brightness.light,
         ),
         useMaterial3: true,
+        fontFamily: 'Noto Sans SC',
+        pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: ZoomPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -142,6 +149,13 @@ class _TesseraAppState extends ConsumerState<TesseraApp> {
           brightness: Brightness.dark,
         ),
         useMaterial3: true,
+        fontFamily: 'Noto Sans SC',
+        pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: ZoomPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
       ),
       home: const WorkspaceApprovalListener(child: MainPage()),
       onGenerateRoute: (settings) {

@@ -209,6 +209,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsLightweightModeSubtitle => '大幅缩减系统提示词，仅保留核心约束并不再限制安全指令，开启后跳过记忆加载。';
 
   @override
+  String get settingsFableMode => 'Fable 模式 (实验性)';
+
+  @override
+  String get settingsFableModeSubtitle => '使用 Claude Fable 5 风味提示词。这会消耗更多token且与轻量模式互斥。';
+
+  @override
   String get settingsCustomPrompt => '自定义提示词';
 
   @override

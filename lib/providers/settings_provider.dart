@@ -23,6 +23,7 @@ class SettingsData {
   final bool deepThinkingEnabled;
   final String userCustomPrompt;
   final bool lightweightSystemPrompt;
+  final bool fableMode;
   final String locale;
   final String userDisplayName;
   final String userAlias;
@@ -42,6 +43,7 @@ class SettingsData {
     this.deepThinkingEnabled = false,
     this.userCustomPrompt = '',
     this.lightweightSystemPrompt = false,
+    this.fableMode = false,
     this.locale = 'system',
     this.userDisplayName = '',
     this.userAlias = '',
@@ -61,6 +63,7 @@ class SettingsData {
     bool? deepThinkingEnabled,
     String? userCustomPrompt,
     bool? lightweightSystemPrompt,
+    bool? fableMode,
     String? locale,
     String? userDisplayName,
     String? userAlias,
@@ -80,6 +83,7 @@ class SettingsData {
       userCustomPrompt: userCustomPrompt ?? this.userCustomPrompt,
       lightweightSystemPrompt:
           lightweightSystemPrompt ?? this.lightweightSystemPrompt,
+      fableMode: fableMode ?? this.fableMode,
       locale: locale ?? this.locale,
       userDisplayName: userDisplayName ?? this.userDisplayName,
       userAlias: userAlias ?? this.userAlias,
@@ -121,6 +125,14 @@ class SettingsNotifier extends Notifier<SettingsData> {
     final deepThinkingEnabled = await _service.isDeepThinkingEnabled();
     final userCustomPrompt = await _service.getUserCustomPrompt();
     final lightweightSystemPrompt = await _service.isLightweightSystemPrompt();
+    final fableMode = await _service.isFableMode();
+    // 防御性归一化：若存储中两个开关都为 true（理论上不会发生，但防止外部注入或迁移异常），
+    // 优先保留 fableMode，关闭 lightweightSystemPrompt，并立即回写持久层。
+    var normalizedLightweight = lightweightSystemPrompt;
+    if (fableMode && lightweightSystemPrompt) {
+      normalizedLightweight = false;
+      await _service.setLightweightSystemPrompt(false);
+    }
     final locale = await _service.getLocale();
     final userDisplayName = await _service.getUserDisplayName();
     final userAlias = await _service.getUserAlias();
@@ -140,7 +152,8 @@ class SettingsNotifier extends Notifier<SettingsData> {
       streamEnabled: streamEnabled,
       deepThinkingEnabled: deepThinkingEnabled,
       userCustomPrompt: userCustomPrompt,
-      lightweightSystemPrompt: lightweightSystemPrompt,
+      lightweightSystemPrompt: normalizedLightweight,
+      fableMode: fableMode,
       locale: locale,
       userDisplayName: userDisplayName,
       userAlias: userAlias,
@@ -363,12 +376,42 @@ class SettingsNotifier extends Notifier<SettingsData> {
   }
 
   // ---------------------------------------------------------------------------
-  // 轻量模式
+  // 轻量模式 / Fable 模式（互斥：同一时刻只能开启其中一个）
   // ---------------------------------------------------------------------------
 
+  /// 统一写入轻量与 Fable 两个互斥开关。
+  ///
+  /// 持久层与内存状态同时更新，避免出现两个开关都为 true 的不一致状态。
+  Future<void> _applySystemPromptMode({
+    required bool fable,
+    required bool lightweight,
+  }) async {
+    await _service.setFableMode(fable);
+    await _service.setLightweightSystemPrompt(lightweight);
+    state = state.copyWith(
+      fableMode: fable,
+      lightweightSystemPrompt: lightweight,
+    );
+  }
+
+  /// 设置 Fable 模式
+  ///
+  /// 开启时强制关闭轻量模式；关闭时不主动恢复轻量模式（保持其原值）。
+  Future<void> setFableMode(bool v) async {
+    await _applySystemPromptMode(
+      fable: v,
+      lightweight: v ? false : state.lightweightSystemPrompt,
+    );
+  }
+
+  /// 设置轻量模式
+  ///
+  /// 开启时强制关闭 Fable 模式；关闭时不主动恢复 Fable 模式（保持其原值）。
   Future<void> setLightweightSystemPrompt(bool v) async {
-    state = state.copyWith(lightweightSystemPrompt: v);
-    await _service.setLightweightSystemPrompt(v);
+    await _applySystemPromptMode(
+      fable: v ? false : state.fableMode,
+      lightweight: v,
+    );
   }
 
   // ---------------------------------------------------------------------------

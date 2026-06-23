@@ -209,6 +209,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLightweightModeSubtitle => 'Greatly reduces system prompts — only keeps core constraints, skips memory loading.';
 
   @override
+  String get settingsFableMode => 'Fable Mode (Experimental)';
+
+  @override
+  String get settingsFableModeSubtitle => 'Uses the Claude Fable 5 flavor prompt. This will consume more tokens and cannot be enabled together with Lightweight Mode.';
+
+  @override
   String get settingsCustomPrompt => 'Custom Prompt';
 
   @override

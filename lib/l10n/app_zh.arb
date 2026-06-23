@@ -80,6 +80,8 @@
   "settingsSectionPrompt": "提示词",
   "settingsLightweightMode": "轻量模式",
   "settingsLightweightModeSubtitle": "大幅缩减系统提示词，仅保留核心约束并不再限制安全指令，开启后跳过记忆加载。",
+  "settingsFableMode": "Fable 模式 (实验性)",
+  "settingsFableModeSubtitle": "使用 Claude Fable 5 风味提示词。这会消耗更多token且与轻量模式互斥。",
   "settingsCustomPrompt": "自定义提示词",
 
   "settingsEdit": "编辑",

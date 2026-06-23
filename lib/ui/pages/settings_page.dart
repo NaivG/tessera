@@ -178,7 +178,19 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             onChanged: (v) =>
                 ref.read(settingsProvider.notifier).setLightweightSystemPrompt(v),
             secondary: Icon(
-              Icons.compress_outlined,
+              Icons.flash_on_outlined,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          SwitchListTile(
+            title: Text(l10n.settingsFableMode),
+            subtitle: Text(l10n.settingsFableModeSubtitle),
+            value: state.fableMode,
+            onChanged: (v) =>
+                ref.read(settingsProvider.notifier).setFableMode(v),
+            secondary: Icon(
+              Icons.auto_stories_outlined,
               color: theme.colorScheme.primary,
             ),
           ),
