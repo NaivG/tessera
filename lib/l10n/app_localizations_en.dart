@@ -884,4 +884,77 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get modeAgentCluster => 'Agent Cluster(Beta)';
+
+  @override
+  String get settingsSectionWorkspace => 'Workspaces';
+
+  @override
+  String get settingsWorkspaceManage => 'Manage Workspaces';
+
+  @override
+  String get workspaceNoneActive => 'No active workspace';
+
+  @override
+  String get workspaceAppBarTitle => 'Workspaces';
+
+  @override
+  String get workspaceEmpty => 'No workspaces yet';
+
+  @override
+  String get workspaceEmptySubtitle => 'Add a folder to let Tessera read and write files in it.';
+
+  @override
+  String get workspaceAddTitle => 'Add Workspace';
+
+  @override
+  String get workspacePickFolder => 'Pick Folder';
+
+  @override
+  String get workspaceNameHint => 'Workspace name';
+
+  @override
+  String workspacePathLabel(Object path) {
+    return 'Path: $path';
+  }
+
+  @override
+  String get workspaceSetActive => 'Set as Active';
+
+  @override
+  String get workspaceRename => 'Rename';
+
+  @override
+  String get workspaceRemove => 'Remove Workspace';
+
+  @override
+  String get workspaceActive => 'Active';
+
+  @override
+  String get workspaceSearchHint => 'Search files…';
+
+  @override
+  String get workspaceApprovalTitle => 'Confirm File Operation';
+
+  @override
+  String workspaceApprovalMessage(Object action, Object path, Object ws) {
+    return 'The assistant wants to $action \"$path\" in workspace \"$ws\". Allow?';
+  }
+
+  @override
+  String get workspaceApprovalActionWrite => 'write to';
+
+  @override
+  String get workspaceApprovalActionEdit => 'edit';
+
+  @override
+  String get workspaceApprovalActionMkdir => 'create directory';
+
+  @override
+  String get workspaceApprovalActionDelete => 'delete';
+
+  @override
+  String get workspaceApprovalDeny => 'Deny';
+
+  @override
+  String get workspaceApprovalAllow => 'Allow';
 }

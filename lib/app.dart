@@ -12,6 +12,8 @@ import 'ui/pages/settings_page.dart';
 import 'ui/pages/user_profile_page.dart';
 import 'ui/pages/plugin_page.dart';
 import 'ui/pages/stats_page.dart';
+import 'ui/pages/workspace_page.dart';
+import 'ui/widgets/workspace_approval_listener.dart';
 
 // -----------------------------------------------------------------------------
 // 全局错误暂存 —— 由 main.dart 中的错误处理器写入，路由生成时消费
@@ -77,6 +79,8 @@ class _TesseraAppState extends ConsumerState<TesseraApp> {
     super.initState();
     // 异步加载设置
     ref.read(settingsProvider.notifier).load();
+    // 工作空间的初始状态在 WorkspaceNotifier.build() 中同步从 service 读取，
+    // 无需在这里显式 load()。
   }
 
   /// 解析主题模式
@@ -139,7 +143,7 @@ class _TesseraAppState extends ConsumerState<TesseraApp> {
         ),
         useMaterial3: true,
       ),
-      home: const MainPage(),
+      home: const WorkspaceApprovalListener(child: MainPage()),
       onGenerateRoute: (settings) {
         if (settings.name == ErrorPage.routeName) {
           final payload = consumePendingError();
@@ -159,6 +163,7 @@ class _TesseraAppState extends ConsumerState<TesseraApp> {
         '/memory': (_) => const MemoryPage(),
         '/plugins': (_) => const PluginPage(),
         '/stats': (_) => const StatsPage(),
+        '/workspace': (_) => const WorkspacePage(),
       },
     );
   }

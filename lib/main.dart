@@ -12,6 +12,7 @@ import 'package:window_manager/window_manager.dart';
 
 import 'app.dart';
 import 'services/media_library.dart';
+import 'services/workspace_service.dart';
 import 'ui/pages/error_page.dart';
 import 'utils/logger.dart';
 
@@ -46,6 +47,7 @@ void main() {
       // 初始化 MediaLibrary 缓存目录
       final appDir = (await getApplicationDocumentsDirectory()).path;
       await MediaLibrary.instance.init(appDir);
+      await WorkspaceService.instance.init(appDir);
 
       // 桌面端：配置窗口
       try {

@@ -8,3 +8,5 @@ export 'session_provider.dart';
 export 'settings_provider.dart';
 export 'settings_service_provider.dart';
 export 'stats_provider.dart';
+export 'workspace_provider.dart';
+export 'workspace_service_provider.dart';

@@ -1744,6 +1744,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Agent Cluster(Beta)'**
   String get modeAgentCluster;
+
+  /// No description provided for @settingsSectionWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspaces'**
+  String get settingsSectionWorkspace;
+
+  /// No description provided for @settingsWorkspaceManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Workspaces'**
+  String get settingsWorkspaceManage;
+
+  /// No description provided for @workspaceNoneActive.
+  ///
+  /// In en, this message translates to:
+  /// **'No active workspace'**
+  String get workspaceNoneActive;
+
+  /// No description provided for @workspaceAppBarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspaces'**
+  String get workspaceAppBarTitle;
+
+  /// No description provided for @workspaceEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No workspaces yet'**
+  String get workspaceEmpty;
+
+  /// No description provided for @workspaceEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a folder to let Tessera read and write files in it.'**
+  String get workspaceEmptySubtitle;
+
+  /// No description provided for @workspaceAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Workspace'**
+  String get workspaceAddTitle;
+
+  /// No description provided for @workspacePickFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick Folder'**
+  String get workspacePickFolder;
+
+  /// No description provided for @workspaceNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace name'**
+  String get workspaceNameHint;
+
+  /// No description provided for @workspacePathLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Path: {path}'**
+  String workspacePathLabel(Object path);
+
+  /// No description provided for @workspaceSetActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Set as Active'**
+  String get workspaceSetActive;
+
+  /// No description provided for @workspaceRename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get workspaceRename;
+
+  /// No description provided for @workspaceRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Workspace'**
+  String get workspaceRemove;
+
+  /// No description provided for @workspaceActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get workspaceActive;
+
+  /// No description provided for @workspaceSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search files…'**
+  String get workspaceSearchHint;
+
+  /// No description provided for @workspaceApprovalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm File Operation'**
+  String get workspaceApprovalTitle;
+
+  /// No description provided for @workspaceApprovalMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The assistant wants to {action} \"{path}\" in workspace \"{ws}\". Allow?'**
+  String workspaceApprovalMessage(Object action, Object path, Object ws);
+
+  /// No description provided for @workspaceApprovalActionWrite.
+  ///
+  /// In en, this message translates to:
+  /// **'write to'**
+  String get workspaceApprovalActionWrite;
+
+  /// No description provided for @workspaceApprovalActionEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'edit'**
+  String get workspaceApprovalActionEdit;
+
+  /// No description provided for @workspaceApprovalActionMkdir.
+  ///
+  /// In en, this message translates to:
+  /// **'create directory'**
+  String get workspaceApprovalActionMkdir;
+
+  /// No description provided for @workspaceApprovalActionDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'delete'**
+  String get workspaceApprovalActionDelete;
+
+  /// No description provided for @workspaceApprovalDeny.
+  ///
+  /// In en, this message translates to:
+  /// **'Deny'**
+  String get workspaceApprovalDeny;
+
+  /// No description provided for @workspaceApprovalAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get workspaceApprovalAllow;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

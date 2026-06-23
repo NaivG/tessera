@@ -392,5 +392,41 @@
   "modeNormal": "普通",
   "modePlan": "计划",
   "modeAgent": "Agent",
-  "modeAgentCluster": "Agent 集群(Beta)"
+  "modeAgentCluster": "Agent 集群(Beta)",
+
+  "settingsSectionWorkspace": "工作空间",
+  "settingsWorkspaceManage": "管理工作空间",
+  "workspaceNoneActive": "未选择激活工作空间",
+  "workspaceAppBarTitle": "工作空间",
+  "workspaceEmpty": "尚未添加工作空间",
+  "workspaceEmptySubtitle": "添加文件夹后,Tessera 才能读写其中的文件。",
+  "workspaceAddTitle": "添加工作空间",
+  "workspacePickFolder": "选择文件夹",
+  "workspaceNameHint": "工作空间名称",
+  "workspacePathLabel": "路径:{path}",
+  "@workspacePathLabel": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "workspaceSetActive": "设为当前",
+  "workspaceRename": "重命名",
+  "workspaceRemove": "移除工作空间",
+  "workspaceActive": "当前",
+  "workspaceSearchHint": "搜索文件…",
+  "workspaceApprovalTitle": "确认文件操作",
+  "workspaceApprovalMessage": "助手想对工作空间 \"{ws}\" 中的 \"{path}\" 执行{action}。是否允许?",
+  "@workspaceApprovalMessage": {
+    "placeholders": {
+      "action": {},
+      "path": {},
+      "ws": {}
+    }
+  },
+  "workspaceApprovalActionWrite": "写入",
+  "workspaceApprovalActionEdit": "编辑",
+  "workspaceApprovalActionMkdir": "创建目录",
+  "workspaceApprovalActionDelete": "删除",
+  "workspaceApprovalDeny": "拒绝",
+  "workspaceApprovalAllow": "允许"
 }

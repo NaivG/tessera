@@ -884,4 +884,77 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get modeAgentCluster => 'Agent 集群(Beta)';
+
+  @override
+  String get settingsSectionWorkspace => '工作空间';
+
+  @override
+  String get settingsWorkspaceManage => '管理工作空间';
+
+  @override
+  String get workspaceNoneActive => '未选择激活工作空间';
+
+  @override
+  String get workspaceAppBarTitle => '工作空间';
+
+  @override
+  String get workspaceEmpty => '尚未添加工作空间';
+
+  @override
+  String get workspaceEmptySubtitle => '添加文件夹后,Tessera 才能读写其中的文件。';
+
+  @override
+  String get workspaceAddTitle => '添加工作空间';
+
+  @override
+  String get workspacePickFolder => '选择文件夹';
+
+  @override
+  String get workspaceNameHint => '工作空间名称';
+
+  @override
+  String workspacePathLabel(Object path) {
+    return '路径:$path';
+  }
+
+  @override
+  String get workspaceSetActive => '设为当前';
+
+  @override
+  String get workspaceRename => '重命名';
+
+  @override
+  String get workspaceRemove => '移除工作空间';
+
+  @override
+  String get workspaceActive => '当前';
+
+  @override
+  String get workspaceSearchHint => '搜索文件…';
+
+  @override
+  String get workspaceApprovalTitle => '确认文件操作';
+
+  @override
+  String workspaceApprovalMessage(Object action, Object path, Object ws) {
+    return '助手想对工作空间 \"$ws\" 中的 \"$path\" 执行$action。是否允许?';
+  }
+
+  @override
+  String get workspaceApprovalActionWrite => '写入';
+
+  @override
+  String get workspaceApprovalActionEdit => '编辑';
+
+  @override
+  String get workspaceApprovalActionMkdir => '创建目录';
+
+  @override
+  String get workspaceApprovalActionDelete => '删除';
+
+  @override
+  String get workspaceApprovalDeny => '拒绝';
+
+  @override
+  String get workspaceApprovalAllow => '允许';
 }

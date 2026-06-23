@@ -391,5 +391,41 @@
   "modeNormal": "Normal",
   "modePlan": "Plan",
   "modeAgent": "Agent",
-  "modeAgentCluster": "Agent Cluster(Beta)"
+  "modeAgentCluster": "Agent Cluster(Beta)",
+
+  "settingsSectionWorkspace": "Workspaces",
+  "settingsWorkspaceManage": "Manage Workspaces",
+  "workspaceNoneActive": "No active workspace",
+  "workspaceAppBarTitle": "Workspaces",
+  "workspaceEmpty": "No workspaces yet",
+  "workspaceEmptySubtitle": "Add a folder to let Tessera read and write files in it.",
+  "workspaceAddTitle": "Add Workspace",
+  "workspacePickFolder": "Pick Folder",
+  "workspaceNameHint": "Workspace name",
+  "workspacePathLabel": "Path: {path}",
+  "@workspacePathLabel": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "workspaceSetActive": "Set as Active",
+  "workspaceRename": "Rename",
+  "workspaceRemove": "Remove Workspace",
+  "workspaceActive": "Active",
+  "workspaceSearchHint": "Search files…",
+  "workspaceApprovalTitle": "Confirm File Operation",
+  "workspaceApprovalMessage": "The assistant wants to {action} \"{path}\" in workspace \"{ws}\". Allow?",
+  "@workspaceApprovalMessage": {
+    "placeholders": {
+      "action": {},
+      "path": {},
+      "ws": {}
+    }
+  },
+  "workspaceApprovalActionWrite": "write to",
+  "workspaceApprovalActionEdit": "edit",
+  "workspaceApprovalActionMkdir": "create directory",
+  "workspaceApprovalActionDelete": "delete",
+  "workspaceApprovalDeny": "Deny",
+  "workspaceApprovalAllow": "Allow"
 }

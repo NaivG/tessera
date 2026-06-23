@@ -14,6 +14,7 @@ import 'conversation_list_provider.dart';
 import 'session_provider.dart';
 import 'settings_provider.dart';
 import 'stats_provider.dart';
+import 'workspace_provider.dart';
 
 // =============================================================================
 // ChatData
@@ -266,6 +267,8 @@ class ChatNotifier extends Notifier<ChatData> {
     _toolRegistry.register(discoverTool, _handleDiscover);
     _adapter!.registerTools(_toolRegistry);
     PluginRegistry().registerTo(_toolRegistry);
+    // 工作空间工具 — 由 WorkspaceApprovalCoordinator 异步审批
+    registerWorkspaceTools(_toolRegistry, confirmer: _confirmWorkspaceAction);
   }
 
   Future<void> init() async {
@@ -288,6 +291,10 @@ class ChatNotifier extends Notifier<ChatData> {
       _toolRegistry.register(discoverTool, _handleDiscover);
     }
     PluginRegistry().registerTo(_toolRegistry);
+    // 工作空间工具 — 防止 configureCapabilities 清空后未重新注册
+    if (!_toolRegistry.has('workspace_list')) {
+      registerWorkspaceTools(_toolRegistry, confirmer: _confirmWorkspaceAction);
+    }
 
     _initialized = true;
     debugPrint('[ChatNotifier] 初始化完成，记忆系统就绪');
@@ -410,6 +417,7 @@ Wrap the plan JSON in a ```json code block.''';
     // 写入 cache + 显示指针 + 标记为运行中
     _putConversation(conv);
     state = state.copyWith(
+      conversation: conv, // 新对话自动成为显示中的对话
       isStreaming: false,
       error: null,
       memoryContextText: '',
@@ -1310,6 +1318,23 @@ Wrap the plan JSON in a ```json code block.''';
     tools.addAll(adapterTools);
     tools.addAll(pluginTools);
 
+    // 始终注入 workspace_* 工具 — 核心能力，与 discover/adapter 并列。
+    // 写操作仍由 WorkspaceApprovalCoordinator 弹窗向用户确认，这里只是
+    // 让 LLM 在 tools schema 中能看到这些工具。
+    for (final def in const [
+      workspaceListTool,
+      workspaceReadTool,
+      workspaceSearchTool,
+      workspaceWriteTool,
+      workspaceEditTool,
+      workspaceMkdirTool,
+      workspaceDeleteTool,
+    ]) {
+      if (_toolRegistry.has(def.name)) {
+        tools.add(def);
+      }
+    }
+
     // 去重（按 name）
     final seen = <String>{};
     return tools.where((t) => seen.add(t.name)).toList();
@@ -1516,6 +1541,27 @@ Wrap the plan JSON in a ```json code block.''';
   }
 
   // ── Tool 调用 ──
+
+  /// 工作空间工具审批 — 通过 WorkspaceApprovalCoordinator 弹出对话框
+  Future<bool> _confirmWorkspaceAction(
+      WorkspaceApprovalRequest request) async {
+    final coordinator = ref.read(workspaceApprovalCoordinatorProvider);
+    // 启动一个超时计时器，5 秒内若无响应视为拒绝
+    final timeout = Future<bool>.delayed(
+      const Duration(seconds: 5),
+      () {
+        if (!request.completer.isCompleted) {
+          request.completer.complete(false);
+        }
+        return false;
+      },
+    );
+    final result = await Future.any([
+      coordinator.request(request),
+      timeout,
+    ]);
+    return result;
+  }
 
   /// `discover` meta-tool handler：统一发现 skills 和 tools
   Future<ToolResult> _handleDiscover(ToolCall call) async {

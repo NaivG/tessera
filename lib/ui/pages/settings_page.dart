@@ -187,6 +187,42 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
           const Divider(height: 24),
 
+          // 工作空间
+          _SectionHeader(l10n.settingsSectionWorkspace),
+          const SizedBox(height: 8),
+          Consumer(
+            builder: (ctx, wsRef, _) {
+              final wsState = wsRef.watch(workspaceProvider);
+              final activeName = wsState.active?.name;
+              return ListTile(
+                leading: Icon(
+                  Icons.folder_outlined,
+                  color: theme.colorScheme.primary,
+                ),
+                title: Text(l10n.settingsWorkspaceManage),
+                subtitle: Text(
+                  activeName ?? l10n.workspaceNoneActive,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                tileColor: theme.colorScheme.surfaceContainerHighest
+                    .withValues(alpha: 0.5),
+                onTap: () {
+                  Navigator.of(context).pushNamed('/workspace');
+                },
+              );
+            },
+          ),
+
+          const Divider(height: 24),
+
           // 插件管理
           _SectionHeader(l10n.pluginAppBarTitle),
           const SizedBox(height: 8),
