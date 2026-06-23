@@ -66,5 +66,15 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>需要访问文件夹以保存和读取文件</string>
+	<key>NSFileProviderDomainUsageDescription</key>
+	<string>需要访问文件</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>需要访问麦克风以进行录音</string>
+	<key>NSCameraUsageDescription</key>
+	<string>需要访问相机以进行拍照</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>需要访问相册以进行图片选择</string>
 </dict>
 </plist>

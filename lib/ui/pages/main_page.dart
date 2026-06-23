@@ -11,6 +11,7 @@ import '../../models/message.dart';
 import '../../providers/providers.dart';
 import '../../services/conversation_service.dart';
 import '../widgets/chat_content_view.dart';
+import '../widgets/conversation_menu.dart';
 import '../widgets/message_input.dart';
 import '../widgets/sidebar.dart';
 
@@ -85,22 +86,38 @@ class _MainPageState extends ConsumerState<MainPage>
     }
     final notifier = ref.read(chatProvider.notifier);
     notifier.configureCapabilities(ref.read(settingsProvider));
-    await notifier.init();
-    await notifier.loadConversation(conv.id);
+    // 使用 setDisplayedConversation 而非旧 loadConversation:
+    // 不取消运行中的流,只切换显示指针。
+    await notifier.setDisplayedConversation(conv.id);
   }
 
   void _newConversation() {
     if (_scaffoldKey.currentState?.isDrawerOpen == true) {
       Navigator.of(context).pop();
     }
-    ref.read(chatProvider.notifier).clear();
+    // 使用 enterDraft 而非 clear:不取消运行中的流,仅进入草稿状态。
+    // MessageInput 在 UI 层根据 runningConversationId 判断是否禁用。
+    ref.read(chatProvider.notifier).enterDraft();
   }
 
   Future<void> _deleteConversation(String id) async {
+    final chatState = ref.read(chatProvider);
+    // 守卫:正在运行的对话不允许删除(避免打断流式输出)
+    if (chatState.runningConversationId == id) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.deleteRunningConversationBlocked)),
+        );
+      }
+      return;
+    }
     await _convService.deleteConversation(id);
     ref.read(conversationListProvider.notifier).remove(id);
+    ref.read(chatProvider.notifier).removeConversation(id);
+    // 如果当前显示的就是被删除的对话,清空显示指针
     if (_activeConversationId == id) {
-      ref.read(chatProvider.notifier).clear();
+      ref.read(chatProvider.notifier).enterDraft();
     }
   }
 
@@ -250,12 +267,24 @@ class _MainPageState extends ConsumerState<MainPage>
         ),
         title: Text(_title, style: theme.textTheme.titleMedium),
         actions: [
-          if (ref.watch(chatProvider).isStreaming)
+          ConversationMenu(
+            conversation: ref.watch(chatProvider).conversation,
+            pendingMode: ref.watch(chatProvider).pendingMode,
+            sessions: ref.watch(sessionProvider).sessions,
+            activeSessionId: ref.watch(sessionProvider).activeSessionId,
+            onSwitchSession: (id) =>
+                ref.read(chatProvider.notifier).switchSession(id),
+            onSwitchMode: (mode) =>
+                ref.read(chatProvider.notifier).setPendingMode(mode),
+          ),
+          // Stop 按钮:只要存在运行中的对话就显示,不要求 displayed == running
+          if (ref.watch(chatProvider).runningConversationId != null)
             IconButton(
               icon: const Icon(Icons.stop),
               onPressed: () => chatNotifier.stopStreaming(),
             ),
-          if (!ref.watch(chatProvider).isStreaming &&
+          // Regenerate:仅当无运行中对话且当前显示对话有消息时
+          if (ref.watch(chatProvider).runningConversationId == null &&
               ref.watch(chatProvider).messages.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.refresh),
@@ -277,6 +306,8 @@ class _MainPageState extends ConsumerState<MainPage>
           onSettings: _openSettings,
           displayName: settings.userDisplayName,
           onProfile: () => Navigator.of(context).pushNamed('/profile'),
+          runningConversationId: ref.watch(chatProvider).runningConversationId,
+          displayedConversationId: ref.watch(chatProvider).conversation?.id,
         ),
       ),
       body: _buildChatArea(theme),
@@ -309,6 +340,8 @@ class _MainPageState extends ConsumerState<MainPage>
               onToggleCollapse: _toggleSidebar,
               displayName: settings.userDisplayName,
               onProfile: () => Navigator.of(context).pushNamed('/profile'),
+              runningConversationId: ref.watch(chatProvider).runningConversationId,
+              displayedConversationId: ref.watch(chatProvider).conversation?.id,
             ),
           ),
           Container(width: 1, color: theme.colorScheme.outlineVariant),
@@ -323,12 +356,23 @@ class _MainPageState extends ConsumerState<MainPage>
                       ),
                 title: Text(_title, style: theme.textTheme.titleMedium),
                 actions: [
-                  if (chatData.isStreaming)
+                  ConversationMenu(
+                    conversation: chatData.conversation,
+                    pendingMode: chatData.pendingMode,
+                    sessions: ref.watch(sessionProvider).sessions,
+                    activeSessionId: ref.watch(sessionProvider).activeSessionId,
+                    onSwitchSession: (id) =>
+                        ref.read(chatProvider.notifier).switchSession(id),
+                    onSwitchMode: (mode) =>
+                        ref.read(chatProvider.notifier).setPendingMode(mode),
+                  ),
+                  if (chatData.runningConversationId != null)
                     IconButton(
                       icon: const Icon(Icons.stop),
                       onPressed: () => chatNotifier.stopStreaming(),
                     ),
-                  if (!chatData.isStreaming && chatData.messages.isNotEmpty)
+                  if (chatData.runningConversationId == null &&
+                      chatData.messages.isNotEmpty)
                     IconButton(
                       icon: const Icon(Icons.refresh),
                       onPressed: () => chatNotifier.retry(

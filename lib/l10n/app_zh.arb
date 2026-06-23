@@ -24,6 +24,11 @@
   "chatWelcomeTitle": "Tessera AI",
   "chatWelcomeSubtitle": "开始新对话，发送消息即可",
 
+  "chatWelcomeDesc1": "你的全能 AI 助手",
+  "chatWelcomeDesc2": "由你选择的模型驱动",
+  "chatWelcomeDesc3": "无缝衔接多模态任务",
+  "chatWelcomeDesc4": "在下方开始新对话",
+
   "bubbleThinking": "思考中...",
   "bubbleThought": "已思考",
   "bubbleToolCall": "调用工具...",
@@ -354,5 +359,38 @@
   "statsResetConfirm": "确定要重置所有使用统计吗？此操作不可撤销。",
   "statsEmpty": "暂无统计数据",
   "statsEmptySubtitle": "开始与 AI 模型对话后，使用数据将显示在此处",
-  "statsShortcut": "统计"
+  "statsShortcut": "统计",
+
+  "conversationSelectMode": "选择对话模式",
+  "conversationCurrentMode": "当前模式: {mode}",
+  "@conversationCurrentMode": {
+    "placeholders": { "mode": {} }
+  },
+  "conversationSwitchSession": "会话切换",
+  "conversationMainSession": "主会话",
+
+  "planExecuteTitle": "执行计划",
+
+  "subAgentTitle": "子Agent: {task}",
+  "@subAgentTitle": {
+    "placeholders": { "task": {} }
+  },
+  "subAgentViewSession": "查看子Agent会话",
+  "subAgentRunning": "运行中",
+  "subAgentCompleted": "已完成",
+  "subAgentFailed": "失败",
+
+  "readOnlyBannerMessage": "正在运行「{title}」,此对话为只读",
+  "@readOnlyBannerMessage": {
+    "placeholders": { "title": {} }
+  },
+  "readOnlyJumpToRunning": "跳转",
+  "readOnlyInputDisabledHint": "请先停止其他对话的运行",
+  "deleteRunningConversationBlocked": "对话正在运行,请先停止",
+  "sidebarRunningIndicator": "运行中",
+
+  "modeNormal": "普通",
+  "modePlan": "计划",
+  "modeAgent": "Agent",
+  "modeAgentCluster": "Agent 集群(Beta)"
 }

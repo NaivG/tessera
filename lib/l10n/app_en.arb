@@ -24,6 +24,11 @@
   "chatWelcomeTitle": "Tessera AI",
   "chatWelcomeSubtitle": "Start a new conversation by sending a message",
 
+  "chatWelcomeDesc1": "Your all-in-one AI assistant",
+  "chatWelcomeDesc2": "Powered by the models you choose",
+  "chatWelcomeDesc3": "Seamlessly routes multimodal tasks",
+  "chatWelcomeDesc4": "Start a new conversation below",
+
   "bubbleThinking": "Thinking...",
   "bubbleThought": "Thought",
   "bubbleToolCall": "Calling tool...",
@@ -353,5 +358,38 @@
   "statsResetConfirm": "Are you sure you want to reset all usage statistics? This action cannot be undone.",
   "statsEmpty": "No usage data yet",
   "statsEmptySubtitle": "Usage data will appear here after you start chatting with AI models",
-  "statsShortcut": "Stats"
+  "statsShortcut": "Stats",
+
+  "conversationSelectMode": "Select Mode",
+  "conversationCurrentMode": "Current: {mode}",
+  "@conversationCurrentMode": {
+    "placeholders": { "mode": {} }
+  },
+  "conversationSwitchSession": "Switch Session",
+  "conversationMainSession": "Main Session",
+
+  "planExecuteTitle": "Execution Plan",
+
+  "subAgentTitle": "Sub-Agent: {task}",
+  "@subAgentTitle": {
+    "placeholders": { "task": {} }
+  },
+  "subAgentViewSession": "View Sub-Agent Session",
+  "subAgentRunning": "Running",
+  "subAgentCompleted": "Completed",
+  "subAgentFailed": "Failed",
+
+  "readOnlyBannerMessage": "Running \"{title}\" — this conversation is read-only",
+  "@readOnlyBannerMessage": {
+    "placeholders": { "title": {} }
+  },
+  "readOnlyJumpToRunning": "Jump",
+  "readOnlyInputDisabledHint": "Please stop the running conversation first",
+  "deleteRunningConversationBlocked": "Conversation is running. Please stop it first.",
+  "sidebarRunningIndicator": "Running",
+
+  "modeNormal": "Normal",
+  "modePlan": "Plan",
+  "modeAgent": "Agent",
+  "modeAgentCluster": "Agent Cluster(Beta)"
 }

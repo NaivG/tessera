@@ -62,8 +62,7 @@ import 'app_localizations_zh.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -71,8 +70,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -84,18 +82,17 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('zh'),
+    Locale('zh')
   ];
 
   /// No description provided for @localeDescription.
@@ -205,6 +202,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Start a new conversation by sending a message'**
   String get chatWelcomeSubtitle;
+
+  /// No description provided for @chatWelcomeDesc1.
+  ///
+  /// In en, this message translates to:
+  /// **'Your all-in-one AI assistant'**
+  String get chatWelcomeDesc1;
+
+  /// No description provided for @chatWelcomeDesc2.
+  ///
+  /// In en, this message translates to:
+  /// **'Powered by the models you choose'**
+  String get chatWelcomeDesc2;
+
+  /// No description provided for @chatWelcomeDesc3.
+  ///
+  /// In en, this message translates to:
+  /// **'Seamlessly routes multimodal tasks'**
+  String get chatWelcomeDesc3;
+
+  /// No description provided for @chatWelcomeDesc4.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a new conversation below'**
+  String get chatWelcomeDesc4;
 
   /// No description provided for @bubbleThinking.
   ///
@@ -1388,124 +1409,344 @@ abstract class AppLocalizations {
   /// **'Library'**
   String get toolboxLabel;
 
-  // ---------------------------------------------------------------------------
-  // Plugin page
-  // ---------------------------------------------------------------------------
-
   /// No description provided for @pluginAppBarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins'**
   String get pluginAppBarTitle;
 
-  /// No description provided for @pluginEmpty.
-  String get pluginEmpty;
-
-  /// No description provided for @pluginLoadError.
-  String get pluginLoadError;
-
-  /// No description provided for @pluginRetry.
-  String get pluginRetry;
-
-  /// No description provided for @pluginInstall.
-  String get pluginInstall;
-
-  /// No description provided for @pluginUninstall.
-  String get pluginUninstall;
-
-  /// No description provided for @pluginInstalled.
-  String get pluginInstalled;
-
-  /// No description provided for @pluginBundled.
-  String get pluginBundled;
-
-  /// No description provided for @pluginInstallSuccess.
-  String pluginInstallSuccess(String name);
-
-  /// No description provided for @pluginInstallFailed.
-  String pluginInstallFailed(String error);
-
-  /// No description provided for @pluginUninstallSuccess.
-  String pluginUninstallSuccess(String name);
-
-  /// No description provided for @pluginUninstallFailed.
-  String pluginUninstallFailed(String error);
-
-  /// No description provided for @pluginUninstallConfirm.
-  String pluginUninstallConfirm(String name);
-
-  /// No description provided for @pluginUninstallDialogTitle.
-  String get pluginUninstallDialogTitle;
-
-  /// No description provided for @pluginEnableFailed.
-  String pluginEnableFailed(String name);
-
-  /// No description provided for @pluginByAuthor.
-  String pluginByAuthor(String author);
-
-  /// No description provided for @pluginShortcut.
-  String get pluginShortcut;
-
   /// No description provided for @pluginSectionInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed'**
   String get pluginSectionInstalled;
 
   /// No description provided for @pluginSectionBundled.
+  ///
+  /// In en, this message translates to:
+  /// **'Bundled Sources'**
   String get pluginSectionBundled;
 
   /// No description provided for @pluginSectionInstallFromFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Install from File'**
   String get pluginSectionInstallFromFile;
 
   /// No description provided for @pluginInstallFromFileAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Select .plugin File'**
   String get pluginInstallFromFileAction;
 
+  /// No description provided for @pluginEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No plugins found'**
+  String get pluginEmpty;
+
+  /// No description provided for @pluginLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load plugins'**
+  String get pluginLoadError;
+
+  /// No description provided for @pluginRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get pluginRetry;
+
+  /// No description provided for @pluginInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get pluginInstall;
+
+  /// No description provided for @pluginUninstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Uninstall'**
+  String get pluginUninstall;
+
+  /// No description provided for @pluginInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed'**
+  String get pluginInstalled;
+
+  /// No description provided for @pluginBundled.
+  ///
+  /// In en, this message translates to:
+  /// **'Bundled'**
+  String get pluginBundled;
+
+  /// No description provided for @pluginInstallSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin \"{name}\" installed successfully'**
+  String pluginInstallSuccess(Object name);
+
+  /// No description provided for @pluginInstallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Install failed: {error}'**
+  String pluginInstallFailed(Object error);
+
+  /// No description provided for @pluginUninstallSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin \"{name}\" uninstalled'**
+  String pluginUninstallSuccess(Object name);
+
+  /// No description provided for @pluginUninstallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Uninstall failed: {error}'**
+  String pluginUninstallFailed(Object error);
+
+  /// No description provided for @pluginUninstallConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to uninstall \"{name}\"?\nThis will delete the plugin files.'**
+  String pluginUninstallConfirm(Object name);
+
+  /// No description provided for @pluginUninstallDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Uninstall Plugin'**
+  String get pluginUninstallDialogTitle;
+
+  /// No description provided for @pluginEnableFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to enable plugin \"{name}\"'**
+  String pluginEnableFailed(Object name);
+
+  /// No description provided for @pluginByAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'by {author}'**
+  String pluginByAuthor(Object author);
+
   /// No description provided for @pluginInstallFromZip.
+  ///
+  /// In en, this message translates to:
+  /// **'Install from ZIP'**
   String get pluginInstallFromZip;
 
   /// No description provided for @pluginInstallConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Install Plugin'**
   String get pluginInstallConfirmTitle;
 
   /// No description provided for @pluginInvalidZip.
-  String pluginInvalidZip(String error);
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid plugin package: {error}'**
+  String pluginInvalidZip(Object error);
+
+  /// No description provided for @pluginShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins'**
+  String get pluginShortcut;
 
   /// No description provided for @statsAppBarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage Statistics'**
   String get statsAppBarTitle;
 
   /// No description provided for @statsOverall.
+  ///
+  /// In en, this message translates to:
+  /// **'Overall'**
   String get statsOverall;
 
   /// No description provided for @statsTotalTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Tokens'**
   String get statsTotalTokens;
 
   /// No description provided for @statsPromptTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt'**
   String get statsPromptTokens;
 
   /// No description provided for @statsCompletionTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'Completion'**
   String get statsCompletionTokens;
 
   /// No description provided for @statsCacheHitRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache Hit Rate'**
   String get statsCacheHitRate;
 
   /// No description provided for @statsRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests'**
   String get statsRequests;
 
   /// No description provided for @statsReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
   String get statsReset;
 
   /// No description provided for @statsResetConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Reset'**
   String get statsResetConfirmTitle;
 
   /// No description provided for @statsResetConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to reset all usage statistics? This action cannot be undone.'**
   String get statsResetConfirm;
 
   /// No description provided for @statsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No usage data yet'**
   String get statsEmpty;
 
   /// No description provided for @statsEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage data will appear here after you start chatting with AI models'**
   String get statsEmptySubtitle;
 
   /// No description provided for @statsShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
   String get statsShortcut;
+
+  /// No description provided for @conversationSelectMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Mode'**
+  String get conversationSelectMode;
+
+  /// No description provided for @conversationCurrentMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Current: {mode}'**
+  String conversationCurrentMode(Object mode);
+
+  /// No description provided for @conversationSwitchSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch Session'**
+  String get conversationSwitchSession;
+
+  /// No description provided for @conversationMainSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Main Session'**
+  String get conversationMainSession;
+
+  /// No description provided for @planExecuteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Execution Plan'**
+  String get planExecuteTitle;
+
+  /// No description provided for @subAgentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sub-Agent: {task}'**
+  String subAgentTitle(Object task);
+
+  /// No description provided for @subAgentViewSession.
+  ///
+  /// In en, this message translates to:
+  /// **'View Sub-Agent Session'**
+  String get subAgentViewSession;
+
+  /// No description provided for @subAgentRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get subAgentRunning;
+
+  /// No description provided for @subAgentCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get subAgentCompleted;
+
+  /// No description provided for @subAgentFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get subAgentFailed;
+
+  /// No description provided for @readOnlyBannerMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Running \"{title}\" — this conversation is read-only'**
+  String readOnlyBannerMessage(Object title);
+
+  /// No description provided for @readOnlyJumpToRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump'**
+  String get readOnlyJumpToRunning;
+
+  /// No description provided for @readOnlyInputDisabledHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Please stop the running conversation first'**
+  String get readOnlyInputDisabledHint;
+
+  /// No description provided for @deleteRunningConversationBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation is running. Please stop it first.'**
+  String get deleteRunningConversationBlocked;
+
+  /// No description provided for @sidebarRunningIndicator.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get sidebarRunningIndicator;
+
+  /// No description provided for @modeNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get modeNormal;
+
+  /// No description provided for @modePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get modePlan;
+
+  /// No description provided for @modeAgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent'**
+  String get modeAgent;
+
+  /// No description provided for @modeAgentCluster.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent Cluster(Beta)'**
+  String get modeAgentCluster;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -1514,26 +1755,25 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en', 'zh'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['en', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'en':
-      return AppLocalizationsEn();
-    case 'zh':
-      return AppLocalizationsZh();
+    case 'en': return AppLocalizationsEn();
+    case 'zh': return AppLocalizationsZh();
   }
 
   throw FlutterError(
     'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
     'an issue with the localizations generation tool. Please file an issue '
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
+    'that was used.'
   );
 }

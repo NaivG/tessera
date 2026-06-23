@@ -48,6 +48,7 @@ dependencies:
   image: ^4.8.0
   video_player: ^2.11.1
   video_player_win: ^3.2.2
+  animated_text_kit: ^4.3.0
   # llm api
   http: ^1.6.0
   crypto: ^3.0.6

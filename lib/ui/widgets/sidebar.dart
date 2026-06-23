@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_context_menu/flutter_context_menu.dart';
 
 import '../../models/conversation.dart';
+import '../../models/conversation_mode.dart';
 import 'package:tessera/l10n/app_localizations.dart';
 
 /// 侧边栏组件
@@ -20,6 +21,12 @@ class Sidebar extends StatefulWidget {
   final String displayName;
   final VoidCallback? onProfile;
 
+  /// 正在流式执行的对话 ID(运行中)
+  final String? runningConversationId;
+
+  /// 当前显示在主聊天区的对话 ID
+  final String? displayedConversationId;
+
   const Sidebar({
     super.key,
     required this.conversations,
@@ -32,6 +39,8 @@ class Sidebar extends StatefulWidget {
     this.onToggleCollapse,
     this.displayName = '',
     this.onProfile,
+    this.runningConversationId,
+    this.displayedConversationId,
   });
 
   @override
@@ -297,6 +306,11 @@ class _SidebarState extends State<Sidebar> {
                   itemCount: widget.conversations.length,
                   itemBuilder: (context, index) {
                     final conv = widget.conversations[index];
+                    final isRunning = conv.id == widget.runningConversationId;
+                    final isDisplayed = conv.id == widget.displayedConversationId;
+                    final isOtherRunning = widget.runningConversationId != null &&
+                        !isRunning;
+                    final l10n = AppLocalizations.of(context)!;
                     return ContextMenuRegion(
                       contextMenu: _buildConversationContextMenu(conv),
                       child: ListTile(
@@ -304,22 +318,64 @@ class _SidebarState extends State<Sidebar> {
                           radius: 16,
                           backgroundColor: colorScheme.primaryContainer,
                           child: Icon(
-                            Icons.chat,
+                            _modeIcon(conv.mode),
                             size: 16,
                             color: colorScheme.onPrimaryContainer,
                           ),
                         ),
-                        title: Text(
-                          conv.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyMedium,
+                        title: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                conv.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: isOtherRunning
+                                      ? colorScheme.onSurface
+                                          .withValues(alpha: 0.5)
+                                      : null,
+                                ),
+                              ),
+                            ),
+                            if (isRunning) ...[
+                              const SizedBox(width: 6),
+                              Tooltip(
+                                message: l10n.sidebarRunningIndicator,
+                                child: SizedBox(
+                                  width: 12,
+                                  height: 12,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation(
+                                      colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                         subtitle: Text(
                           '${conv.config.providerId} · ${conv.config.modelId}',
-                          style: theme.textTheme.labelSmall,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: isOtherRunning
+                                ? colorScheme.outline.withValues(alpha: 0.5)
+                                : null,
+                          ),
                         ),
+                        trailing: isRunning
+                            ? Icon(
+                                Icons.bolt,
+                                size: 16,
+                                color: colorScheme.primary,
+                              )
+                            : null,
                         dense: true,
+                        selected: isDisplayed,
+                        tileColor: isDisplayed
+                            ? colorScheme.primaryContainer.withValues(alpha: 0.3)
+                            : null,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -383,6 +439,19 @@ class _SidebarState extends State<Sidebar> {
         alignment: Alignment.center,
       ),
     );
+  }
+
+  IconData _modeIcon(ConversationMode mode) {
+    switch (mode) {
+      case ConversationMode.normal:
+        return Icons.chat;
+      case ConversationMode.plan:
+        return Icons.checklist;
+      case ConversationMode.agent:
+        return Icons.smart_toy;
+      case ConversationMode.agentCluster:
+        return Icons.hub;
+    }
   }
 }
 

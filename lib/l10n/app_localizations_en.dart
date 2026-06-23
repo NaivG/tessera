@@ -51,8 +51,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatNewContentHint => 'Enter new content';
 
   @override
-  String get chatConfigureProviderFirst =>
-      'Please configure an LLM provider and select a model in Settings first';
+  String get chatConfigureProviderFirst => 'Please configure an LLM provider and select a model in Settings first';
 
   @override
   String get chatGoToSettings => 'Settings';
@@ -61,8 +60,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatWelcomeTitle => 'Tessera AI';
 
   @override
-  String get chatWelcomeSubtitle =>
-      'Start a new conversation by sending a message';
+  String get chatWelcomeSubtitle => 'Start a new conversation by sending a message';
+
+  @override
+  String get chatWelcomeDesc1 => 'Your all-in-one AI assistant';
+
+  @override
+  String get chatWelcomeDesc2 => 'Powered by the models you choose';
+
+  @override
+  String get chatWelcomeDesc3 => 'Seamlessly routes multimodal tasks';
+
+  @override
+  String get chatWelcomeDesc4 => 'Start a new conversation below';
 
   @override
   String get bubbleThinking => 'Thinking...';
@@ -136,8 +146,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsUserProfile => 'User Profile';
 
   @override
-  String get settingsUserProfileSubtitle =>
-      'Set personal info to help AI understand you better';
+  String get settingsUserProfileSubtitle => 'Set personal info to help AI understand you better';
 
   @override
   String get settingsSectionLlmProviders => 'LLM Providers';
@@ -158,8 +167,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsModelAssignment => 'Model Assignment';
 
   @override
-  String get settingsModelAssignmentSubtitle =>
-      'Assign models for each capability (text, vision, speech, embedding, etc.)';
+  String get settingsModelAssignmentSubtitle => 'Assign models for each capability (text, vision, speech, embedding, etc.)';
 
   @override
   String get settingsSectionRequest => 'Request';
@@ -168,15 +176,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsStreamEnabled => 'Enable streaming';
 
   @override
-  String get settingsStreamEnabledSubtitle =>
-      'Display AI responses in real-time. Disable to wait for the full response.';
+  String get settingsStreamEnabledSubtitle => 'Display AI responses in real-time. Disable to wait for the full response.';
 
   @override
   String get settingsDeepThinking => 'Enable deep thinking';
 
   @override
-  String get settingsDeepThinkingSubtitle =>
-      'Show the model\'s reasoning process (enabled by default on some models)';
+  String get settingsDeepThinkingSubtitle => 'Show the model\'s reasoning process (enabled by default on some models)';
 
   @override
   String get settingsSectionSpeech => 'Speech';
@@ -185,8 +191,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTtsEnabled => 'Enable Text-to-Speech (TTS)';
 
   @override
-  String get settingsTtsEnabledSubtitle =>
-      'Read AI responses aloud automatically';
+  String get settingsTtsEnabledSubtitle => 'Read AI responses aloud automatically';
 
   @override
   String get settingsSttEnabled => 'Enable Speech-to-Text (STT)';
@@ -201,8 +206,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLightweightMode => 'Lightweight Mode';
 
   @override
-  String get settingsLightweightModeSubtitle =>
-      'Greatly reduces system prompts — only keeps core constraints, skips memory loading.';
+  String get settingsLightweightModeSubtitle => 'Greatly reduces system prompts — only keeps core constraints, skips memory loading.';
 
   @override
   String get settingsCustomPrompt => 'Custom Prompt';
@@ -230,8 +234,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsProviderFormat => 'Provider Format';
 
   @override
-  String get settingsProviderNameLabel =>
-      'Provider Name (leave empty to use format name)';
+  String get settingsProviderNameLabel => 'Provider Name (leave empty to use format name)';
 
   @override
   String get settingsProviderNameHint => 'e.g. DeepSeek, Custom Proxy...';
@@ -290,8 +293,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get memoryEmpty => 'No memories yet';
 
   @override
-  String get memoryEmptySubtitle =>
-      'Memories extracted from conversations will appear here';
+  String get memoryEmptySubtitle => 'Memories extracted from conversations will appear here';
 
   @override
   String get memoryTypeUser => 'User';
@@ -318,8 +320,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryEmpty => 'Library is empty';
 
   @override
-  String get libraryEmptySubtitle =>
-      'Images, files, etc. uploaded in conversations are saved here automatically';
+  String get libraryEmptySubtitle => 'Images, files, etc. uploaded in conversations are saved here automatically';
 
   @override
   String get libraryDeleteDialogTitle => 'Delete File';
@@ -333,8 +334,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryClearDialogTitle => 'Clear Library';
 
   @override
-  String get libraryClearConfirm =>
-      'Are you sure you want to delete all files in the library? This action cannot be undone.';
+  String get libraryClearConfirm => 'Are you sure you want to delete all files in the library? This action cannot be undone.';
 
   @override
   String get profileAppBarTitle => 'User Profile';
@@ -346,8 +346,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileSave => 'Save';
 
   @override
-  String get profileInfoCard =>
-      'The information you provide will be injected into the system prompt to help AI understand your preferences and background, delivering more personalized responses. Empty fields will be ignored.';
+  String get profileInfoCard => 'The information you provide will be injected into the system prompt to help AI understand your preferences and background, delivering more personalized responses. Empty fields will be ignored.';
 
   @override
   String get profileSectionBasic => 'Basic Info';
@@ -377,15 +376,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profilePreferences => 'Preferences & Style';
 
   @override
-  String get profilePreferencesHint =>
-      'e.g. prefers concise answers, enjoys technical depth';
+  String get profilePreferencesHint => 'e.g. prefers concise answers, enjoys technical depth';
 
   @override
   String get profileFacts => 'Relevant Facts';
 
   @override
-  String get profileFactsHint =>
-      'e.g. lives in New York, uses Flutter, learning Rust';
+  String get profileFactsHint => 'e.g. lives in New York, uses Flutter, learning Rust';
 
   @override
   String get profileSaveButton => 'Save Profile';
@@ -397,8 +394,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileUnsavedDialogTitle => 'Unsaved Changes';
 
   @override
-  String get profileUnsavedDialogContent =>
-      'You have unsaved changes. Are you sure you want to leave?';
+  String get profileUnsavedDialogContent => 'You have unsaved changes. Are you sure you want to leave?';
 
   @override
   String get profileLeave => 'Leave';
@@ -410,15 +406,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileClearDialogTitle => 'Clear Profile';
 
   @override
-  String get profileClearDialogContent =>
-      'Are you sure you want to clear all profile info? This action cannot be undone.';
+  String get profileClearDialogContent => 'Are you sure you want to clear all profile info? This action cannot be undone.';
 
   @override
   String get errorTitle => 'Oops! An unexpected error occurred.';
 
   @override
-  String get errorSubtitle =>
-      'An unhandled exception occurred. Please report the following information to the developer.';
+  String get errorSubtitle => 'An unhandled exception occurred. Please report the following information to the developer.';
 
   @override
   String get errorType => 'Error Type';
@@ -474,8 +468,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get modelEditApiInfoFetched =>
-      'Model info fetched from API, please confirm';
+  String get modelEditApiInfoFetched => 'Model info fetched from API, please confirm';
 
   @override
   String get modelEditTitle => 'Edit Models';
@@ -521,19 +514,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get modelSelectionSectionMain => 'Main Model (Text LLM)';
 
   @override
-  String get modelSelectionMainSubtitle =>
-      'Which model handles basic text chat tasks';
+  String get modelSelectionMainSubtitle => 'Which model handles basic text chat tasks';
 
   @override
   String get modelSelectionSectionInput => 'Multimodal Input';
 
   @override
-  String get modelSelectionInputSubtitle =>
-      'Which model processes user images, audio, and video.';
+  String get modelSelectionInputSubtitle => 'Which model processes user images, audio, and video.';
 
   @override
-  String get modelSelectionInputHint =>
-      'If the main model supports this modality, you can select \"Use Main Model\".';
+  String get modelSelectionInputHint => 'If the main model supports this modality, you can select \"Use Main Model\".';
 
   @override
   String get modelSelectionSectionOutput => 'Multimodal Output';
@@ -560,37 +550,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get modelSelectionSectionLlm => 'LLM Assist Features';
 
   @override
-  String get modelSelectionOutputSubtitle =>
-      'Which model generates non-text outputs (images, video, speech, etc.)';
+  String get modelSelectionOutputSubtitle => 'Which model generates non-text outputs (images, video, speech, etc.)';
 
   @override
-  String get modelSelectionLlmSubtitle =>
-      'Auxiliary tasks like topic detection, memory organization, and content summarization. Leave empty to use the main model by default.';
+  String get modelSelectionLlmSubtitle => 'Auxiliary tasks like topic detection, memory organization, and content summarization. Leave empty to use the main model by default.';
 
   @override
-  String get modelSelectionOtherSubtitle =>
-      'Specialized models for Embedding, Ranking, etc. Select LLM assist features (topic detection / memory / summarization) above.';
+  String get modelSelectionOtherSubtitle => 'Specialized models for Embedding, Ranking, etc. Select LLM assist features (topic detection / memory / summarization) above.';
 
   @override
   String get modelSelectionTopicDetection => 'Topic Detection';
 
   @override
-  String get modelSelectionTopicDetectionHint =>
-      'Detect conversation topics and intent classification';
+  String get modelSelectionTopicDetectionHint => 'Detect conversation topics and intent classification';
 
   @override
   String get modelSelectionMemoryOrganization => 'Memory Organization';
 
   @override
-  String get modelSelectionMemoryOrganizationHint =>
-      'Organize long-term memory and extract knowledge';
+  String get modelSelectionMemoryOrganizationHint => 'Organize long-term memory and extract knowledge';
 
   @override
   String get modelSelectionContentSummarization => 'Content Summarization';
 
   @override
-  String get modelSelectionContentSummarizationHint =>
-      'Generate conversation/document summaries';
+  String get modelSelectionContentSummarizationHint => 'Generate conversation/document summaries';
 
   @override
   String get modelSelectionEmbeddingHint => 'Generate text embedding vectors';
@@ -602,8 +586,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get modelSelectionRankingHint => 'Re-rank search results';
 
   @override
-  String get modelSelectionNoModelsFound =>
-      'No available models found. Please add the corresponding model in Settings first.';
+  String get modelSelectionNoModelsFound => 'No available models found. Please add the corresponding model in Settings first.';
 
   @override
   String get modelSelectionPickTitle => 'Select Model';
@@ -623,12 +606,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notSetting => 'not set';
 
   @override
-  String get customPromptHint =>
-      'Content entered here will be injected into the \"User Custom Instruction\" block of the system prompt. Leave empty to skip.';
+  String get customPromptHint => 'Content entered here will be injected into the \"User Custom Instruction\" block of the system prompt. Leave empty to skip.';
 
   @override
-  String get customPromptHintTemplate =>
-      'For example: prefer concise answers, favor English, emphasize code quality, etc.';
+  String get customPromptHintTemplate => 'For example: prefer concise answers, favor English, emphasize code quality, etc.';
 
   @override
   String get memoryFormatJustNow => 'Just now';
@@ -718,6 +699,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginAppBarTitle => 'Plugins';
 
   @override
+  String get pluginSectionInstalled => 'Installed';
+
+  @override
+  String get pluginSectionBundled => 'Bundled Sources';
+
+  @override
+  String get pluginSectionInstallFromFile => 'Install from File';
+
+  @override
+  String get pluginInstallFromFileAction => 'Select .plugin File';
+
+  @override
   String get pluginEmpty => 'No plugins found';
 
   @override
@@ -739,47 +732,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginBundled => 'Bundled';
 
   @override
-  String pluginInstallSuccess(String name) =>
-      'Plugin "$name" installed successfully';
+  String pluginInstallSuccess(Object name) {
+    return 'Plugin \"$name\" installed successfully';
+  }
 
   @override
-  String pluginInstallFailed(String error) => 'Install failed: $error';
+  String pluginInstallFailed(Object error) {
+    return 'Install failed: $error';
+  }
 
   @override
-  String pluginUninstallSuccess(String name) =>
-      'Plugin "$name" uninstalled';
+  String pluginUninstallSuccess(Object name) {
+    return 'Plugin \"$name\" uninstalled';
+  }
 
   @override
-  String pluginUninstallFailed(String error) => 'Uninstall failed: $error';
+  String pluginUninstallFailed(Object error) {
+    return 'Uninstall failed: $error';
+  }
 
   @override
-  String pluginUninstallConfirm(String name) =>
-      'Are you sure you want to uninstall "$name"?\nThis will delete the plugin files.';
+  String pluginUninstallConfirm(Object name) {
+    return 'Are you sure you want to uninstall \"$name\"?\nThis will delete the plugin files.';
+  }
 
   @override
   String get pluginUninstallDialogTitle => 'Uninstall Plugin';
 
   @override
-  String pluginEnableFailed(String name) =>
-      'Failed to enable plugin "$name"';
+  String pluginEnableFailed(Object name) {
+    return 'Failed to enable plugin \"$name\"';
+  }
 
   @override
-  String pluginByAuthor(String author) => 'by $author';
-
-  @override
-  String get pluginShortcut => 'Plugins';
-
-  @override
-  String get pluginSectionInstalled => 'Installed';
-
-  @override
-  String get pluginSectionBundled => 'Bundled Sources';
-
-  @override
-  String get pluginSectionInstallFromFile => 'Install from File';
-
-  @override
-  String get pluginInstallFromFileAction => 'Select .plugin File';
+  String pluginByAuthor(Object author) {
+    return 'by $author';
+  }
 
   @override
   String get pluginInstallFromZip => 'Install from ZIP';
@@ -788,7 +776,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginInstallConfirmTitle => 'Install Plugin';
 
   @override
-  String pluginInvalidZip(String error) => 'Invalid plugin package: $error';
+  String pluginInvalidZip(Object error) {
+    return 'Invalid plugin package: $error';
+  }
+
+  @override
+  String get pluginShortcut => 'Plugins';
 
   @override
   String get statsAppBarTitle => 'Usage Statistics';
@@ -818,16 +811,77 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsResetConfirmTitle => 'Confirm Reset';
 
   @override
-  String get statsResetConfirm =>
-      'Are you sure you want to reset all usage statistics? This action cannot be undone.';
+  String get statsResetConfirm => 'Are you sure you want to reset all usage statistics? This action cannot be undone.';
 
   @override
   String get statsEmpty => 'No usage data yet';
 
   @override
-  String get statsEmptySubtitle =>
-      'Usage data will appear here after you start chatting with AI models';
+  String get statsEmptySubtitle => 'Usage data will appear here after you start chatting with AI models';
 
   @override
   String get statsShortcut => 'Stats';
+
+  @override
+  String get conversationSelectMode => 'Select Mode';
+
+  @override
+  String conversationCurrentMode(Object mode) {
+    return 'Current: $mode';
+  }
+
+  @override
+  String get conversationSwitchSession => 'Switch Session';
+
+  @override
+  String get conversationMainSession => 'Main Session';
+
+  @override
+  String get planExecuteTitle => 'Execution Plan';
+
+  @override
+  String subAgentTitle(Object task) {
+    return 'Sub-Agent: $task';
+  }
+
+  @override
+  String get subAgentViewSession => 'View Sub-Agent Session';
+
+  @override
+  String get subAgentRunning => 'Running';
+
+  @override
+  String get subAgentCompleted => 'Completed';
+
+  @override
+  String get subAgentFailed => 'Failed';
+
+  @override
+  String readOnlyBannerMessage(Object title) {
+    return 'Running \"$title\" — this conversation is read-only';
+  }
+
+  @override
+  String get readOnlyJumpToRunning => 'Jump';
+
+  @override
+  String get readOnlyInputDisabledHint => 'Please stop the running conversation first';
+
+  @override
+  String get deleteRunningConversationBlocked => 'Conversation is running. Please stop it first.';
+
+  @override
+  String get sidebarRunningIndicator => 'Running';
+
+  @override
+  String get modeNormal => 'Normal';
+
+  @override
+  String get modePlan => 'Plan';
+
+  @override
+  String get modeAgent => 'Agent';
+
+  @override
+  String get modeAgentCluster => 'Agent Cluster(Beta)';
 }

@@ -1,5 +1,7 @@
+import 'conversation_mode.dart';
 import 'llm_config.dart';
 import 'message.dart';
+import 'session.dart';
 
 /// 对话
 class Conversation {
@@ -11,6 +13,15 @@ class Conversation {
   final DateTime createdAt;
   DateTime updatedAt;
 
+  /// 对话模式（默认 normal，向后兼容）
+  final ConversationMode mode;
+
+  /// 当前正在查看的 Session ID（默认为主 Session ID）
+  String? activeSessionId;
+
+  /// 该对话下的所有 Session（懒加载，默认空列表）
+  final List<Session> sessions;
+
   Conversation({
     required this.id,
     required this.title,
@@ -19,9 +30,13 @@ class Conversation {
     this.systemPrompt,
     DateTime? createdAt,
     DateTime? updatedAt,
+    this.mode = ConversationMode.normal,
+    this.activeSessionId,
+    List<Session>? sessions,
   }) : messages = messages ?? [],
        createdAt = createdAt ?? DateTime.now(),
-       updatedAt = updatedAt ?? DateTime.now();
+       updatedAt = updatedAt ?? DateTime.now(),
+       sessions = sessions ?? [];
 
   /// 添加消息并更新时间戳
   void addMessage(Message message) {
@@ -54,6 +69,9 @@ class Conversation {
     String? systemPrompt,
     DateTime? createdAt,
     DateTime? updatedAt,
+    ConversationMode? mode,
+    String? activeSessionId,
+    List<Session>? sessions,
   }) {
     return Conversation(
       id: id ?? this.id,
@@ -63,6 +81,9 @@ class Conversation {
       systemPrompt: systemPrompt ?? this.systemPrompt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      mode: mode ?? this.mode,
+      activeSessionId: activeSessionId ?? this.activeSessionId,
+      sessions: sessions ?? List<Session>.from(this.sessions),
     );
   }
 
@@ -80,6 +101,9 @@ class Conversation {
       systemPrompt: json['system_prompt'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      mode: json['mode'] != null
+          ? ConversationMode.fromName(json['mode'] as String)
+          : ConversationMode.normal,
     );
   }
 
@@ -93,6 +117,7 @@ class Conversation {
       'system_prompt': systemPrompt,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'mode': mode.name,
     };
   }
 }

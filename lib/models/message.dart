@@ -54,6 +54,12 @@ class Message {
   final String? errorMessage;
   final DateTime timestamp;
 
+  /// 消息所属 Session（为空时属于主 Session）
+  final String? sessionId;
+
+  /// 结构化元数据，用于区分特殊消息类型（plan / sub_agent / sub_agent_result）
+  final Map<String, dynamic>? metadata;
+
   const Message({
     required this.id,
     required this.role,
@@ -67,6 +73,8 @@ class Message {
     this.status = MessageStatus.completed,
     this.errorMessage,
     required this.timestamp,
+    this.sessionId,
+    this.metadata,
   });
 
   /// 创建一个流式接收中的 assistant 消息
@@ -104,9 +112,12 @@ class Message {
     Map<String, String>? toolResults,
     TokenUsage? usage,
     DateTime? timestamp,
+    String? sessionId,
+    Map<String, dynamic>? metadata,
     bool clearToolCalls = false,
     bool clearThinking = false,
     bool clearMediaAttachments = false,
+    bool clearMetadata = false,
   }) {
     return Message(
       id: id ?? this.id,
@@ -123,6 +134,8 @@ class Message {
       status: status ?? this.status,
       errorMessage: errorMessage ?? this.errorMessage,
       timestamp: timestamp ?? this.timestamp,
+      sessionId: sessionId ?? this.sessionId,
+      metadata: clearMetadata ? null : (metadata ?? this.metadata),
     );
   }
 
@@ -145,6 +158,8 @@ class Message {
           : MessageStatus.completed,
       errorMessage: json['error_message'] as String?,
       timestamp: DateTime.parse(json['timestamp'] as String),
+      sessionId: json['session_id'] as String?,
+      metadata: json['metadata'] as Map<String, dynamic>?,
     );
   }
 
@@ -162,6 +177,8 @@ class Message {
       'status': status.name,
       'error_message': errorMessage,
       'timestamp': timestamp.toIso8601String(),
+      if (sessionId != null) 'session_id': sessionId,
+      if (metadata != null) 'metadata': metadata,
     };
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:tessera/l10n/app_localizations.dart';
@@ -6,7 +7,10 @@ import '../../core/core.dart';
 import '../../providers/chat_provider.dart';
 import 'chat_bubble.dart';
 import 'message_input.dart';
+import 'plan_block.dart';
 import 'processing_block.dart';
+import 'read_only_banner.dart';
+import 'sub_agent_card.dart';
 
 /// 聊天内容视图 — 消息列表 + 输入栏
 class ChatContentView extends ConsumerStatefulWidget {
@@ -57,6 +61,8 @@ class _ChatContentViewState extends ConsumerState<ChatContentView> {
 
     return Column(
       children: [
+        // 只读模式条幅 — 用户切走到非运行对话时显示
+        const ReadOnlyBanner(),
         Expanded(
           child: data.displayMessages.isEmpty
               ? _buildWelcomeView(theme)
@@ -66,6 +72,29 @@ class _ChatContentViewState extends ConsumerState<ChatContentView> {
                   itemCount: data.displayMessages.length,
                   itemBuilder: (context, index) {
                     final msg = data.displayMessages[index];
+
+                    // Plan 消息
+                    if (msg.metadata?['type'] == 'plan') {
+                      final steps = (msg.metadata!['steps'] as List<dynamic>?)
+                              ?.map((e) => Map<String, dynamic>.from(e as Map))
+                              .toList() ??
+                          [];
+                      return PlanBlock(steps: steps);
+                    }
+
+                    // 子 Agent 卡片消息
+                    if (msg.metadata?['type'] == 'sub_agent') {
+                      return SubAgentCard(
+                        sessionId: msg.metadata!['sessionId'] as String? ?? '',
+                        task: msg.metadata!['task'] as String? ?? '',
+                        status: msg.metadata!['status'] as String? ?? 'running',
+                        summary: msg.metadata!['summary'] as String?,
+                        onJumpToSession: (id) =>
+                            ref.read(chatProvider.notifier).switchSession(id),
+                      );
+                    }
+
+                    // 普通消息
                     return ChatBubble(
                       key: ValueKey(msg.id),
                       message: msg,
@@ -101,9 +130,12 @@ class _ChatContentViewState extends ConsumerState<ChatContentView> {
               initiallyExpanded: true,
             ),
           ),
-        // 输入栏
+        // 输入栏 — 仅当 displayed 对话就是 running 对话时可输入
+        // (新草稿 + 无 running 也可输入;只读视图禁用)
         MessageInput(
-          enabled: !data.isStreaming && !data.isPreprocessing,
+          enabled: data.runningConversationId == null
+              ? !data.isPreprocessing
+              : data.isDisplayedRunning && !data.isPreprocessing,
           onSend: widget.onSend,
         ),
       ],
@@ -112,27 +144,49 @@ class _ChatContentViewState extends ConsumerState<ChatContentView> {
 
   Widget _buildWelcomeView(ThemeData theme) {
     final l10n = AppLocalizations.of(context)!;
+    final descriptions = <String>[
+      l10n.chatWelcomeDesc1,
+      l10n.chatWelcomeDesc2,
+      l10n.chatWelcomeDesc3,
+      l10n.chatWelcomeDesc4,
+    ];
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.assistant, size: 64, color: theme.colorScheme.primary),
-          const SizedBox(height: 16),
-          Text(
-            l10n.chatWelcomeTitle,
-            style: theme.textTheme.headlineSmall?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.bold,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 第一行 —— 纯文字 Logo，左对齐
+            Text(
+              'Tessera',
+              style: theme.textTheme.displayLarge?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.normal,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.chatWelcomeSubtitle,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.outline,
+            const SizedBox(height: 16),
+            // 第二行 —— 打字机轮播动态描述，左对齐
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.8,
+              child: AnimatedTextKit(
+                animatedTexts: descriptions.map(
+                  (desc) => TypewriterAnimatedText(
+                    desc,
+                    textStyle: theme.textTheme.displaySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    speed: const Duration(milliseconds: 100),
+                  ),
+                ).toList(),
+                isRepeatingAnimation: true,
+                pause: const Duration(milliseconds: 2500),
+                displayFullTextOnTap: true,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 64),
+          ],
+        ),
       ),
     );
   }

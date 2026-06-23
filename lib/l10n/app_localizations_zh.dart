@@ -12,7 +12,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localeDescription => '简体中文';
 
   @override
-  String get createdBy => '汉化 NaivG';
+  String get createdBy => 'NaivG';
 
   @override
   String get appTitle => 'Tessera';
@@ -61,6 +61,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatWelcomeSubtitle => '开始新对话，发送消息即可';
+
+  @override
+  String get chatWelcomeDesc1 => '你的全能 AI 助手';
+
+  @override
+  String get chatWelcomeDesc2 => '由你选择的模型驱动';
+
+  @override
+  String get chatWelcomeDesc3 => '无缝衔接多模态任务';
+
+  @override
+  String get chatWelcomeDesc4 => '在下方开始新对话';
 
   @override
   String get bubbleThinking => '思考中...';
@@ -194,8 +206,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsLightweightMode => '轻量模式';
 
   @override
-  String get settingsLightweightModeSubtitle =>
-      '大幅缩减系统提示词，仅保留核心约束并不再限制安全指令，开启后跳过记忆加载。';
+  String get settingsLightweightModeSubtitle => '大幅缩减系统提示词，仅保留核心约束并不再限制安全指令，开启后跳过记忆加载。';
 
   @override
   String get settingsCustomPrompt => '自定义提示词';
@@ -335,8 +346,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileSave => '保存';
 
   @override
-  String get profileInfoCard =>
-      '你填写的信息将注入系统提示词，帮助 AI 了解你的偏好和背景，提供更加个性化的回复。空字段将被忽略。';
+  String get profileInfoCard => '你填写的信息将注入系统提示词，帮助 AI 了解你的偏好和背景，提供更加个性化的回复。空字段将被忽略。';
 
   @override
   String get profileSectionBasic => '基本信息';
@@ -546,8 +556,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get modelSelectionLlmSubtitle => '话题检测、记忆整理、内容总结等辅助任务。留空默认使用主模型。';
 
   @override
-  String get modelSelectionOtherSubtitle =>
-      '嵌入（Embedding）、排序（Ranking）等专用模型。话题检测/记忆整理/内容总结等 LLM 辅助功能请在上方选择。';
+  String get modelSelectionOtherSubtitle => '嵌入（Embedding）、排序（Ranking）等专用模型。话题检测/记忆整理/内容总结等 LLM 辅助功能请在上方选择。';
 
   @override
   String get modelSelectionTopicDetection => '话题检测';
@@ -690,6 +699,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pluginAppBarTitle => '插件管理';
 
   @override
+  String get pluginSectionInstalled => '已安装';
+
+  @override
+  String get pluginSectionBundled => '捆绑插件源';
+
+  @override
+  String get pluginSectionInstallFromFile => '从文件安装';
+
+  @override
+  String get pluginInstallFromFileAction => '选择 .plugin 文件';
+
+  @override
   String get pluginEmpty => '暂无插件';
 
   @override
@@ -711,47 +732,42 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pluginBundled => '捆版';
 
   @override
-  String pluginInstallSuccess(String name) =>
-      '插件「$name」安装成功';
+  String pluginInstallSuccess(Object name) {
+    return '插件「$name」安装成功';
+  }
 
   @override
-  String pluginInstallFailed(String error) => '安装失败: $error';
+  String pluginInstallFailed(Object error) {
+    return '安装失败: $error';
+  }
 
   @override
-  String pluginUninstallSuccess(String name) =>
-      '插件「$name」已卸载';
+  String pluginUninstallSuccess(Object name) {
+    return '插件「$name」已卸载';
+  }
 
   @override
-  String pluginUninstallFailed(String error) => '卸载失败: $error';
+  String pluginUninstallFailed(Object error) {
+    return '卸载失败: $error';
+  }
 
   @override
-  String pluginUninstallConfirm(String name) =>
-      '确定要卸载「$name」吗？\n此操作将删除插件文件。';
+  String pluginUninstallConfirm(Object name) {
+    return '确定要卸载「$name」吗？\n此操作将删除插件文件。';
+  }
 
   @override
   String get pluginUninstallDialogTitle => '卸载插件';
 
   @override
-  String pluginEnableFailed(String name) =>
-      '启用插件「$name」失败';
+  String pluginEnableFailed(Object name) {
+    return '启用插件「$name」失败';
+  }
 
   @override
-  String pluginByAuthor(String author) => '来自 $author';
-
-  @override
-  String get pluginShortcut => '插件';
-
-  @override
-  String get pluginSectionInstalled => '已安装';
-
-  @override
-  String get pluginSectionBundled => '捆绑插件源';
-
-  @override
-  String get pluginSectionInstallFromFile => '从文件安装';
-
-  @override
-  String get pluginInstallFromFileAction => '选择 .plugin 文件';
+  String pluginByAuthor(Object author) {
+    return '来自 $author';
+  }
 
   @override
   String get pluginInstallFromZip => '从 ZIP 安装';
@@ -760,7 +776,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pluginInstallConfirmTitle => '安装插件';
 
   @override
-  String pluginInvalidZip(String error) => '无效的插件包: $error';
+  String pluginInvalidZip(Object error) {
+    return '无效的插件包: $error';
+  }
+
+  @override
+  String get pluginShortcut => '插件';
 
   @override
   String get statsAppBarTitle => '使用统计';
@@ -800,4 +821,67 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get statsShortcut => '统计';
+
+  @override
+  String get conversationSelectMode => '选择对话模式';
+
+  @override
+  String conversationCurrentMode(Object mode) {
+    return '当前模式: $mode';
+  }
+
+  @override
+  String get conversationSwitchSession => '会话切换';
+
+  @override
+  String get conversationMainSession => '主会话';
+
+  @override
+  String get planExecuteTitle => '执行计划';
+
+  @override
+  String subAgentTitle(Object task) {
+    return '子Agent: $task';
+  }
+
+  @override
+  String get subAgentViewSession => '查看子Agent会话';
+
+  @override
+  String get subAgentRunning => '运行中';
+
+  @override
+  String get subAgentCompleted => '已完成';
+
+  @override
+  String get subAgentFailed => '失败';
+
+  @override
+  String readOnlyBannerMessage(Object title) {
+    return '正在运行「$title」,此对话为只读';
+  }
+
+  @override
+  String get readOnlyJumpToRunning => '跳转';
+
+  @override
+  String get readOnlyInputDisabledHint => '请先停止其他对话的运行';
+
+  @override
+  String get deleteRunningConversationBlocked => '对话正在运行,请先停止';
+
+  @override
+  String get sidebarRunningIndicator => '运行中';
+
+  @override
+  String get modeNormal => '普通';
+
+  @override
+  String get modePlan => '计划';
+
+  @override
+  String get modeAgent => 'Agent';
+
+  @override
+  String get modeAgentCluster => 'Agent 集群(Beta)';
 }
