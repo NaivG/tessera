@@ -272,6 +272,16 @@ class LuaPluginHost {
     }
     ls.pop(1);
 
+    // 早期校验参数 schema:type 字段必须是 JSON Schema 合规值
+    // (Lua 习惯写 "table",在 [ToolDefinition.normalizeJsonSchemaType] 中
+    // 会被静默归一化,这里只兜底真正非法的 type,带插件上下文抛错)
+    final validationError = _validateParametersSchema(parameters);
+    if (validationError != null) {
+      return ls.error2(
+        'register_tool: [$pluginId] tool "$name" — $validationError',
+      );
+    }
+
     // 读取 tags（可选）
     final tags = _readStringList(ls, 1, 'tags');
 
@@ -367,6 +377,31 @@ class LuaPluginHost {
     }
     ls.pop(1); // pop the field value (table or nil)
     return result;
+  }
+
+  /// 校验 plugin 注册的 parameters schema。
+  /// 委托给 [ToolDefinition.normalizeProperty] 做归一化,捕获非标准 type 抛
+  /// 的 [ArgumentError] 并把"哪个参数、什么 type"翻译成可读字符串。
+  /// 返回 `null` 表示通过;返回非空字符串作为错误消息。
+  String? _validateParametersSchema(Map<String, dynamic> parameters) {
+    for (final entry in parameters.entries) {
+      final value = entry.value;
+      if (value is! Map) continue;
+      final prop = Map<String, dynamic>.from(value);
+      final t = prop['type'];
+      try {
+        if (t is String) {
+          ToolDefinition.normalizeJsonSchemaType(t);
+        } else if (t is List) {
+          for (final e in t) {
+            if (e is String) ToolDefinition.normalizeJsonSchemaType(e);
+          }
+        }
+      } on ArgumentError catch (e) {
+        return 'parameter "${entry.key}" has invalid type: ${e.message ?? e}';
+      }
+    }
+    return null;
   }
 
   // ---------------------------------------------------------------------------
