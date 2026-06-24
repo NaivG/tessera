@@ -749,6 +749,36 @@ abstract class AppLocalizations {
   /// **'User Profile'**
   String get profileAppBarTitle;
 
+  /// No description provided for @profileAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Avatar'**
+  String get profileAvatar;
+
+  /// No description provided for @profileAvatarHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the avatar to pick an image from your gallery. It will be shown in the sidebar and chat bubbles.'**
+  String get profileAvatarHint;
+
+  /// No description provided for @profileChangeAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Avatar'**
+  String get profileChangeAvatar;
+
+  /// No description provided for @profileRemoveAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Avatar'**
+  String get profileRemoveAvatar;
+
+  /// No description provided for @profileAvatarPickError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load image: {error}'**
+  String profileAvatarPickError(Object error);
+
   /// No description provided for @profileSaving.
   ///
   /// In en, this message translates to:

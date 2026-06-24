@@ -346,6 +346,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileAppBarTitle => '用户档案';
 
   @override
+  String get profileAvatar => '头像';
+
+  @override
+  String get profileAvatarHint => '点击头像从相册选择图片。选定的头像会显示在侧边栏和聊天气泡中。';
+
+  @override
+  String get profileChangeAvatar => '更换头像';
+
+  @override
+  String get profileRemoveAvatar => '移除头像';
+
+  @override
+  String profileAvatarPickError(Object error) {
+    return '加载图片失败：$error';
+  }
+
+  @override
   String get profileSaving => '保存中…';
 
   @override

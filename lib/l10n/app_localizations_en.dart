@@ -346,6 +346,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileAppBarTitle => 'User Profile';
 
   @override
+  String get profileAvatar => 'Avatar';
+
+  @override
+  String get profileAvatarHint => 'Tap the avatar to pick an image from your gallery. It will be shown in the sidebar and chat bubbles.';
+
+  @override
+  String get profileChangeAvatar => 'Change Avatar';
+
+  @override
+  String get profileRemoveAvatar => 'Remove Avatar';
+
+  @override
+  String profileAvatarPickError(Object error) {
+    return 'Failed to load image: $error';
+  }
+
+  @override
   String get profileSaving => 'Saving…';
 
   @override

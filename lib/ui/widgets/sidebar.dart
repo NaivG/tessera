@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_context_menu/flutter_context_menu.dart';
 
@@ -19,6 +21,7 @@ class Sidebar extends StatefulWidget {
   final VoidCallback onSettings;
   final VoidCallback? onToggleCollapse;
   final String displayName;
+  final String? avatarPath;
   final VoidCallback? onProfile;
 
   /// 正在流式执行的对话 ID(运行中)
@@ -38,6 +41,7 @@ class Sidebar extends StatefulWidget {
     required this.onSettings,
     this.onToggleCollapse,
     this.displayName = '',
+    this.avatarPath,
     this.onProfile,
     this.runningConversationId,
     this.displayedConversationId,
@@ -201,15 +205,7 @@ class _SidebarState extends State<Sidebar> {
                 InkWell(
                   borderRadius: BorderRadius.circular(16),
                   onTap: widget.onProfile,
-                  child: CircleAvatar(
-                    radius: 16,
-                    backgroundColor: colorScheme.primary,
-                    child: Icon(
-                      Icons.person,
-                      size: 18,
-                      color: colorScheme.onPrimary,
-                    ),
-                  ),
+                  child: _buildUserAvatar(colorScheme),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -235,6 +231,41 @@ class _SidebarState extends State<Sidebar> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildUserAvatar(ColorScheme colorScheme) {
+    final path = widget.avatarPath;
+    if (path != null && path.isNotEmpty) {
+      final file = File(path);
+      if (file.existsSync()) {
+        return CircleAvatar(
+          radius: 16,
+          backgroundColor: colorScheme.primary,
+          child: ClipOval(
+            child: Image.file(
+              file,
+              width: 32,
+              height: 32,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => Icon(
+                Icons.person,
+                size: 18,
+                color: colorScheme.onPrimary,
+              ),
+            ),
+          ),
+        );
+      }
+    }
+    return CircleAvatar(
+      radius: 16,
+      backgroundColor: colorScheme.primary,
+      child: Icon(
+        Icons.person,
+        size: 18,
+        color: colorScheme.onPrimary,
       ),
     );
   }

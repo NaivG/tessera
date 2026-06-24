@@ -37,6 +37,9 @@ class ChatBubble extends StatelessWidget {
   /// 分享回调
   final void Function()? onShare;
 
+  /// 用户头像文件绝对路径（为空时使用默认图标）
+  final String? userAvatarPath;
+
   const ChatBubble({
     super.key,
     required this.message,
@@ -45,6 +48,7 @@ class ChatBubble extends StatelessWidget {
     this.onModify,
     this.onRegenerate,
     this.onShare,
+    this.userAvatarPath,
   });
 
   @override
@@ -271,6 +275,28 @@ class ChatBubble extends StatelessWidget {
   }
 
   Widget _buildAvatar(ThemeData theme, bool isUser) {
+    if (isUser && userAvatarPath != null && userAvatarPath!.isNotEmpty) {
+      final file = File(userAvatarPath!);
+      if (file.existsSync()) {
+        return CircleAvatar(
+          radius: 16,
+          backgroundColor: theme.colorScheme.primary,
+          child: ClipOval(
+            child: Image.file(
+              file,
+              width: 32,
+              height: 32,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Icon(
+                Icons.person,
+                size: 18,
+                color: theme.colorScheme.onPrimary,
+              ),
+            ),
+          ),
+        );
+      }
+    }
     return CircleAvatar(
       radius: 16,
       backgroundColor: isUser

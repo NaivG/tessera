@@ -142,6 +142,14 @@
   "libraryClearConfirm": "确定要删除资料库中的所有文件吗？此操作不可撤销。",
 
   "profileAppBarTitle": "用户档案",
+  "profileAvatar": "头像",
+  "profileAvatarHint": "点击头像从相册选择图片。选定的头像会显示在侧边栏和聊天气泡中。",
+  "profileChangeAvatar": "更换头像",
+  "profileRemoveAvatar": "移除头像",
+  "profileAvatarPickError": "加载图片失败：{error}",
+  "@profileAvatarPickError": {
+    "placeholders": { "error": {} }
+  },
   "profileSaving": "保存中…",
   "profileSave": "保存",
   "profileInfoCard": "你填写的信息将注入系统提示词，帮助 AI 了解你的偏好和背景，提供更加个性化的回复。空字段将被忽略。",

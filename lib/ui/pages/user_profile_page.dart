@@ -1,5 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image/image.dart' as img;
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 import 'package:tessera/l10n/app_localizations.dart';
 
@@ -186,6 +192,10 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
             ),
             const SizedBox(height: 16),
 
+            // 头像
+            _buildAvatarCard(theme, state.userAvatarPath),
+            const SizedBox(height: 16),
+
             // 基本信息
             _SectionHeader(AppLocalizations.of(context)!.profileSectionBasic),
             const SizedBox(height: 12),
@@ -274,6 +284,221 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
         ),
       ),
     );
+  }
+
+  Widget _buildAvatarCard(ThemeData theme, String? avatarPath) {
+    final l10n = AppLocalizations.of(context)!;
+    final hasAvatar = avatarPath != null && avatarPath.isNotEmpty;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            // 头像预览
+            InkWell(
+              borderRadius: BorderRadius.circular(48),
+              onTap: () => _showAvatarSheet(hasAvatar),
+              child: Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: theme.colorScheme.primaryContainer,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: hasAvatar
+                    ? Image.file(
+                        File(avatarPath),
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Icon(
+                          Icons.person,
+                          size: 48,
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
+                      )
+                    : Icon(
+                        Icons.person,
+                        size: 48,
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.account_circle_outlined,
+                        size: 16,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        l10n.profileAvatar,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n.profileAvatarHint,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      FilledButton.tonalIcon(
+                        onPressed: () => _pickAvatar(),
+                        icon: const Icon(Icons.image_outlined, size: 18),
+                        label: Text(
+                          hasAvatar
+                              ? l10n.profileChangeAvatar
+                              : l10n.profileChangeAvatar,
+                        ),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                      ),
+                      if (hasAvatar)
+                        OutlinedButton.icon(
+                          onPressed: _removeAvatar,
+                          icon: const Icon(Icons.delete_outline, size: 18),
+                          label: Text(l10n.profileRemoveAvatar),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            foregroundColor: theme.colorScheme.error,
+                            side: BorderSide(
+                              color: theme.colorScheme.error.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showAvatarSheet(bool hasAvatar) async {
+    final l10n = AppLocalizations.of(context)!;
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.image_outlined),
+              title: Text(
+                hasAvatar ? l10n.profileChangeAvatar : l10n.profileChangeAvatar,
+              ),
+              onTap: () => Navigator.pop(ctx, 'pick'),
+            ),
+            if (hasAvatar)
+              ListTile(
+                leading: Icon(
+                  Icons.delete_outline,
+                  color: Theme.of(ctx).colorScheme.error,
+                ),
+                title: Text(
+                  l10n.profileRemoveAvatar,
+                  style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+                ),
+                onTap: () => Navigator.pop(ctx, 'remove'),
+              ),
+            ListTile(
+              leading: const Icon(Icons.close),
+              title: Text(l10n.commonCancel),
+              onTap: () => Navigator.pop(ctx),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+    if (action == 'pick') {
+      await _pickAvatar();
+    } else if (action == 'remove') {
+      await _removeAvatar();
+    }
+  }
+
+  final _imagePicker = ImagePicker();
+
+  Future<void> _pickAvatar() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final XFile? picked = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 90,
+      );
+      if (picked == null) return;
+      if (!mounted) return;
+
+      // 读取并按需缩放（>256 缩到 256，否则原图使用）
+      final bytes = await File(picked.path).readAsBytes();
+      final decoded = img.decodeImage(bytes);
+      if (decoded == null) {
+        throw Exception('decode failed');
+      }
+
+      img.Image output = decoded;
+      const int maxSide = 256;
+      if (decoded.width > maxSide || decoded.height > maxSide) {
+        output = img.copyResize(
+          decoded,
+          width: decoded.width >= decoded.height ? maxSide : null,
+          height: decoded.height > decoded.width ? maxSide : null,
+          interpolation: img.Interpolation.cubic,
+        );
+      }
+
+      final appDir = await getApplicationDocumentsDirectory();
+      final avatarFile = File(p.join(appDir.path, 'avatar.png'));
+      await avatarFile.writeAsBytes(img.encodePng(output));
+
+      await ref
+          .read(settingsProvider.notifier)
+          .setUserAvatarPath(avatarFile.path);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.profileAvatarPickError(e.toString()))),
+      );
+    }
+  }
+
+  Future<void> _removeAvatar() async {
+    await ref.read(settingsProvider.notifier).setUserAvatarPath(null);
   }
 
   Widget _buildTextField({

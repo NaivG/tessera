@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:tessera/l10n/app_localizations.dart';
 import '../../core/core.dart';
-import '../../providers/chat_provider.dart';
+import '../../providers/providers.dart';
 import 'chat_bubble.dart';
 import 'message_input.dart';
 import 'plan_block.dart';
@@ -45,6 +45,7 @@ class _ChatContentViewState extends ConsumerState<ChatContentView> {
     final theme = Theme.of(context);
     final data = ref.watch(chatProvider);
     final notifier = ref.read(chatProvider.notifier);
+    final userAvatarPath = ref.watch(settingsProvider).userAvatarPath;
 
     // 有新消息时滚动到底部
     if (data.messages.isNotEmpty) {
@@ -98,6 +99,7 @@ class _ChatContentViewState extends ConsumerState<ChatContentView> {
                     return ChatBubble(
                       key: ValueKey(msg.id),
                       message: msg,
+                      userAvatarPath: userAvatarPath,
                       contentStream: msg.status == MessageStatus.streaming
                           ? notifier.getContentStream(msg.id)
                           : null,

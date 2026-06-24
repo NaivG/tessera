@@ -142,6 +142,7 @@ class SettingsService {
   static const _keyUserRole = 'user_role';
   static const _keyUserPreferences = 'user_preferences';
   static const _keyUserFacts = 'user_facts';
+  static const _keyUserAvatarPath = 'user_avatar_path';
 
   Future<String> getUserDisplayName() async =>
       (await _store).getString(_keyUserDisplayName) ?? '';
@@ -172,6 +173,17 @@ class SettingsService {
 
   Future<void> setUserFacts(String v) async =>
       (await _store).setString(_keyUserFacts, v);
+
+  Future<String?> getUserAvatarPath() async =>
+      (await _store).getString(_keyUserAvatarPath);
+
+  Future<void> setUserAvatarPath(String? v) async {
+    if (v == null || v.isEmpty) {
+      await (await _store).remove(_keyUserAvatarPath);
+    } else {
+      await (await _store).setString(_keyUserAvatarPath, v);
+    }
+  }
 
   // --- 语言 ---
 

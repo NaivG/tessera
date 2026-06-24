@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -11,6 +13,9 @@ import 'settings_service_provider.dart';
 // =============================================================================
 // 不可变数据类 — SettingsData
 // =============================================================================
+
+/// 用于 copyWith 区分 "未传参" 与 "传 null" 的哨兵对象
+const Object _unset = Object();
 
 /// 设置状态数据（不可变）
 class SettingsData {
@@ -30,6 +35,7 @@ class SettingsData {
   final String userRole;
   final String userPreferences;
   final String userFacts;
+  final String? userAvatarPath;
   final bool loaded;
 
   SettingsData({
@@ -50,6 +56,7 @@ class SettingsData {
     this.userRole = '',
     this.userPreferences = '',
     this.userFacts = '',
+    this.userAvatarPath,
   }) : modelSelectionConfig = modelSelectionConfig ?? ModelSelectionConfig.empty();
 
   SettingsData copyWith({
@@ -70,6 +77,7 @@ class SettingsData {
     String? userRole,
     String? userPreferences,
     String? userFacts,
+    Object? userAvatarPath = _unset,
   }) {
     return SettingsData(
       loaded: loaded ?? this.loaded,
@@ -90,6 +98,9 @@ class SettingsData {
       userRole: userRole ?? this.userRole,
       userPreferences: userPreferences ?? this.userPreferences,
       userFacts: userFacts ?? this.userFacts,
+      userAvatarPath: identical(userAvatarPath, _unset)
+          ? this.userAvatarPath
+          : userAvatarPath as String?,
     );
   }
 }
@@ -139,6 +150,7 @@ class SettingsNotifier extends Notifier<SettingsData> {
     final userRole = await _service.getUserRole();
     final userPreferences = await _service.getUserPreferences();
     final userFacts = await _service.getUserFacts();
+    final userAvatarPath = await _service.getUserAvatarPath();
     var modelSelectionConfig = await _service.loadModelSelectionConfig();
     modelSelectionConfig = _migrateModelSlots(providerConfigs, modelSelectionConfig);
 
@@ -160,6 +172,7 @@ class SettingsNotifier extends Notifier<SettingsData> {
       userRole: userRole,
       userPreferences: userPreferences,
       userFacts: userFacts,
+      userAvatarPath: userAvatarPath,
     );
   }
 
@@ -450,6 +463,25 @@ class SettingsNotifier extends Notifier<SettingsData> {
   Future<void> setUserFacts(String v) async {
     state = state.copyWith(userFacts: v);
     await _service.setUserFacts(v);
+  }
+
+  /// 设置/清除用户头像路径
+  ///
+  /// - [path] 为 null 时清除头像（同时尝试删除磁盘上的旧文件）
+  /// - 为非空字符串时持久化新路径
+  Future<void> setUserAvatarPath(String? path) async {
+    final oldPath = state.userAvatarPath;
+    state = state.copyWith(userAvatarPath: path);
+    await _service.setUserAvatarPath(path);
+    // 路径发生变化且旧文件存在时，尝试删除以释放空间。
+    if (oldPath != null && oldPath != path) {
+      try {
+        final f = File(oldPath);
+        if (await f.exists()) await f.delete();
+      } catch (_) {
+        // 删除失败不影响主流程，忽略
+      }
+    }
   }
 
   Future<void> setUserProfile({
