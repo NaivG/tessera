@@ -1924,6 +1924,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Allow'**
   String get workspaceApprovalAllow;
+
+  /// No description provided for @workspaceUnsupportedPlatform.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspaces are not supported on this platform.'**
+  String get workspaceUnsupportedPlatform;
+
+  /// No description provided for @workspaceOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get workspaceOpenSettings;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

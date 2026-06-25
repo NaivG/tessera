@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '../models/message.dart';
 import '../models/tool.dart';
@@ -300,6 +303,20 @@ void registerWorkspaceTools(
 ({WorkspaceService service, Workspace? active, ToolResult? error})
 _resolveActive() {
   final service = WorkspaceService.instance;
+  // kIsWeb 先于 Platform 判断 —— dart:io 在 web 上不可用。
+  if (kIsWeb || Platform.isIOS) {
+    return (
+      service: service,
+      active: null,
+      error: ToolResult(
+        toolCallId: '',
+        isError: true,
+        content:
+            'Workspace tools are not supported on this platform '
+            '(${kIsWeb ? 'Web' : 'iOS'}).',
+      ),
+    );
+  }
   if (!service.isInitialized) {
     return (
       service: service,

@@ -437,5 +437,7 @@
   "workspaceApprovalActionMkdir": "create directory",
   "workspaceApprovalActionDelete": "delete",
   "workspaceApprovalDeny": "Deny",
-  "workspaceApprovalAllow": "Allow"
+  "workspaceApprovalAllow": "Allow",
+  "workspaceUnsupportedPlatform": "Workspaces are not supported on this platform.",
+  "workspaceOpenSettings": "Settings"
 }

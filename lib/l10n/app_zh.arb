@@ -438,5 +438,7 @@
   "workspaceApprovalActionMkdir": "创建目录",
   "workspaceApprovalActionDelete": "删除",
   "workspaceApprovalDeny": "拒绝",
-  "workspaceApprovalAllow": "允许"
+  "workspaceApprovalAllow": "允许",
+  "workspaceUnsupportedPlatform": "当前平台不支持工作空间功能。",
+  "workspaceOpenSettings": "设置"
 }

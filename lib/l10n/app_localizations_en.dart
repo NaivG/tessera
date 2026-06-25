@@ -980,4 +980,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get workspaceApprovalAllow => 'Allow';
+
+  @override
+  String get workspaceUnsupportedPlatform => 'Workspaces are not supported on this platform.';
+
+  @override
+  String get workspaceOpenSettings => 'Settings';
 }

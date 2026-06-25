@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
+import 'package:permission_handler/permission_handler.dart' as ph;
 
 import '../models/workspace.dart';
 import '../utils/path_traversal.dart';
@@ -106,20 +107,83 @@ class WorkspaceService {
   }
 
   // ---------------------------------------------------------------------------
+  // 平台支持 + Android 存储权限
+  // ---------------------------------------------------------------------------
+
+  /// 当前平台是否支持工作空间功能。
+  ///
+  /// - Web / iOS 始终 false —— dart:io 直读目录的方案在这两个平台不可行
+  ///   (Web 无文件系统,iOS 沙盒 picker 不能给目录级访问)。
+  /// - 桌面端 (Windows / macOS / Linux) 始终 true。
+  /// - Android 始终 true —— 真正的可用性靠 [requestStorageAccess] 决定。
+  bool get isPlatformSupported {
+    if (kIsWeb) return false;
+    if (Platform.isIOS) return false;
+    return true;
+  }
+
+  /// Android 上一次请求 [ph.Permission.manageExternalStorage] 的结果。
+  ///
+  /// 第三方 ROM (MIUI / EMUI / ColorOS 等) 可能在后台收回权限,
+  /// 所以**不在会话内长期缓存** —— 每次调用 [requestStorageAccess] 都会重新
+  /// 通过 `Permission.manageExternalStorage.status` 校验当前状态。
+  ph.PermissionStatus _lastStorageAccess = ph.PermissionStatus.denied;
+
+  /// 确保当前平台 + 权限下工作空间可用。返回是否可用。
+  ///
+  /// - Web / iOS: 直接返回 false。
+  /// - 桌面端: 返回 true,无须额外权限。
+  /// - Android: 每次调用都重新检查 `manageExternalStorage.status`,
+  ///   未授权则发起 [ph.Permission.manageExternalStorage.request] 请求授权。
+  ///   已授权或请求成功 → 返回 true。
+  Future<bool> requestStorageAccess() async {
+    if (kIsWeb || Platform.isIOS) return false;
+    if (!Platform.isAndroid) return true;
+
+    // 先查当前真实状态 —— 第三方 ROM 可能在我们不知道的时候收回权限
+    final current = await ph.Permission.manageExternalStorage.status;
+    if (current.isGranted) {
+      _lastStorageAccess = current;
+      return true;
+    }
+    final result = await ph.Permission.manageExternalStorage.request();
+    _lastStorageAccess = result;
+    return result.isGranted;
+  }
+
+  /// 当前 Android 存储权限状态(只读,给 UI 判断是否需要引导用户去设置)。
+  ph.PermissionStatus get androidStorageAccessStatus => _lastStorageAccess;
+
+  // ---------------------------------------------------------------------------
   // 工作空间管理
   // ---------------------------------------------------------------------------
 
   /// 添加一个工作空间。路径必须已存在的目录。
+  ///
+  /// Android: 在添加前会请求 MANAGE_EXTERNAL_STORAGE 权限 —— 第三方 ROM 可能
+  /// 收回已授过的权限,所以即使本次会话之前已经通过,也必须每次重新校验。
+  /// Web / iOS: 直接抛 [WorkspaceFileException],该平台不支持工作空间。
   Future<Workspace> addWorkspace({
     required String name,
     required String path,
   }) async {
     _ensureInitialized();
+    if (kIsWeb || Platform.isIOS) {
+      throw WorkspaceFileException(
+        'Workspaces are not supported on this platform.',
+      );
+    }
     if (name.trim().isEmpty) {
       throw ArgumentError('Workspace name must not be empty.');
     }
     if (path.trim().isEmpty) {
       throw ArgumentError('Workspace path must not be empty.');
+    }
+    if (Platform.isAndroid && !await requestStorageAccess()) {
+      throw WorkspaceFileException(
+        'MANAGE_EXTERNAL_STORAGE permission is required to add a workspace '
+        'on Android. Please grant "All files access" in system Settings.',
+      );
     }
     if (!Directory(path).existsSync()) {
       throw WorkspaceFileException('Directory does not exist: $path');

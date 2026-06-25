@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:tessera/l10n/app_localizations.dart';
-
+import 'package:permission_handler/permission_handler.dart';
 import '../../models/workspace.dart';
 import '../../providers/providers.dart';
+import '../../services/workspace_service.dart';
 
 /// 工作空间管理页面
 ///
@@ -57,9 +58,21 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   Future<void> _addWorkspace() async {
     final l10n = AppLocalizations.of(context)!;
+    // Web / iOS —— 工作空间功能始终禁用,直接给出明确提示,避免后续 picker 走空。
+    final service = ref.read(workspaceServiceProvider);
+    if (!service.isPlatformSupported) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.workspaceUnsupportedPlatform),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
     final picked = await FilePicker.platform.getDirectoryPath(
       dialogTitle: l10n.workspacePickFolder,
     );
+    debugPrint('[ws] picked path = $picked');
     if (picked == null || !mounted) return;
     final defaultName = p.basename(picked);
     final nameCtrl = TextEditingController(text: defaultName);
@@ -100,6 +113,8 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     );
     if (name == null || name.isEmpty) return;
     try {
+      // service.addWorkspace 内部处理 Android MANAGE_EXTERNAL_STORAGE 请求
+      // —— 第三方 ROM 可能撤回权限,所以这里每次都重新校验,不依赖 session 缓存。
       await ref
           .read(workspaceProvider.notifier)
           .addWorkspace(name: name, path: picked);
@@ -108,6 +123,21 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           context,
         ).showSnackBar(SnackBar(content: Text('"$name" added.')));
       }
+    } on WorkspaceFileException catch (e) {
+      if (!mounted) return;
+      final isPermission = e.message.contains('MANAGE_EXTERNAL_STORAGE');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          duration: const Duration(seconds: 6),
+          action: isPermission
+              ? SnackBarAction(
+                  label: l10n.workspaceOpenSettings,
+                  onPressed: openAppSettings,
+                )
+              : null,
+        ),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(

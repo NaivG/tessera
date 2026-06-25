@@ -980,4 +980,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get workspaceApprovalAllow => '允许';
+
+  @override
+  String get workspaceUnsupportedPlatform => '当前平台不支持工作空间功能。';
+
+  @override
+  String get workspaceOpenSettings => '设置';
 }
