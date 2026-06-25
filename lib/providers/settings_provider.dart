@@ -36,6 +36,7 @@ class SettingsData {
   final String userPreferences;
   final String userFacts;
   final String? userAvatarPath;
+  final Map<String, int> contextWindowOverrides;
   final bool loaded;
 
   SettingsData({
@@ -57,6 +58,7 @@ class SettingsData {
     this.userPreferences = '',
     this.userFacts = '',
     this.userAvatarPath,
+    this.contextWindowOverrides = const {},
   }) : modelSelectionConfig = modelSelectionConfig ?? ModelSelectionConfig.empty();
 
   SettingsData copyWith({
@@ -77,6 +79,7 @@ class SettingsData {
     String? userRole,
     String? userPreferences,
     String? userFacts,
+    Map<String, int>? contextWindowOverrides,
     Object? userAvatarPath = _unset,
   }) {
     return SettingsData(
@@ -101,6 +104,8 @@ class SettingsData {
       userAvatarPath: identical(userAvatarPath, _unset)
           ? this.userAvatarPath
           : userAvatarPath as String?,
+      contextWindowOverrides:
+          contextWindowOverrides ?? this.contextWindowOverrides,
     );
   }
 }
@@ -151,6 +156,8 @@ class SettingsNotifier extends Notifier<SettingsData> {
     final userPreferences = await _service.getUserPreferences();
     final userFacts = await _service.getUserFacts();
     final userAvatarPath = await _service.getUserAvatarPath();
+    final contextWindowOverrides =
+        await _service.getContextWindowOverrides();
     var modelSelectionConfig = await _service.loadModelSelectionConfig();
     modelSelectionConfig = _migrateModelSlots(providerConfigs, modelSelectionConfig);
 
@@ -173,6 +180,7 @@ class SettingsNotifier extends Notifier<SettingsData> {
       userPreferences: userPreferences,
       userFacts: userFacts,
       userAvatarPath: userAvatarPath,
+      contextWindowOverrides: contextWindowOverrides,
     );
   }
 
@@ -322,6 +330,7 @@ class SettingsNotifier extends Notifier<SettingsData> {
         id: modelInfo.id,
         type: modelInfo.type,
         tags: List<ModelTag>.from(modelInfo.tags),
+        contextWindow: modelInfo.contextWindow,
       );
       config.models.add(newModel);
       state = state.copyWith(providerConfigs: newList);
@@ -555,6 +564,25 @@ class SettingsNotifier extends Notifier<SettingsData> {
   Future<void> setModelSelectionConfig(ModelSelectionConfig config) async {
     state = state.copyWith(modelSelectionConfig: config);
     await _service.saveModelSelectionConfig(config);
+  }
+
+  // ---------------------------------------------------------------------------
+  // 上下文窗口覆盖
+  // ---------------------------------------------------------------------------
+
+  /// 设置或清除某个模型的上下文窗口手动覆盖值。
+  ///
+  /// 传入 [tokens] 为 null 时删除该覆盖；
+  /// 传入正值时设置覆盖。
+  Future<void> setContextWindowOverride(String modelId, int? tokens) async {
+    final newMap = Map<String, int>.from(state.contextWindowOverrides);
+    if (tokens == null || tokens <= 0) {
+      newMap.remove(modelId);
+    } else {
+      newMap[modelId] = tokens;
+    }
+    state = state.copyWith(contextWindowOverrides: newMap);
+    await _service.setContextWindowOverrides(newMap);
   }
 
   // ---------------------------------------------------------------------------

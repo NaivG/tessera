@@ -10,6 +10,7 @@ import '../plugin/plugin.dart';
 import '../services/conversation_service.dart';
 import '../utils/json_extractor.dart';
 import '../utils/plan_parser.dart';
+import 'context_provider.dart';
 import 'conversation_list_provider.dart';
 import 'session_provider.dart';
 import 'settings_provider.dart';
@@ -167,6 +168,9 @@ class ChatNotifier extends Notifier<ChatData> {
 
   /// 运行时工具调用参数校验器
   final ToolCallValidator _toolCallValidator = ToolCallValidator();
+
+  /// 上下文窗口管理器
+  final ContextWindowManager _contextManager = ContextWindowManager();
 
   /// LLM 通过 discover 工具发现后、下一轮 API 调用时注入完整 schema 的工具名集合。
   final Set<String> _discoveredInSession = {};
@@ -396,8 +400,10 @@ Wrap the plan JSON in a ```json code block.''';
     debugPrint('[ChatNotifier] 创建新对话：$title, mode=${mode.name}');
     // 不取消运行中的对话 — `sendMessage` 的守卫会保证调用此方法时无运行。
 
-    // 新对话：重置发现状态
+    // 新对话：重置发现状态和上下文管理器
     _discoveredInSession.clear();
+    _contextManager.reset();
+    ref.read(contextTokenProvider.notifier).reset();
 
     final conv = Conversation(
       id: Message.generateId(),
@@ -504,6 +510,20 @@ Wrap the plan JSON in a ```json code block.''';
       sessions: conv.sessions,
       activeSessionId: conv.id,
     );
+
+    // 切换对话后,同步刷新 Token 指示器到当前对话的实际用量。
+    // 复用 _prepareContextForSend 的纯函数路径,避免在切换时仍显示上一个对话的残留计数。
+    final contextLimit = _getContextLimit(conv.config);
+    final budget = _contextManager.prepareContext(
+      conversation: conv,
+      systemPrompt: conv.systemPrompt ?? '',
+      tools: const [],
+      userOverride: _settingsData?.contextWindowOverrides[conv.config.modelId],
+    );
+    ref.read(contextTokenProvider.notifier).update(
+      budget.totalTokens,
+      contextLimit,
+    );
   }
 
   /// 仅加载到 cache 但不切换显示。用于预热或批量加载场景。
@@ -551,6 +571,8 @@ Wrap the plan JSON in a ```json code block.''';
       preprocessingTitle: '',
       preprocessingText: '',
     );
+    _contextManager.reset();
+    ref.read(contextTokenProvider.notifier).reset();
     ref.read(sessionProvider.notifier).clear();
   }
 
@@ -566,6 +588,8 @@ Wrap the plan JSON in a ```json code block.''';
     _convMemManager.reset();
     _memoryExtractor.clear();
     _memory.clearCache();
+    _contextManager.reset();
+    ref.read(contextTokenProvider.notifier).reset();
     _preprocessingStreamController.add('');
     ref.read(sessionProvider.notifier).clear();
     state = ChatData(conversationsCache: state.conversationsCache);
@@ -891,10 +915,22 @@ Wrap the plan JSON in a ```json code block.''';
       // 构建增强的 system prompt：基础提示词 + 步骤上下文
       final enhancedPrompt = '${conv.systemPrompt ?? ''}\n\n$contextPrompt';
 
+      // 上下文窗口管理：检查预算，必要时压缩
+      final rawHistory = conv.messages.where(
+        (m) => m.id != assistantId && m.status != MessageStatus.streaming,
+      ).toList();
+      final ctx = await _prepareContextForSend(
+        convId: convId,
+        conv: conv,
+        systemPrompt: enhancedPrompt,
+        history: rawHistory,
+        tools: tools,
+      );
+
       final stream = provider.chatStream(
         config: conv.config,
-        history: conv.messages.where((m) => m.id != assistantId && m.status != MessageStatus.streaming).toList(),
-        systemPrompt: enhancedPrompt,
+        history: ctx.history,
+        systemPrompt: ctx.systemPrompt,
         tools: tools.isNotEmpty ? tools : null,
       );
 
@@ -1310,6 +1346,120 @@ Wrap the plan JSON in a ```json code block.''';
     }
   }
 
+  // ── 上下文窗口管理 ──
+
+  /// 查找当前对话模型的上下文窗口上限
+  int _getContextLimit(LlmConfig config) {
+    final overrides = _settingsData?.contextWindowOverrides;
+    final userOverride = overrides?[config.modelId];
+    return _contextManager.getContextWindowLimit(
+      config,
+      userOverride: userOverride,
+    );
+  }
+
+  /// 发送前检查上下文预算，必要时执行压缩。
+  ///
+  /// 返回压缩后的有效 history 和 systemPrompt。
+  /// 压缩失败时 fallback 为直接丢弃最早消息。
+  Future<({
+    List<Message> history,
+    String? systemPrompt,
+    int totalTokens,
+    int contextLimit,
+  })> _prepareContextForSend({
+    required String convId,
+    required Conversation conv,
+    required String? systemPrompt,
+    required List<Message> history,
+    required List<ToolDefinition> tools,
+  }) async {
+    final contextLimit = _getContextLimit(conv.config);
+    final budget = _contextManager.prepareContext(
+      conversation: conv,
+      systemPrompt: systemPrompt ?? '',
+      tools: tools,
+      userOverride: _settingsData?.contextWindowOverrides[conv.config.modelId],
+    );
+
+    ref.read(contextTokenProvider.notifier).update(
+      budget.totalTokens,
+      contextLimit,
+    );
+
+    if (!budget.needsCompression) {
+      return (
+        history: history,
+        systemPrompt: systemPrompt,
+        totalTokens: budget.totalTokens,
+        contextLimit: contextLimit,
+      );
+    }
+
+    // 需要压缩
+    ref.read(contextTokenProvider.notifier).setCompressing(
+      true,
+      notice: '正在压缩历史消息...',
+    );
+
+    final prep = _contextManager.prepareCompression(history);
+    var effectiveHistory = history;
+    var effectiveSystemPrompt = systemPrompt;
+
+    if (prep.toCompress.isNotEmpty) {
+      try {
+        final provider = ProviderFactory.get(conv.config.providerId);
+        final summaryResponse = await provider.chat(
+          config: conv.config.copyWith(maxTokens: 500),
+          history: [Message.user(prep.prompt)],
+        );
+        final summary =
+            ContextWindowManager.extractSummary(summaryResponse.content);
+        if (summary != null && summary.isNotEmpty) {
+          final result = _contextManager.applyCompression(
+            summary: summary,
+            toKeep: prep.toKeep,
+            originalSystemPrompt: systemPrompt,
+          );
+          effectiveHistory = result.messages;
+          effectiveSystemPrompt = result.enhancedSystemPrompt;
+          debugPrint(
+            '[ChatNotifier] 上下文压缩完成: ${result.compressedCount} 条消息 → 摘要',
+          );
+        } else {
+          // LLM 返回无效摘要，fallback
+          final result = _contextManager.fallbackCompression(
+            history,
+            originalSystemPrompt: systemPrompt,
+          );
+          effectiveHistory = result.messages;
+          debugPrint('[ChatNotifier] 摘要提取失败，fallback 丢弃早期消息');
+        }
+      } catch (e) {
+        debugPrint('[ChatNotifier] 压缩 LLM 调用失败: $e');
+        final result = _contextManager.fallbackCompression(
+          history,
+          originalSystemPrompt: systemPrompt,
+        );
+        effectiveHistory = result.messages;
+      }
+    }
+
+    ref.read(contextTokenProvider.notifier).setCompressing(false);
+
+    // 更新对话缓存
+    _updateConversationById(convId, (c) => c.copyWith(
+      systemPrompt: effectiveSystemPrompt,
+    ));
+
+    return (
+      history: effectiveHistory,
+      systemPrompt: effectiveSystemPrompt,
+      totalTokens: budget.totalTokens,
+      contextLimit: contextLimit,
+    );
+  }
+
   // ── 流式发送 ──
 
   List<ToolDefinition> get _currentTools {
@@ -1363,13 +1513,24 @@ Wrap the plan JSON in a ```json code block.''';
       if (conv == null) return;
       final provider = ProviderFactory.get(conv.config.providerId);
       final tools = _currentTools;
+
+      // 上下文窗口管理：检查预算，必要时压缩
+      final rawHistory = conv.messages.sublist(
+        0,
+        conv.messages.length - 1,
+      );
+      final ctx = await _prepareContextForSend(
+        convId: convId,
+        conv: conv,
+        systemPrompt: conv.systemPrompt,
+        history: rawHistory,
+        tools: tools,
+      );
+
       final stream = provider.chatStream(
         config: conv.config,
-        history: conv.messages.sublist(
-          0,
-          conv.messages.length - 1,
-        ),
-        systemPrompt: conv.systemPrompt,
+        history: ctx.history,
+        systemPrompt: ctx.systemPrompt,
         tools: tools.isNotEmpty ? tools : null,
       );
 
@@ -1466,13 +1627,24 @@ Wrap the plan JSON in a ```json code block.''';
       if (conv == null) return;
       final provider = ProviderFactory.get(conv.config.providerId);
       final tools = _currentTools;
+
+      // 上下文窗口管理：检查预算，必要时压缩
+      final rawHistory = conv.messages.sublist(
+        0,
+        conv.messages.length - 1,
+      );
+      final ctx = await _prepareContextForSend(
+        convId: convId,
+        conv: conv,
+        systemPrompt: conv.systemPrompt,
+        history: rawHistory,
+        tools: tools,
+      );
+
       final response = await provider.chat(
         config: conv.config,
-        history: conv.messages.sublist(
-          0,
-          conv.messages.length - 1,
-        ),
-        systemPrompt: conv.systemPrompt,
+        history: ctx.history,
+        systemPrompt: ctx.systemPrompt,
         tools: tools.isNotEmpty ? tools : null,
       );
 

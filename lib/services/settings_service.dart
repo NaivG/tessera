@@ -21,6 +21,7 @@ class SettingsService {
   static const _keyLightweightSystemPrompt = 'lightweight_system_prompt';
   static const _keyFableMode = 'fable_mode';
   static const _keyLocale = 'locale';
+  static const _keyContextWindowOverrides = 'context_window_overrides';
 
   Future<SharedPreferences> get _store async {
     if (_prefs != null) return _prefs!;
@@ -192,6 +193,26 @@ class SettingsService {
 
   Future<void> setLocale(String locale) async =>
       (await _store).setString(_keyLocale, locale);
+
+  // --- 上下文窗口覆盖 ---
+
+  /// 获取所有上下文窗口手动覆盖值
+  Future<Map<String, int>> getContextWindowOverrides() async {
+    final raw = (await _store).getString(_keyContextWindowOverrides);
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw) as Map<String, dynamic>;
+      return decoded.map((k, v) => MapEntry(k, (v as num).toInt()));
+    } catch (_) {
+      return {};
+    }
+  }
+
+  /// 保存所有上下文窗口手动覆盖值
+  Future<void> setContextWindowOverrides(Map<String, int> overrides) async {
+    final raw = jsonEncode(overrides);
+    await (await _store).setString(_keyContextWindowOverrides, raw);
+  }
 
   // --- 清除 ---
 

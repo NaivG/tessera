@@ -1,5 +1,6 @@
 // Riverpod providers
 export 'chat_provider.dart';
+export 'context_provider.dart';
 export 'conversation_list_provider.dart';
 export 'conversation_service_provider.dart';
 export 'memory_provider.dart';

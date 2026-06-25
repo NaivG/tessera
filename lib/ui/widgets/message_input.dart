@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 
 import '../../core/core.dart';
+import '../../providers/context_provider.dart';
 import '../../services/media_library.dart';
 import '../../services/speech_service.dart';
 import 'package:tessera/l10n/app_localizations.dart';
@@ -29,22 +31,23 @@ class SendPayload {
 /// 布局：
 /// ```
 /// [文本输入框            ] [🎤] [+] [➤]
+/// Token: 12K / 128K                     (可选指示器)
 /// ```
 ///
 /// - 🎤: 语音输入（Speech-to-Text）
 /// - +: 弹出选择菜单（图片 / 相机 / 文件）
 /// - ➤: 发送
-class MessageInput extends StatefulWidget {
+class MessageInput extends ConsumerStatefulWidget {
   final bool enabled;
   final ValueChanged<SendPayload> onSend;
 
   const MessageInput({super.key, this.enabled = true, required this.onSend});
 
   @override
-  State<MessageInput> createState() => _MessageInputState();
+  ConsumerState<MessageInput> createState() => _MessageInputState();
 }
 
-class _MessageInputState extends State<MessageInput> {
+class _MessageInputState extends ConsumerState<MessageInput> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
   final _speechService = SpeechService();
@@ -238,11 +241,22 @@ class _MessageInputState extends State<MessageInput> {
     });
   }
 
+  // ── Token 指示器颜色 ──
+
+  Color _tokenColor(double ratio, ColorScheme cs) {
+    if (ratio < 0.5) return Colors.green;
+    if (ratio < 0.8) return Colors.orange;
+    return cs.error;
+  }
+
   // ── UI ──
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    // 观察上下文 Token 状态
+    final tokenState = ref.watch(contextTokenProvider);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -257,6 +271,9 @@ class _MessageInputState extends State<MessageInput> {
               padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
               child: _buildAttachmentBar(theme),
             ),
+          // Token 指示器 — 输入框上方
+          if (tokenState.currentTokens > 0)
+            _buildTokenIndicator(tokenState, theme),
           // 主输入框 — 统一圆角框(文本 + 三个按钮合成一个完整框)
           Container(
             margin: const EdgeInsets.fromLTRB(12, 4, 12, 8),
@@ -317,6 +334,52 @@ class _MessageInputState extends State<MessageInput> {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTokenIndicator(
+    ContextTokenState tokenState,
+    ThemeData theme,
+  ) {
+    final color = _tokenColor(tokenState.usageRatio, theme.colorScheme);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          if (tokenState.isCompressing)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: color,
+                ),
+              ),
+            ),
+          if (tokenState.compressionNotice != null &&
+              !tokenState.isCompressing)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: Text(
+                tokenState.compressionNotice!,
+                style: theme.textTheme.labelSmall?.copyWith(color: color),
+              ),
+            ),
+          if (tokenState.systemPromptTruncated)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Icon(Icons.warning_amber_rounded, size: 14, color: color),
+            ),
+          Text(
+            tokenState.displayText,
+            style: theme.textTheme.labelSmall?.copyWith(color: color),
           ),
         ],
       ),

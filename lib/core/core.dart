@@ -7,6 +7,7 @@ export 'prompt_template_store.dart';
 export 'system_prompt_builder.dart';
 export 'sub_agent_manager.dart';
 export 'sub_agent_tool.dart';
+export 'context_window_manager.dart';
 export 'discover_manager.dart';
 export 'discover_tool.dart';
 export 'tool_call_validator.dart';

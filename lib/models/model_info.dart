@@ -82,13 +82,15 @@ enum ModelTag {
 /// 取代原先的纯字符串 [String] 模型 ID，增加了类型和标签元数据。
 /// [uid] 是实例唯一标识（UUID），用于可靠地引用此模型实例；
 /// [id] 是模型标识符（如 "gpt-4o"）。
+/// [contextWindow] 是可选的上下文窗口 Token 数，null 时使用内置默认值表。
 /// JSON 序列化格式：
 /// ```json
 /// {
 ///   "uid": "a1b2c3d4-...",
 ///   "id": "gpt-4o",
 ///   "type": "text",
-///   "tags": ["text", "vision"]
+///   "tags": ["text", "vision"],
+///   "context_window": 128000
 /// }
 /// ```
 class ModelInfo {
@@ -104,11 +106,15 @@ class ModelInfo {
   /// 模态标签集合（顺序无关，但序列化时按 [ModelTag] 枚举定义排序）
   final List<ModelTag> tags;
 
+  /// 模型上下文窗口 Token 数（null = 使用内置默认值表）
+  final int? contextWindow;
+
   const ModelInfo({
     this.uid = '',
     required this.id,
     this.type = ModelType.text,
     this.tags = const [ModelTag.text],
+    this.contextWindow,
   });
 
   // --- 便捷查询 ---
@@ -153,12 +159,16 @@ class ModelInfo {
     String? id,
     ModelType? type,
     List<ModelTag>? tags,
+    int? contextWindow,
+    bool clearContextWindow = false,
   }) {
     return ModelInfo(
       uid: uid ?? this.uid,
       id: id ?? this.id,
       type: type ?? this.type,
       tags: tags ?? List<ModelTag>.from(this.tags),
+      contextWindow:
+          clearContextWindow ? null : (contextWindow ?? this.contextWindow),
     );
   }
 
@@ -180,6 +190,7 @@ class ModelInfo {
         id: json['id'] as String,
         type: _parseModelType(json['type']),
         tags: _parseModelTags(json['tags']),
+        contextWindow: json['context_window'] as int?,
       );
     }
     throw ArgumentError('无法解析 ModelInfo: $json');
@@ -192,6 +203,7 @@ class ModelInfo {
       'id': id,
       'type': type.name,
       'tags': tags.map((t) => t.name).toList(),
+      if (contextWindow != null) 'context_window': contextWindow,
     };
   }
 
@@ -238,10 +250,12 @@ class ModelInfo {
       other is ModelInfo &&
           id == other.id &&
           type == other.type &&
+          contextWindow == other.contextWindow &&
           _listEquals(tags, other.tags);
 
   @override
-  int get hashCode => Object.hash(id, type, Object.hashAll(tags));
+  int get hashCode =>
+      Object.hash(id, type, contextWindow, Object.hashAll(tags));
 
   static bool _listEquals<T>(List<T> a, List<T> b) {
     if (a.length != b.length) return false;

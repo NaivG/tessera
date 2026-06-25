@@ -5,6 +5,7 @@ import 'package:tessera/l10n/app_localizations.dart';
 import '../../l10n/model_localization.dart';
 import '../../models/llm_provider_config.dart';
 import '../../models/model_info.dart';
+import '../../utils/model_context_defaults.dart';
 import '../../llm/provider_factory.dart';
 import '../../providers/providers.dart';
 
@@ -228,6 +229,12 @@ class _ModelEditPageState extends ConsumerState<ModelEditPage> {
       selectedTags.add(ModelTag.text);
     }
 
+    // contextWindow：API → 默认值表（getContextWindow 内置 fallback 128K）
+    final controllerCtxWindow = TextEditingController(
+      text: (fetchedInfo?.contextWindow ?? getContextWindow(modelId))
+          .toString(),
+    );
+
     final result = await showDialog<ModelInfo>(
       context: context,
       builder: (ctx) {
@@ -334,6 +341,26 @@ class _ModelEditPageState extends ConsumerState<ModelEditPage> {
                       ),
                     ],
 
+                    // 上下文窗口设置
+                    const SizedBox(height: 20),
+                    _DialogLabel('上下文窗口 (Tokens)'),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: controllerCtxWindow,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        hintText: '默认 128K (128000)',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                      ),
+                    ),
+
                     // 从 API 获取到信息的提示
                     if (fetchedInfo != null) ...[
                       const SizedBox(height: 12),
@@ -366,12 +393,17 @@ class _ModelEditPageState extends ConsumerState<ModelEditPage> {
                 ),
                 FilledButton(
                   onPressed: () {
+                    final ctxWinText = controllerCtxWindow.text.trim();
+                    final int? ctxWin = ctxWinText.isNotEmpty
+                        ? int.tryParse(ctxWinText)
+                        : null;
                     Navigator.pop(
                       ctx,
                       ModelInfo(
                         id: modelId,
                         type: selectedType,
                         tags: isLLM ? selectedTags.toList() : [],
+                        contextWindow: ctxWin,
                       ),
                     );
                   },
