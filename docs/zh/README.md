@@ -53,7 +53,11 @@ Tessera 通过两层方法处理这一问题：
 | 媒体 | image_picker / file_picker / video_player / gal |
 | 平台 | window_manager（桌面端）/ flutter_local_notifications |
 | 记忆检索 | SimHash（128 位）+ jieba（结巴分词） |
-| 插件运行时 | 来自 `NaivG/LuaDardo` fork 的 [`lua_dardo_plus`](https://pub.dev/packages/lua_dardo_plus)（Lua 5.3）+ archive（`.plugin` zip）+ path_provider |
+| 插件运行时 | [`luax`](https://github.com/NaivG/luax)（Lua 5.3，由项目作者本人维护）+ archive（`.plugin` zip）+ path_provider |
+| 工作空间 | Workspace 服务（按行读取、stale-read 强制、写操作审批）+ `path_traversal` 沙箱 |
+| 发现系统 | 基于 tag / capability 索引的 `DiscoverManager` + `ToolCallValidator`（校验失败时返回 schema） |
+| 子 Agent | `SubAgentManager` 并行流式执行子任务（Agent / Plan 对话模式） |
+| 上下文预算 | `TokenCounter`（CJK 感知）+ `ContextWindowManager`（80% 阈值，调用 LLM 压缩最早消息） |
 | 国际化 | Flutter l10n（intl） |
 
 ---
@@ -68,9 +72,17 @@ tessera/
 │   ├── core/                          # 核心抽象
 │   │   ├── llm_provider.dart          # 统一 LLM 提供商接口
 │   │   ├── capability_adapter.dart    # 能力转译路由
-│   │   ├── tool_registry.dart         # 工具注册与执行
+│   │   ├── tool_registry.dart         # 工具注册 + capability/tag 索引
+│   │   ├── tool_call_validator.dart   # 运行时 schema 校验，失败返回 schema
+│   │   ├── discover_manager.dart      # 统一 skill + tool 发现（紧凑目录）
+│   │   ├── discover_tool.dart         # 暴露给 LLM 的 `discover` 工具
+│   │   ├── sub_agent_manager.dart     # 并行流式子 Agent 执行
+│   │   ├── sub_agent_tool.dart        # 暴露给 LLM 的 `sub_agent` 工具
+│   │   ├── workspace_tools.dart       # workspace_list/read/search/write/edit/patch/mkdir/delete
+│   │   ├── context_window_manager.dart # Token 预算，80% 阈值，调用 LLM 压缩
 │   │   ├── system_prompt_builder.dart # 三段式系统提示词组装
-│   │   └── prompt_template_store.dart # 提示模板存储
+│   │   ├── prompt_template_store.dart # 提示模板存储
+│   │   └── core.dart                  # Barrel 导出
 │   ├── llm/                           # LLM SDK 封装
 │   │   ├── openai_provider.dart
 │   │   ├── anthropic_provider.dart
@@ -83,20 +95,30 @@ tessera/
 │   │   ├── model_selection_config.dart / stream_chunk.dart
 │   │   ├── media_attachment.dart / prompt_template.dart
 │   │   ├── memory_entry.dart / memory_type.dart / memory_relation.dart / memory_extraction.dart
-│   │   └── llm_provider_config.dart
+│   │   ├── llm_provider_config.dart / provider_usage.dart
+│   │   ├── session.dart               # 单对话下的子 Agent / 子任务会话
+│   │   ├── conversation_mode.dart     # Agent / Plan / Default 对话模式
+│   │   ├── plan.dart                  # Plan 模式的结构化计划条目
+│   │   └── workspace.dart             # Workspace + WorkspaceIndex + EditOperation
 │   ├── services/                      # 业务服务
 │   │   ├── conversation_service.dart  # SQLite 对话持久化
 │   │   ├── memory_service.dart        # 记忆持久化
 │   │   ├── speech_service.dart        # 语音识别/合成
 │   │   ├── media_library.dart         # 媒体文件管理
-│   │   └── settings_service.dart      # 设置持久化
+│   │   ├── settings_service.dart      # 设置持久化（+ 上下文窗口覆盖值）
+│   │   ├── usage_stats_service.dart   # 按 provider 聚合 token 用量
+│   │   └── workspace_service.dart     # Workspace CRUD + 读/写强制
 │   ├── providers/                     # 状态管理（Riverpod）
-│   │   ├── chat_provider.dart         # 对话流状态
+│   │   ├── chat_provider.dart         # 对话流状态（流式 + 工具分发）
 │   │   ├── settings_provider.dart     # 设置状态
 │   │   ├── memory_provider.dart       # 记忆状态
-│   │   ├── conversation_service_provider.dart # 对话服务
-│   │   ├── memory_service_provider.dart       # 记忆服务
-│   │   ├── settings_service_provider.dart      # 设置服务
+│   │   ├── context_provider.dart      # Token 用量指示器状态
+│   │   ├── session_provider.dart      # 子 Agent 会话状态
+│   │   ├── workspace_provider.dart    # 当前 workspace + 审批状态
+│   │   ├── stats_provider.dart        # provider 用量聚合
+│   │   ├── conversation_list_provider.dart / conversation_service_provider.dart
+│   │   ├── memory_service_provider.dart / settings_service_provider.dart
+│   │   ├── workspace_service_provider.dart
 │   │   └── providers.dart             # Barrel 导出
 │   ├── cache/                         # 提示缓存系统
 │   │   ├── cache_manager.dart
@@ -114,27 +136,38 @@ tessera/
 │   │   ├── plugin_metadata.dart       # Manifest schema（plugin.json）
 │   │   ├── lua_plugin_host.dart       # 单插件 LuaState + tessera 桥接
 │   │   ├── plugin_manager.dart        # 捆绑 + 已安装的发现
-│   │   └── plugin_registry.dart       # 生命周期、启用/禁用、TOOL 注册
+│   │   ├── plugin_registry.dart       # 生命周期、启用/禁用、TOOL 注册
+│   │   └── addons/                    # 可选 Lua 模块（http / json / html2md / base64）
 │   ├── ui/
 │   │   ├── pages/                     # 页面
 │   │   │   ├── main_page.dart / chat_page.dart
 │   │   │   ├── settings_page.dart / user_profile_page.dart
 │   │   │   ├── library_page.dart / memory_page.dart
 │   │   │   ├── model_selection_page.dart / model_edit_page.dart
+│   │   │   ├── plugin_page.dart / workspace_page.dart / stats_page.dart
 │   │   │   └── error_page.dart
 │   │   └── widgets/                   # 可复用组件
 │   │       ├── chat_bubble.dart / chat_content_view.dart
 │   │       ├── message_input.dart / processing_block.dart
-│   │       └── sidebar.dart
+│   │       ├── sidebar.dart / conversation_menu.dart
+│   │       ├── plan_block.dart / read_only_banner.dart
+│   │       ├── sub_agent_card.dart
+│   │       ├── workspace_approval_card.dart / workspace_approval_listener.dart
+│   │       └── workspace_confirmation_dialog.dart
 │   ├── l10n/                          # 国际化
 │   │   ├── app_en.arb / app_zh.arb
 │   │   ├── app_localizations.dart
 │   │   └── model_localization.dart
 │   └── utils/
 │       ├── logger.dart
-│       └── json_extractor.dart              # LLM JSON 输出提取（多策略容错）
+│       ├── json_extractor.dart              # LLM JSON 输出提取（多策略容错）
+│       ├── token_counter.dart               # CJK 感知的 token 估算
+│       ├── model_context_defaults.dart      # 内置模型上下文窗口表
+│       ├── path_traversal.dart              # 工作空间路径沙箱检查
+│       └── plan_parser.dart                 # Plan 模式计划文本解析
 ├── assets/
-│   ├── system_prompt.txt              # 三段式系统提示模板
+│   ├── system_prompt.txt              # 默认三段式系统提示词模板
+│   ├── prompt_fable.txt               # Fable 模式系统提示词
 │   ├── dict*.txt / idf_dict.txt       # 结巴分词词典
 │   └── plugins/                       # 捆绑插件（随应用一起发布）
 │       ├── plugins_index.json         # 捆绑插件 id 白名单
@@ -149,7 +182,11 @@ tessera/
 
 ## 目录
 
-- [**插件系统**](plugin-system.md) —— 沙箱化 Lua 运行时、`plugin.json` manifest、`tessera` 桥接 API、生命周期、`.plugin` 分发格式、本项目作者维护的 `NaivG/LuaDardo` fork、编写指南、内置示例
+- [**插件系统**](plugin-system.md) —— 沙箱化 Lua 运行时、`plugin.json` manifest、`tessera` 桥接 API、生命周期、`.plugin` 分发格式、本项目作者维护的 `NaivG/luax` fork、编写指南、内置示例
 - [**记忆系统**](memory-system.md) —— 长期记忆流水线：SimHash 索引、抽取、检索打分、压缩（DBSCAN + LLM 合并）、指数衰减遗忘、`memory.db` 持久化层
 - [**LLM 提供商抽象**](llm-providers.md) —— 跨 OpenAI / Anthropic / Ollama / Google 的统一 `LlmProvider` 接口、`Stream<StreamChunk>` 流式协议、`LlmProviderConfig`、`JsonExtractor` 4 步结构化输出解析
 - [**能力转译**](capability-adapter.md) —— 多模态路由：视觉 / 音频 / 文生图 / TTS 子模型如何以 function-call 工具形式暴露给纯文本主模型，以及基于 slot 的 `ModelSelectionConfig`
+- [**工作空间工具**](workspace-tools.md) —— 沙箱化的本地文件工具（`workspace_list/read/search/write/edit/patch/mkdir/delete`）：按行读取、stale-read 强制、每次写操作的用户审批，以及路径越权检查
+- [**发现系统**](discover-system.md) —— tag / capability 索引：`DiscoverManager` 生成紧凑的 skill 目录，`discover` 工具返回轻量摘要，`ToolCallValidator` 在 LLM 调用参数错误时返回完整 schema
+- [**子 Agent**](sub-agents.md) —— `SubAgentManager` 并行流式执行多个子任务，每个任务分配独立 session 卡片、专用系统提示词以及 `SubAgentStreamHandle` 用于实时 delta 聚合
+- [**上下文窗口管理**](context-window.md) —— 客户端 token 预算强制：`TokenCounter`（CJK 感知）、内置模型上下文窗口表与用户覆盖值、80% 用量阈值、以及通过 LLM 摘要最早消息的自动压缩

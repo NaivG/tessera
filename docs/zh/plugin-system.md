@@ -4,7 +4,7 @@
 
 ## 概述
 
-Tessera 的插件系统是一个沙箱化的 **Lua 5.3** 运行时,由 [`lua_dardo_plus`](https://pub.dev/packages/lua_dardo_plus) Dart 包提供,源码来自 [`NaivG/LuaDardo`](https://github.com/NaivG/LuaDardo) Git fork(详见 [Lua 运行时](#lua-运行时)),让你可以在运行时通过两种方式扩展应用:
+Tessera 的插件系统是一个沙箱化的 **Lua 5.3** 运行时，由 [`luax`](https://github.com/NaivG/luax) Dart 包提供（由项目作者本人维护，详见 [Lua 运行时](#lua-运行时)），让你可以在运行时通过两种方式扩展应用：
 
 - **TOOL（工具）** —— 主对话模型可以通过 function-calling 调用的函数，结果以文本形式返回，并合并回对话中（包装为 `ToolResult`）。
 - **SKILL（技能）** —— 一段简短的 Markdown 描述，会被追加到系统提示中，让模型知道**何时**该使用你注册的 TOOL。
@@ -17,7 +17,8 @@ Tessera 的插件系统是一个沙箱化的 **Lua 5.3** 运行时,由 [`lua_dar
 | Lua 沙箱 + 桥接 | [`lib/plugin/lua_plugin_host.dart`](../../lib/plugin/lua_plugin_host.dart) |
 | 文件系统安装 / 卸载 | [`lib/plugin/plugin_manager.dart`](../../lib/plugin/plugin_manager.dart) |
 | 生命周期 / 工具分发 | [`lib/plugin/plugin_registry.dart`](../../lib/plugin/plugin_registry.dart) |
-| Lua 运行时(fork) | [`LuaDardo`](https://github.com/NaivG/LuaDardo)(通过 `pubspec.yaml` 引入) |
+| 可选 Lua 模块（http/json/html2md/base64） | [`lib/plugin/addons/`](../../lib/plugin/addons/) |
+| Lua 运行时（fork） | [`luax`](https://github.com/NaivG/luax)（通过 `pubspec.yaml` 引入） |
 | UI 页面 | [`lib/ui/pages/plugin_page.dart`](../../lib/ui/pages/plugin_page.dart) |
 
 ## 插件 Manifest（`plugin.json`）
@@ -56,16 +57,23 @@ Tessera 的插件系统是一个沙箱化的 **Lua 5.3** 运行时,由 [`lua_dar
 -- 1) 打印调试信息（输出到 Flutter 日志）
 tessera.log("Time Plugin loaded")
 
--- 2) 注册一个 SKILL —— 文本会被追加到系统提示中
+-- 2) 注册一个 SKILL —— 文本会被追加到系统提示中。
+--    `tags` 和 `capabilities` 会被发现系统索引，
+--    以便 LLM 按关键字或能力查找该 skill。
 tessera.register_skill({
   name = "时间工具",
-  description = "当用户询问当前时间、时间戳或时区转换时，使用 get_current_time / format_time / convert_timezone 工具。"
+  description = "当用户询问当前时间、时间戳或时区转换时，使用 get_current_time / format_time / convert_timezone 工具。",
+  tags         = { "time", "datetime" },
+  capabilities = { "time.current", "time.format" },
 })
 
--- 3) 注册一个 TOOL —— 可被 LLM 调用的函数
+-- 3) 注册一个 TOOL —— 可被 LLM 调用的函数。
+--    tags 与 capabilities 同样会被发现系统索引。
 tessera.register_tool({
   name = "get_current_time",
   description = "返回指定 IANA 时区的当前时间。",
+  tags         = { "time" },
+  capabilities = { "time.current" },
   parameters = {
     timezone = { type = "string", description = "IANA 时区，如 Asia/Shanghai", required = false },
     format   = { type = "string", description = "iso / timestamp / human",        required = false },
@@ -81,7 +89,7 @@ tessera.register_tool({
 
 `handler` 就是一个普通 Lua 函数：它以 Lua 表的形式接收 LLM 传来的参数映射，必须返回一个 `string`。宿主会把返回值包装为 [`lib/models/tool.dart`](../../lib/models/tool.dart) 中定义的 `ToolResult`，再送回主模型。
 
-随后，`PluginRegistry.buildSkillBlocks()` 会把每个已注册技能的 `name` + `description` 拼成一个 Markdown 段落，注入到系统提示中 —— 模型从系统提示里看到技能摘要，按需调用对应的 TOOL。
+随后，`PluginRegistry.buildSkillBlocks()` 会把所有已注册技能的 `name` + `description` 拼成一个**紧凑目录**注入到系统提示中。完整的 per-skill / per-tool schema 不会随 prompt 一起发送 —— LLM 通过 `discover` 工具获取轻量摘要，`ToolCallValidator` 会在 LLM 调用参数错误时把完整 schema 返回给模型（参见 [发现系统](discover-system.md)）。
 
 ## 生命周期
 
@@ -135,7 +143,20 @@ python plugins/pack_plugin.py pack plugins/my_plugin --skip-lua-check
 
 ## Lua 运行时
 
-插件跑在沙箱化的 **Lua 5.3** 虚拟机上,由 [`lua_dardo_plus`](https://pub.dev/packages/lua_dardo_plus) 包提供,源码来自 [`NaivG/LuaDardo`](https://github.com/NaivG/LuaDardo) Git 仓库(在 `pubspec.yaml` 中声明)。
+插件跑在沙箱化的 **Lua 5.3** 虚拟机上，由 [`luax`](https://github.com/NaivG/luax) Dart 包提供（在 `pubspec.yaml` 中以 `git:` 依赖声明）。该包由项目作者本人维护；原先的 `lua_dardo_plus` 已被替换。
+
+### 可选 Lua 扩展模块
+
+除 Lua 5.3 标准库外，宿主还通过 [`lib/plugin/addons/`](../../lib/plugin/addons/) 暴露以下可选模块：
+
+| 模块 | 用途 |
+|---|---|
+| `http` | `http.get / http.post`（状态码、响应头、响应体） |
+| `json` | `json.encode / json.decode` |
+| `html2md` | `html2md.convert(html)`，将 HTML 转换为 Markdown |
+| `base64` | `base64.encode / base64.decode` |
+
+这些模块在 `LuaPluginHost._setupBridge()` 中挂载，插件作者可以直接以普通 Lua 函数的方式调用，无需额外配置。
 
 ## 插件编写指南
 
@@ -189,6 +210,7 @@ tessera.register_tool({
 - [`lib/plugin/plugin.dart`](../../lib/plugin/plugin.dart) —— 公共 barrel，大多数调用方只需 import 一次
 - [`lib/ui/pages/plugin_page.dart`](../../lib/ui/pages/plugin_page.dart) —— 安装 / 启用 / 卸载 UI
 - [`plugins/pack_plugin.py`](../../plugins/pack_plugin.py) —— 官方打包工具
-- [`LuaDardo`](https://github.com/NaivG/LuaDardo) —— Lua 运行时 fork 源码,由项目作者本人维护
+- [`luax`](https://github.com/NaivG/luax) —— Lua 运行时包，由项目作者本人维护
 - [`lib/models/tool.dart`](../../lib/models/tool.dart) —— `ToolDefinition` / `ToolCall` / `ToolResult` 类型定义
 - [`lib/core/tool_registry.dart`](../../lib/core/tool_registry.dart) —— 插件宿主注册 TOOL 时写入的全局工具表
+- [发现系统](discover-system.md) —— skill / tool 的 tag 与 capability 如何喂给 `discover` 工具以及 `ToolCallValidator`

@@ -4,7 +4,7 @@ Tessera's Lua plugin system.
 
 ## Overview
 
-Tessera's plugin system is a sandboxed **Lua 5.3** runtime — powered by the [`lua_dardo_plus`](https://pub.dev/packages/lua_dardo_plus) Dart package, sourced from the [`NaivG/LuaDardo`](https://github.com/NaivG/LuaDardo) Git fork (see [Lua Runtime](#lua-runtime) for details) — that lets you extend the app at runtime in two ways:
+Tessera's plugin system is a sandboxed **Lua 5.3** runtime — powered by the [`luax`](https://github.com/NaivG/luax) Dart package, maintained by the project owner (see [Lua Runtime](#lua-runtime) for details) — that lets you extend the app at runtime in two ways:
 
 - **TOOL** — a function the main chat model can invoke via function-calling. Results are returned as text and merged back into the conversation as a `ToolResult`.
 - **SKILL** — a short markdown description appended to the system prompt so the model knows *when* to use your TOOLs.
@@ -17,7 +17,8 @@ Each plugin is a folder containing a `plugin.json` manifest and a Lua entry scri
 | Lua sandbox + bridge | [`lib/plugin/lua_plugin_host.dart`](../../lib/plugin/lua_plugin_host.dart) |
 | Filesystem install/uninstall | [`lib/plugin/plugin_manager.dart`](../../lib/plugin/plugin_manager.dart) |
 | Lifecycle / tool dispatch | [`lib/plugin/plugin_registry.dart`](../../lib/plugin/plugin_registry.dart) |
-| Lua runtime (fork) | [`LuaDardo`](https://github.com/NaivG/LuaDardo) (sourced via `pubspec.yaml`) |
+| Optional Lua modules (http/json/html2md/base64) | [`lib/plugin/addons/`](../../lib/plugin/addons/) |
+| Lua runtime (fork) | [`luax`](https://github.com/NaivG/luax) (sourced via `pubspec.yaml`) |
 | UI surface | [`lib/ui/pages/plugin_page.dart`](../../lib/ui/pages/plugin_page.dart) |
 
 ## Plugin Manifest (`plugin.json`)
@@ -56,16 +57,23 @@ When your Lua script runs, a global table named `tessera` is injected into the L
 -- 1) Log a debug message (visible in the Flutter log)
 tessera.log("Time Plugin loaded")
 
--- 2) Register a SKILL — text appended to the system prompt
+-- 2) Register a SKILL — text appended to the system prompt.
+--    `tags` and `capabilities` are indexed by the Discover system
+--    so the LLM can find this skill by keyword or capability.
 tessera.register_skill({
   name = "Time Tools",
-  description = "When the user asks about the current time, timestamps, or timezone conversions, use the get_current_time / format_time / convert_timezone tools."
+  description = "When the user asks about the current time, timestamps, or timezone conversions, use the get_current_time / format_time / convert_timezone tools.",
+  tags         = { "time", "datetime" },
+  capabilities = { "time.current", "time.format" },
 })
 
--- 3) Register a TOOL — an LLM-callable function
+-- 3) Register a TOOL — an LLM-callable function.
+--    Tags and capabilities are also indexed for the Discover system.
 tessera.register_tool({
   name = "get_current_time",
   description = "Return the current time in a given IANA timezone.",
+  tags         = { "time" },
+  capabilities = { "time.current" },
   parameters = {
     timezone = { type = "string", description = "IANA tz, e.g. Asia/Shanghai", required = false },
     format   = { type = "string", description = "iso / timestamp / human",        required = false },
@@ -81,7 +89,7 @@ tessera.register_tool({
 
 A `handler` is just a Lua function: it receives the LLM's argument map as a Lua table and must return a `string`. The host wraps the result in a `ToolResult` (defined in [`lib/models/tool.dart`](../../lib/models/tool.dart)) and feeds it back to the main model.
 
-`PluginRegistry.buildSkillBlocks()` then concatenates every registered skill's `name` + `description` into a single markdown section that's injected into the system prompt — the model sees the skill summary in the system prompt and is expected to call the matching TOOL.
+`PluginRegistry.buildSkillBlocks()` then concatenates every registered skill's `name` + `description` into a compact catalog that's injected into the system prompt. The full per-skill / per-tool schemas are **not** sent in the prompt — the LLM calls the `discover` tool to get lightweight summaries, and `ToolCallValidator` returns the full schema when the LLM's call is malformed (see [Discover System](discover-system.md)).
 
 ## Lifecycle
 
@@ -136,9 +144,24 @@ The **Plugins** page ([`lib/ui/pages/plugin_page.dart`](../../lib/ui/pages/plugi
 ## Lua Runtime
 
 Plugins run on a sandboxed **Lua 5.3** VM provided by the
-[`lua_dardo_plus`](https://pub.dev/packages/lua_dardo_plus) Dart package, sourced from the
-[`NaivG/LuaDardo`](https://github.com/NaivG/LuaDardo) Git repository (declared in
-`pubspec.yaml`).
+[`luax`](https://github.com/NaivG/luax) Dart package (declared in `pubspec.yaml` as a
+`git:` dependency). The package is maintained by the project owner; the previous
+`lua_dardo_plus` import has been replaced.
+
+### Optional Lua addons
+
+In addition to the standard Lua 5.3 libraries, the host exposes optional
+modules under [`lib/plugin/addons/`](../../lib/plugin/addons/):
+
+| Module | Purpose |
+|---|---|
+| `http` | `http.get / http.post` (status, headers, body) |
+| `json` | `json.encode / json.decode` |
+| `html2md` | `html2md.convert(html)` for stripping HTML into Markdown |
+| `base64` | `base64.encode / base64.decode` |
+
+These are wired up by `LuaPluginHost._setupBridge()`; plugin authors can call
+them as plain Lua functions without any extra setup.
 
 ## Authoring a Plugin
 
@@ -192,6 +215,7 @@ tessera.register_tool({
 - [`lib/plugin/plugin.dart`](../../lib/plugin/plugin.dart) — public barrel, the only import most callers need
 - [`lib/ui/pages/plugin_page.dart`](../../lib/ui/pages/plugin_page.dart) — install / enable / uninstall UI
 - [`plugins/pack_plugin.py`](../../plugins/pack_plugin.py) — official packager
-- [`LuaDardo`](https://github.com/NaivG/LuaDardo) — Lua runtime fork source, maintained by the project owner
+- [`luax`](https://github.com/NaivG/luax) — Lua runtime package, maintained by the project owner
 - [`lib/models/tool.dart`](../../lib/models/tool.dart) — `ToolDefinition` / `ToolCall` / `ToolResult` types
 - [`lib/core/tool_registry.dart`](../../lib/core/tool_registry.dart) — global tool registry that the plugin host registers into
+- [Discover System](discover-system.md) — how skill / tool tags and capabilities feed the `discover` tool and `ToolCallValidator`

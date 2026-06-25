@@ -51,10 +51,14 @@
 - **🧠 能力转译系统** — 通过 function-calling 自动将视觉、音频、图像生成、TTS 任务路由到专用子模型。
 - **💾 智能提示缓存** — 三段式系统提示 + SHA256 增量缓存，只重传变更的段落。
 - **🧠 长期记忆** — 基于 SimHash 的语义检索、DBSCAN 聚类 + LLM 压缩、指数衰减遗忘、滚动式对话摘要。
-- **🧩 可扩展的插件系统** — 沙箱化 Lua 5.3 运行时，写几行脚本就能注册工具与技能，无需重新编译。
+- **🧩 可扩展的插件系统** — 沙箱化 Lua 5.3 运行时（[`NaivG/luax`](https://github.com/NaivG/luax)），写几行脚本就能注册工具与技能，无需重新编译。
+- **🔍 发现系统** — 基于 tag 与 capability 的索引：LLM 看到紧凑的 skill 目录，需要时调用 `discover` 获取轻量摘要；`ToolCallValidator` 在参数错误时把完整 schema 返回给模型。
+- **🛠️ 工作空间工具** — 沙箱化的本地文件工具（`workspace_read/write/edit/patch/mkdir/delete/...`），支持按行读取、stale-read 强制、每次写操作前弹出用户审批。
+- **🤝 子 Agent** — `SubAgentManager` 并行流式执行多个子任务，每个任务独立 session 卡片、专用系统提示词以及实时 delta 聚合。
+- **📏 上下文窗口管理** — 客户端 token 预算强制，CJK 感知估算、80% 用量阈值、调用 LLM 摘要最早消息。
 - **🎤 语音交互** — 语音输入（STT）与语音输出（TTS）。
-- **📚 对话管理** — SQLite 持久化存储，支持创建、重命名、删除对话，附带媒体库。
-- **🎨 用户体验** — Material 3 设计、亮/暗主题、桌面端窗口管理、流式 Markdown 与代码高亮。
+- **📚 对话管理** — SQLite 持久化存储，支持创建、重命名、删除对话，附带媒体库、Agent / Plan / Default 对话模式。
+- **🎨 用户体验** — Material 3 设计、亮/暗主题、桌面端窗口管理、流式 Markdown 与代码高亮、输入框旁 token 用量指示器。
 - **🌐 国际化** — 完整中英文本地化，基于 Flutter l10n，易于扩展。
 
 深入架构、技术栈与项目结构请参见 [**文档**](docs/zh/README.md)。
@@ -98,6 +102,10 @@ Tessera 各大子系统的深入参考文档位于 [**docs/zh/**](docs/zh/README
 - [**记忆系统**](docs/zh/memory-system.md) —— 长期记忆流水线：SimHash 索引、抽取、检索打分、压缩（DBSCAN + LLM 合并）、指数衰减遗忘
 - [**LLM 提供商抽象**](docs/zh/llm-providers.md) —— 跨 OpenAI / Anthropic / Ollama / Google 的统一 `LlmProvider` 接口、流式协议、结构化输出
 - [**能力转译**](docs/zh/capability-adapter.md) —— 多模态路由：视觉 / 音频 / 文生图 / TTS 子模型如何以 function-call 工具形式暴露给纯文本主模型
+- [**工作空间工具**](docs/zh/workspace-tools.md) —— 沙箱化的本地文件工具，支持按行读取、stale-read 强制以及写操作审批
+- [**发现系统**](docs/zh/discover-system.md) —— 紧凑的 skill 目录、`discover` 工具以及 `ToolCallValidator`（校验失败时返回 schema）
+- [**子 Agent**](docs/zh/sub-agents.md) —— `SubAgentManager` 并行流式子任务与 `sub_agent` 工具
+- [**上下文窗口管理**](docs/zh/context-window.md) —— 客户端 token 预算、80% 阈值、LLM 摘要压缩
 
 ---
 

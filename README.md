@@ -51,10 +51,14 @@
 - **🧠 Capability Adapter System** — Automatically routes vision, audio, image generation, and TTS tasks to specialized sub-models via function-calling.
 - **💾 Intelligent Prompt Caching** — Three-block system prompt with SHA256 delta caching; only changed blocks are re-sent.
 - **🧠 Long-Term Memory** — SimHash-based semantic search, DBSCAN clustering with LLM compression, exponential-decay forgetting, and rolling conversation summaries.
-- **🧩 Extensible Plugin System** — Sandboxed Lua 5.3 runtime. Write a script, register tools and skills — no rebuild needed.
+- **🧩 Extensible Plugin System** — Sandboxed Lua 5.3 runtime ([`NaivG/luax`](https://github.com/NaivG/luax)). Write a script, register tools and skills — no rebuild needed.
+- **🔍 Discover System** — Tag and capability indexing: the LLM sees a compact skill catalog and calls `discover` to get lightweight summaries; `ToolCallValidator` returns the full schema when arguments are wrong.
+- **🛠️ Workspace Tools** — Sandboxed local file tools (`workspace_read/write/edit/patch/mkdir/delete/...`) with line-range reads, stale-read enforcement, and a per-write user-approval dialog.
+- **🤝 Sub-Agents** — `SubAgentManager` launches multiple sub-tasks in parallel streaming fashion, each with its own session card, system-prompt variant, and live delta aggregation.
+- **📏 Context Window Manager** — Client-side token budget enforcement with CJK-aware estimation, an 80% usage threshold, and LLM-driven summarization of the oldest messages.
 - **🎤 Voice Interaction** — Speech-to-text input and text-to-speech output.
-- **📚 Conversation Management** — SQLite persistent storage, create/rename/delete, media library.
-- **🎨 User Experience** — Material 3 design, light/dark theme, desktop window management, streaming Markdown with code highlighting.
+- **📚 Conversation Management** — SQLite persistent storage, create/rename/delete, media library, Agent / Plan / Default conversation modes.
+- **🎨 User Experience** — Material 3 design, light/dark theme, desktop window management, streaming Markdown with code highlighting, token-usage indicator in the input area.
 - **🌐 Localization** — Fully localized in English and Chinese, extensible via Flutter l10n.
 
 See [**Documentation**](docs/en/) for deep-dive architecture, tech stack, project structure, and subsystem references.
@@ -98,6 +102,10 @@ Deep-dive architecture, tech stack, project structure, and subsystem references 
 - [**Memory System**](docs/en/memory-system.md) — SimHash indexing, extraction pipeline, retrieval scoring, DBSCAN + LLM compression, exponential-decay forgetting
 - [**LLM Provider Abstraction**](docs/en/llm-providers.md) — Unified `LlmProvider` interface, streaming protocol, structured output with `JsonExtractor`
 - [**Capability Adapter**](docs/en/capability-adapter.md) — Multimodal routing architecture, model selection slots, function-call bridging
+- [**Workspace Tools**](docs/en/workspace-tools.md) — Sandboxed local file tools with line-range reads, stale-read enforcement, and write approval
+- [**Discover System**](docs/en/discover-system.md) — Compact skill catalog, the `discover` tool, and `ToolCallValidator` (fail-with-schema)
+- [**Sub-Agents**](docs/en/sub-agents.md) — `SubAgentManager` parallel streaming sub-tasks and the `sub_agent` tool
+- [**Context Window Manager**](docs/en/context-window.md) — Client-side token budget, 80% threshold, LLM-driven summarization
 
 ---
 
