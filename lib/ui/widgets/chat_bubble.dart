@@ -287,7 +287,7 @@ class ChatBubble extends StatelessWidget {
               width: 32,
               height: 32,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Icon(
+              errorBuilder: (_, _, _) => Icon(
                 Icons.person,
                 size: 18,
                 color: theme.colorScheme.onPrimary,
