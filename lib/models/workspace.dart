@@ -188,3 +188,16 @@ class WorkspaceApprovalRequest {
     required this.completer,
   });
 }
+
+// =============================================================================
+// ReadResult — workspace_read 服务层返回的 (切片内容, 总行数) 配对
+//
+// 不持久化,不参与 JSON 序列化。handler 用 totalLines 构造
+// "Showing lines X-Y of Z" 响应头。
+// =============================================================================
+
+class ReadResult {
+  final String content;
+  final int totalLines;
+  const ReadResult({required this.content, required this.totalLines});
+}

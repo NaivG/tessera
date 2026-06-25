@@ -219,9 +219,10 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     } else {
       // 文件 —— 弹出只读内容预览
       try {
-        final content = await ref
+        final result = await ref
             .read(workspaceProvider.notifier)
             .readFile(ws.id, entry.relativePath);
+        final content = result.content;
         if (!mounted) return;
         await showDialog<void>(
           context: context,

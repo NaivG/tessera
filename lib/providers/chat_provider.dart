@@ -1338,6 +1338,7 @@ Wrap the plan JSON in a ```json code block.''';
       workspaceSearchTool,
       workspaceWriteTool,
       workspaceEditTool,
+      workspacePatchTool,
       workspaceMkdirTool,
       workspaceDeleteTool,
     ]) {

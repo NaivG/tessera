@@ -47,6 +47,12 @@ class WorkspaceService {
   bool _initialized = false;
   WorkspaceIndex _index = WorkspaceIndex.empty;
 
+  /// Per-file mtime recorded at the last workspace_read call.
+  /// Key: `"<workspaceId>:<relativePath>"` (POSIX separators).
+  /// Session-scoped, in-memory only. Used to reject stale writes
+  /// via the integrity check in workspace_write / workspace_edit / workspace_patch.
+  final Map<String, DateTime> _readMtimes = {};
+
   /// 索引文件路径
   String get _indexPath => p.join(_workspacesDir ?? '', 'index.json');
 
@@ -221,7 +227,18 @@ class WorkspaceService {
   }
 
   /// 读取文本文件内容。
-  Future<String> readFile(String workspaceId, String relativePath) async {
+  ///
+  /// [startLine] / [endLine] 是 1-indexed, inclusive 的可选行范围。
+  /// - 都为 null 时返回全文(向后兼容)
+  /// - 任一给定时返回切片,返回 [ReadResult] 含切片内容与文件总行数
+  ///
+  /// 副作用:成功读取后会把当前 mtime 写入 [_readMtimes](供完整性检查使用)。
+  Future<ReadResult> readFile(
+    String workspaceId,
+    String relativePath, {
+    int? startLine,
+    int? endLine,
+  }) async {
     _ensureInitialized();
     final ws = _require(workspaceId);
     final abs = resolveSafePath(
@@ -232,17 +249,38 @@ class WorkspaceService {
     if (!await file.exists()) {
       throw WorkspaceFileException('File not found: $relativePath');
     }
-    return file.readAsString();
+    final raw = await file.readAsString();
+    final stat = await file.stat();
+    _readMtimes[_mtimeKey(workspaceId, relativePath)] = stat.modified;
+
+    if (raw.isEmpty) {
+      return const ReadResult(content: '', totalLines: 0);
+    }
+    final lines = raw.split('\n');
+    final total = lines.length;
+    if (startLine == null && endLine == null) {
+      return ReadResult(content: raw, totalLines: total);
+    }
+    final s = (startLine ?? 1).clamp(1, total);
+    final e = (endLine ?? total).clamp(s, total);
+    final slice = lines.sublist(s - 1, e).join('\n');
+    return ReadResult(content: slice, totalLines: total);
   }
 
   /// 写入文本内容到文件。
   ///
-  /// 若文件不存在则创建（包括父目录）。
+  /// - 若 [startLine]/[endLine] 都为 null:全文覆写（若文件不存在则创建，包括父目录）
+  /// - 若都提供：把第 [startLine]..[endLine] 行（1-indexed, inclusive）替换为 [content]，
+  ///   其余内容原样保留；此时文件必须存在且非空
+  ///
+  /// 副作用：写完后会 stat 并刷新 [_readMtimes] 中的 mtime，使后续写能通过完整性检查。
   Future<void> writeFile(
     String workspaceId,
     String relativePath,
-    String content,
-  ) async {
+    String content, {
+    int? startLine,
+    int? endLine,
+  }) async {
     _ensureInitialized();
     final ws = _require(workspaceId);
     final abs = resolveSafePath(
@@ -252,7 +290,52 @@ class WorkspaceService {
     final file = File(abs);
     // 确保父目录存在
     await file.parent.create(recursive: true);
-    await file.writeAsString(content, flush: true);
+
+    if (startLine == null && endLine == null) {
+      await file.writeAsString(content, flush: true);
+    } else {
+      if (!await file.exists()) {
+        throw WorkspaceFileException(
+          'Cannot apply line range to non-existent file: $relativePath. '
+          'Call workspace_write without start_line/end_line to create it.',
+        );
+      }
+      final raw = await file.readAsString();
+      if (raw.isEmpty) {
+        throw WorkspaceFileException(
+          'Cannot apply line range to empty file: $relativePath. '
+          'Use workspace_write without start_line/end_line to create it.',
+        );
+      }
+      if (startLine! < 1) {
+        throw ArgumentError(
+          'start_line must be >= 1 (got $startLine).',
+        );
+      }
+      if (endLine! < startLine) {
+        throw ArgumentError(
+          'end_line ($endLine) must be >= start_line ($startLine).',
+        );
+      }
+      final lines = raw.split('\n');
+      final s = startLine.clamp(1, lines.length);
+      final e = endLine.clamp(s, lines.length);
+      final endsWithNewline = raw.endsWith('\n');
+      final newLines = <String>[
+        ...lines.sublist(0, s - 1),
+        ...content.split('\n'),
+        ...lines.sublist(e),
+      ];
+      var result = newLines.join('\n');
+      if (endsWithNewline && !result.endsWith('\n')) {
+        result = '$result\n';
+      }
+      await file.writeAsString(result, flush: true);
+    }
+
+    // 刷新 mtime — 写完后 LLM 可能立即再写，需要让它通过完整性检查
+    final stat = await file.stat();
+    _readMtimes[_mtimeKey(workspaceId, relativePath)] = stat.modified;
   }
 
   /// 创建目录（默认递归）。
@@ -429,8 +512,82 @@ class WorkspaceService {
       }
     }
     await file.writeAsString(content, flush: true);
+    // 刷新 mtime — 同 writeFile，写完后 LLM 可能立即再写
+    final stat = await file.stat();
+    _readMtimes[_mtimeKey(workspaceId, relativePath)] = stat.modified;
     return (length: content.length, appliedEdits: applied);
   }
+
+  /// 应用单条 find/replace 编辑 — workspace_patch 的服务端实现。
+  ///
+  /// 内部复用 [editFile],因此 0 匹配/多匹配的错误语义与 workspace_edit 一致。
+  Future<({int length, int appliedEdits})> applyPatch(
+    String workspaceId,
+    String relativePath, {
+    required String find,
+    required String replace,
+    bool replaceAll = false,
+  }) async {
+    if (find.isEmpty) {
+      throw ArgumentError('find must not be empty.');
+    }
+    return editFile(workspaceId, relativePath, [
+      EditOperation(find: find, replace: replace, replaceAll: replaceAll),
+    ]);
+  }
+
+  /// 文件是否存在(供 handler 在完整性检查时使用)。
+  Future<bool> fileExists(String workspaceId, String relativePath) async {
+    _ensureInitialized();
+    final ws = _require(workspaceId);
+    final abs = resolveSafePath(
+      workspaceRootPath: ws.rootPath,
+      relativePath: relativePath,
+    );
+    return File(abs).exists();
+  }
+
+  /// 检查文件 mtime 与上次 read 时记录的 mtime 是否一致。
+  ///
+  /// 返回一个 record:
+  /// - `neverRead == true` 表示本次会话从未 read 过该文件
+  /// - `modified == true` 表示 read 过,但 mtime 已被外部(或非 read 路径)改过
+  ///
+  /// 文件不存在时返回 `(neverRead: false, modified: false)`(留给调用方决定
+  /// "需要先创建" 还是 "要求 read")。
+  Future<({bool neverRead, bool modified})> readFreshness(
+    String workspaceId,
+    String relativePath,
+  ) async {
+    _ensureInitialized();
+    final ws = _require(workspaceId);
+    final abs = resolveSafePath(
+      workspaceRootPath: ws.rootPath,
+      relativePath: relativePath,
+    );
+    final file = File(abs);
+    if (!await file.exists()) {
+      return (neverRead: false, modified: false);
+    }
+    final stat = await file.stat();
+    final recorded = _readMtimes[_mtimeKey(workspaceId, relativePath)];
+    if (recorded == null) {
+      return (neverRead: true, modified: false);
+    }
+    return (
+      neverRead: false,
+      modified: !stat.modified.isAtSameMomentAs(recorded),
+    );
+  }
+
+  /// 清除某文件的 read 记录(用于重命名/外部移动后强制下次写入要求 read)。
+  void forgetRead(String workspaceId, String relativePath) {
+    _readMtimes.remove(_mtimeKey(workspaceId, relativePath));
+  }
+
+  /// 构造 mtime 跟踪用的 key: `"<workspaceId>:<relativePath>"`，统一 POSIX 分隔符。
+  String _mtimeKey(String workspaceId, String relativePath) =>
+      '$workspaceId:${relativePath.replaceAll('\\', '/')}';
 
   // ---------------------------------------------------------------------------
   // 内部

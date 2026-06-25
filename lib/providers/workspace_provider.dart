@@ -119,8 +119,17 @@ class WorkspaceNotifier extends Notifier<WorkspaceData> {
     String relativePath,
   ) => _service.listDirectory(workspaceId, relativePath);
 
-  Future<String> readFile(String workspaceId, String relativePath) =>
-      _service.readFile(workspaceId, relativePath);
+  Future<ReadResult> readFile(
+    String workspaceId,
+    String relativePath, {
+    int? startLine,
+    int? endLine,
+  }) => _service.readFile(
+    workspaceId,
+    relativePath,
+    startLine: startLine,
+    endLine: endLine,
+  );
 
   Future<void> writeFile(
     String workspaceId,
